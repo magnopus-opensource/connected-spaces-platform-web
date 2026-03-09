@@ -50,4 +50,4 @@ jobs:
     - name: Run Integration Test
       shell: cmd
       run: |
-        call \build\build\${{ matrix.build_type }}\generators\conanbuild.bat && ctest --test-dir build\build\${{ matrix.build_type }} --output-on-failure"
+        call .\build\build\${{ matrix.build_type }}\generators\conanbuild.bat && ctest --test-dir build\build\${{ matrix.build_type }} --output-on-failure"
