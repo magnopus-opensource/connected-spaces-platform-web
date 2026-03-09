@@ -51,4 +51,4 @@ jobs:
       shell: cmd
       run: |
         call build\build\Debug\generators\conanbuild.bat
-        ctest --test-dir build\build\Debug --output-on-failure
+        ctest --test-dir build\build\${{ matrix.build_type }} --output-on-failure
