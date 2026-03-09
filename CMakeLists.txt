@@ -14,7 +14,7 @@ include(FetchContent)
 FetchContent_Declare(
   test-lib
   GIT_REPOSITORY https://github.com/MAG-mv/test-build-system.git
-  GIT_TAG        9784849e5176251fa0c6a0161268143ee4f0c3c1
+  GIT_TAG        143c5d68342fdcc704e9c5fb46b498efbf46178a
   GIT_SHALLOW    TRUE
   GIT_PROGRESS   TRUE
 )
