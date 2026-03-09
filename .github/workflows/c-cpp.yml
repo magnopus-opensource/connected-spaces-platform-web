@@ -52,4 +52,6 @@ jobs:
       run: |
         call build\build\Debug\generators\conanbuild.bat
         echo Running ctest...
-        ctest --test-dir build --output-on-failure
+        ctest --test-dir build\build\ --output-on-failure
+        ctest --test-dir build\build\Debug --output-on-failure
+        ctest --test-dir build\build\Debug\generators --output-on-failure
