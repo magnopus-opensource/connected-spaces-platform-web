@@ -47,7 +47,9 @@ jobs:
         BUILD_TYPE_LOWER=$(echo "${{ matrix.build_type }}" | tr '[:upper:]' '[:lower:]')
         cmake --build --preset conan-$BUILD_TYPE_LOWER
 
-    - name: Debug integration test env
-      shell: bash
+    - name: Run Integration Test
+      shell: cmd
       run: |
-        cmd.exe /V:ON /C "echo before && call build\build\Debug\generators\conanbuild.bat && echo after conanbuild && ctest --test-dir build --output-on-failure"
+        call build\build\Debug\generators\conanbuild.bat
+        echo Running ctest...
+        ctest --test-dir build --output-on-failure
