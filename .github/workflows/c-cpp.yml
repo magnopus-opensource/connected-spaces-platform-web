@@ -1,0 +1,48 @@
+on:
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  emscripten-build:
+    runs-on: windows-latest
+    
+    strategy:
+      fail-fast: false
+      
+      matrix:
+        build_type: [RelWithDebInfo]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up MSVC (Windows only)
+      if: runner.os == 'Windows'
+      uses: ilammy/msvc-dev-cmd@v1
+
+    - name: Install Conan
+      uses: conan-io/setup-conan@v1
+
+    - name: Conan install
+      shell: bash
+      run: |
+        set -eux
+
+        conan install . \
+          -of "build" \
+          -s build_type="${{ matrix.build_type }}" \
+          -s compiler.cppstd=17 \
+          -c tools.cmake.cmaketoolchain:generator=Ninja \
+          --build=missing \
+          --profile:host=profiles/host/emscripten
+
+    - name: Configure CMake
+      shell: bash
+      run: |
+        BUILD_TYPE_LOWER=$(echo "${{ matrix.build_type }}" | tr '[:upper:]' '[:lower:]')
+        cmake --preset conan-$BUILD_TYPE_LOWER
+
+    - name: Build
+      shell: bash
+      run: |
+        BUILD_TYPE_LOWER=$(echo "${{ matrix.build_type }}" | tr '[:upper:]' '[:lower:]')
+        cmake --build --preset conan-$BUILD_TYPE_LOWER
