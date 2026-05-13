@@ -1,4 +1,5 @@
 import { defineConfig } from 'vitest/config';
+import { playwright } from '@vitest/browser-playwright';
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 
@@ -10,11 +11,12 @@ const BUILD_DIRS: Record<string, string> = {
 const testDir = import.meta.dirname;
 const repoRoot = resolve(testDir, '..');
 
-export default defineConfig(({ mode }) => {
-  const relative = BUILD_DIRS[mode];
+export default defineConfig(() => {
+  const variant = process.env.CSP_BUILD;
+  const relative = variant ? BUILD_DIRS[variant] : undefined;
   if (!relative) {
     throw new Error(
-      `vitest --mode must be one of: ${Object.keys(BUILD_DIRS).join(', ')} (got "${mode}")`,
+      `CSP_BUILD must be one of: ${Object.keys(BUILD_DIRS).join(', ')} (got "${variant ?? ''}"). Use npm run test:debug or test:release.`,
     );
   }
 
@@ -32,7 +34,7 @@ export default defineConfig(({ mode }) => {
       browser: {
         enabled: true,
         headless: true,
-        provider: 'playwright',
+        provider: playwright(),
         instances: [{ browser: 'chromium' }],
       },
     },

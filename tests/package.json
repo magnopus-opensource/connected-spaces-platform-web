@@ -3,14 +3,17 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test:debug": "vitest run --mode debug",
-    "test:release": "vitest run --mode release",
-    "test:watch:debug": "vitest --mode debug",
-    "test:watch:release": "vitest --mode release",
+    "postinstall": "playwright install chromium",
+    "test:debug": "cross-env CSP_BUILD=debug vitest run",
+    "test:release": "cross-env CSP_BUILD=release vitest run",
+    "test:watch:debug": "cross-env CSP_BUILD=debug vitest",
+    "test:watch:release": "cross-env CSP_BUILD=release vitest",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@vitest/browser": "4.1.6",
+    "@vitest/browser-playwright": "4.1.6",
+    "cross-env": "7.0.3",
     "playwright": "1.59.1",
     "typescript": "6.0.3",
     "vitest": "4.1.6"
