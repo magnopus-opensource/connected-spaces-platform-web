@@ -1,0 +1,11 @@
+{
+  "name": "connected-spaces-platform-bindings",
+  "version": "@PROJECT_VERSION@",
+  "description": "@PROJECT_DESCRIPTION@",
+  "type": "module",
+  "main": "./connected-spaces-platform-bindings.js",
+  "files": [
+    "connected-spaces-platform-bindings.js",
+    "connected-spaces-platform-bindings.wasm"
+  ]
+}

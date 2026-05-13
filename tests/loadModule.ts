@@ -1,5 +1,5 @@
 import type { CSPModule } from './csp';
-import createModule from '@bindings/connected-spaces-platform-bindings.js';
+import createModule from 'connected-spaces-platform-bindings';
 
 let cached: Promise<CSPModule> | undefined;
 

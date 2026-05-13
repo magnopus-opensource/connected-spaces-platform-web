@@ -11,7 +11,7 @@ export interface CSPModule {
 
 export type CSPModuleFactory = (overrides?: Partial<CSPModule>) => Promise<CSPModule>;
 
-declare module '@bindings/connected-spaces-platform-bindings.js' {
+declare module 'connected-spaces-platform-bindings' {
   const createModule: CSPModuleFactory;
   export default createModule;
 }

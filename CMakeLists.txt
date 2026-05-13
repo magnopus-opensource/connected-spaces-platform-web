@@ -45,3 +45,5 @@ target_link_options(connected-spaces-platform-bindings PRIVATE
     --no-entry
   >
 )
+
+include(cmake/PackageInstall.cmake)

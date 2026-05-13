@@ -3,27 +3,15 @@ import { playwright } from '@vitest/browser-playwright';
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-const BUILD_DIRS: Record<string, string> = {
-  debug: 'build/Debug',
-  release: 'build/Release',
-};
-
 const testDir = import.meta.dirname;
 const repoRoot = resolve(testDir, '..');
+// Arbitrary install location, just what I decided to call it.
+const installDir = resolve(repoRoot, 'CSP-WASM-Bindings');
 
 export default defineConfig(() => {
-  const variant = process.env.CSP_BUILD;
-  const relative = variant ? BUILD_DIRS[variant] : undefined;
-  if (!relative) {
+  if (!existsSync(installDir)) {
     throw new Error(
-      `CSP_BUILD must be one of: ${Object.keys(BUILD_DIRS).join(', ')} (got "${variant ?? ''}"). Use npm run test:debug or test:release.`,
-    );
-  }
-
-  const buildDir = resolve(repoRoot, relative);
-  if (!existsSync(buildDir)) {
-    throw new Error(
-      `Build directory not found: ${buildDir}. Build the bindings first (cmake --build --preset ${mode}).`,
+      `Bindings install directory not found: ${installDir}. Build and install the bindings first (cmake --install build/<Config> --prefix CSP-WASM-Bindings).`,
     );
   }
 
@@ -40,9 +28,9 @@ export default defineConfig(() => {
     },
     server: {
       // Emscripten's ES6 loader resolves its sibling .wasm via import.meta.url,
-      // so the dev server needs filesystem access to the CMake build directory
+      // so the dev server needs filesystem access to the install directory
       // (which lives outside this package's root).
-      fs: { allow: [testDir, buildDir] },
+      fs: { allow: [testDir, installDir] },
       // SharedArrayBuffer (required by -pthread) needs cross-origin isolation.
       headers: {
         'Cross-Origin-Opener-Policy': 'same-origin',
@@ -51,7 +39,10 @@ export default defineConfig(() => {
     },
     resolve: {
       alias: {
-        '@bindings': buildDir,
+        'connected-spaces-platform-bindings': resolve(
+          installDir,
+          'connected-spaces-platform-bindings.js',
+        ),
       },
     },
   };
