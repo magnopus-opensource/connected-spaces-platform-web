@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { loadCSP } from './loadModule';
-import type { CSPModule } from './csp';
+import type { MainModule } from 'connected-spaces-platform-bindings';
 
 describe('CSPFoundation', () => {
-  let csp: CSPModule;
+  let csp: MainModule;
 
   beforeAll(async () => {
     csp = await loadCSP();

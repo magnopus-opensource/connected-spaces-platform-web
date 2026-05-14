@@ -30,6 +30,14 @@ jobs:
           version: 5.0.2
           actions-cache-folder: 'emsdk-cache'
 
+      # emcc's --emit-tsd shells out to `tsc`. emsdk 5.0.2 invokes it with
+      # `--outFile`, which errors under TypeScript 6.x. Pin to the latest 5.x
+      # globally so emcc finds a compatible compiler on PATH. Drop this when
+      # emsdk bumps past the fix for emscripten-core/emscripten#26534.
+      - name: Install TypeScript (for emcc --emit-tsd)
+        shell: bash
+        run: npm install -g typescript@5.9.3
+
       # Builds CSP as a static emscripten archive and installs to CSP/install.
       # Requires emsdk to already be on PATH (above).
       # Might be nice to cache this as well.

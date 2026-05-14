@@ -12,6 +12,7 @@ configure_file(package.json.in package.json @ONLY)
 install(FILES
       "$<TARGET_FILE:connected-spaces-platform-bindings>" # This is the .js file that is actually our target output
       "$<TARGET_FILE_DIR:connected-spaces-platform-bindings>/$<TARGET_FILE_BASE_NAME:connected-spaces-platform-bindings>.wasm" # The wasm, not a target output, always adjacent
+      "$<TARGET_FILE_DIR:connected-spaces-platform-bindings>/$<TARGET_FILE_BASE_NAME:connected-spaces-platform-bindings>.d.ts" # Embind-generated TS declarations via --emit-tsd, always adjacent
       "${CMAKE_CURRENT_BINARY_DIR}/package.json" # Configured above, makes this an npm package
       DESTINATION .
   )

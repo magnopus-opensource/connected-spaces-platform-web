@@ -4,8 +4,10 @@
   "description": "@PROJECT_DESCRIPTION@",
   "type": "module",
   "main": "./connected-spaces-platform-bindings.js",
+  "types": "./connected-spaces-platform-bindings.d.ts",
   "files": [
     "connected-spaces-platform-bindings.js",
-    "connected-spaces-platform-bindings.wasm"
+    "connected-spaces-platform-bindings.wasm",
+    "connected-spaces-platform-bindings.d.ts"
   ]
 }

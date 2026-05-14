@@ -42,6 +42,7 @@ target_link_options(connected-spaces-platform-bindings PRIVATE
     -sMAXIMUM_MEMORY=1073741824
     "-sEXPORTED_RUNTIME_METHODS=['ccall','setValue','getValue','addFunction','removeFunction','UTF8ToString','stringToUTF8','lengthBytesUTF8']"
     "-sINCOMING_MODULE_JS_API=['buffer','fetchSettings','instantiateWasm','locateFile','mainScriptUrlOrBlob','wasmMemory']"
+    --emit-tsd=connected-spaces-platform-bindings.d.ts
     --no-entry
   >
 )
