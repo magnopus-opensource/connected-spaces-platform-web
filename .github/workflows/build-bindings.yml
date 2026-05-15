@@ -3,6 +3,7 @@ name: Build emscripten bindings
 on:
   pull_request:
   workflow_dispatch:
+  workflow_call:
 
 jobs:
   emscripten-build:
