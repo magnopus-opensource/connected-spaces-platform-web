@@ -13,11 +13,14 @@ on:
         description: 'Name of the release'
         required: true
 
+permissions:
+  contents: write
+
 jobs:
     # Build the bindings
     build-bindings:
         uses: ./.github/workflows/build-bindings.yml
-    
+
     # Then make the release
     publish-release:
         needs: [build-bindings]
