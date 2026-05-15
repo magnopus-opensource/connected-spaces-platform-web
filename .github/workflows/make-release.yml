@@ -1,0 +1,42 @@
+# Make a release. Currently, this just uploads to the github release.
+# It probably wants to be extended in the future to push an npm release.
+name: Make Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version label (e.g., v0.0.1)'
+        required: true
+        default: 'v0.0.1'
+      releaseName:
+        description: 'Name of the release'
+        required: true
+
+jobs:
+    # Build the bindings
+    build-bindings:
+        uses: ./.github/workflows/build-bindings.yml
+    
+    # Then make the release
+    publish-release:
+        needs: [build-bindings]
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write
+        steps:
+          - name: Download all artifacts
+            uses: actions/download-artifact@v4
+            with:
+              path: release-artifacts
+
+          - name: Create GitHub Release
+            uses: softprops/action-gh-release@v2
+            with:
+              # Fallback name for push events
+              name: ${{ github.event.inputs.releaseName }}
+              tag_name: ${{ github.event.inputs.version }}
+              target_commitish: ${{ github.sha }}
+              generate_release_notes: true
+              # Add the ** wildcard so it searches inside the subfolders too
+              files: release-artifacts/**/*.zip

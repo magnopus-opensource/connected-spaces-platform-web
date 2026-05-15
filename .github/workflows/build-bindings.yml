@@ -3,6 +3,7 @@ name: Build emscripten bindings
 on:
   pull_request:
   workflow_dispatch:
+  workflow_call:
 
 jobs:
   emscripten-build:
@@ -89,9 +90,14 @@ jobs:
         working-directory: ./tests
         run: npm test
 
+      - name: Package install dir
+        shell: pwsh
+        run: |
+          Compress-Archive -Path CSP-WASM-Bindings\* -DestinationPath CSP-WASM-Bindings-${{ matrix.config }}.zip
+
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: CSP-WASM-Bindings-${{ matrix.config }}
-          path: ./CSP-WASM-Bindings
+          path: CSP-WASM-Bindings-${{ matrix.config }}.zip
           if-no-files-found: error
