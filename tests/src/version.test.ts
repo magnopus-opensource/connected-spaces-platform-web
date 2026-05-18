@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { loadCSP } from './loadModule';
+import { loadCSP } from '../loadModule';
 import type { MainModule } from 'connected-spaces-platform-bindings';
 
 describe('CSPFoundation', () => {
