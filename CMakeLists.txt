@@ -4,7 +4,10 @@ project(ConnectedSpacesPlatformWeb VERSION 1.0
     DESCRIPTION "Embind generated WASM bindings to the connected spaces platform"
     LANGUAGES CXX)
 
-add_executable(connected-spaces-platform-bindings Bindings.cpp)
+add_executable(connected-spaces-platform-bindings
+    Bindings.cpp
+    src/bindings/TestBindings.cpp
+)
 set_target_properties(connected-spaces-platform-bindings PROPERTIES SUFFIX ".js")
 
 # Project uses C++17
