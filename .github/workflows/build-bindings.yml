@@ -85,6 +85,11 @@ jobs:
         working-directory: ./tests
         run: npm install
 
+      - name: Install Playwright browsers
+        shell: bash
+        working-directory: ./tests
+        run: npx playwright install chromium
+
       - name: Test
         shell: bash
         working-directory: ./tests
