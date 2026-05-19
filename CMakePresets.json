@@ -7,7 +7,8 @@
       "displayName": "release single config (ninja)",
       "inherits": "conan-release",
       "cacheVariables": {
-        "CMAKE_INSTALL_PREFIX": "${sourceDir}/CSP-WASM-Bindings"
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/CSP-WASM-Bindings",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
       }
     },
     {
@@ -15,7 +16,8 @@
       "displayName": "debug single config (ninja)",
       "inherits": "conan-debug",
       "cacheVariables": {
-        "CMAKE_INSTALL_PREFIX": "${sourceDir}/CSP-WASM-Bindings"
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/CSP-WASM-Bindings",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
       }
     }
   ],
