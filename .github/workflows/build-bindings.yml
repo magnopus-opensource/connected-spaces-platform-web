@@ -4,7 +4,9 @@ on:
   pull_request:
   workflow_dispatch:
   workflow_call:
-
+  push:
+      branches: [main] # This is really just to seed the cache on main so PR's can reuse the same cache entries.
+                       # We could add a concurrency group if the redundancy bothers us for this, but I'm not fussed.
 jobs:
   emscripten-build:
     runs-on: windows-latest
