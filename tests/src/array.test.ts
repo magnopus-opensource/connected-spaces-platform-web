@@ -5,8 +5,22 @@ import type { MainModule } from 'connected-spaces-platform-bindings';
 describe('CSPFoundation', () => {
   let csp: MainModule;
 
+  // embind's primitive type-conversion checks (e.g. "Cannot convert ... to int")
+  // live inside ASSERTIONS-gated blocks, so they only throw in debug builds.
+  // Release silently coerces bad input, so we probe the live module once and
+  // gate the conversion-error tests on what this build actually does.
+  let embindAssertions: boolean;
+
   beforeAll(async () => {
     csp = await loadCSP();
+
+    using probe = csp.BindingsMechanismsTestType.create();
+    try {
+      probe.setArrayBasicTypeByValue([undefined as unknown as number]);
+      embindAssertions = false;
+    } catch {
+      embindAssertions = true;
+    }
   });
 
 /* 
@@ -146,7 +160,8 @@ describe('CSPFoundation', () => {
 
   });
 
-  it('Setting a sparse array throws', () => {
+  it('Setting a sparse array throws', (ctx) => {
+    ctx.skip(!embindAssertions, 'release build: embind primitive type-conversion checks are ASSERTIONS-gated (debug only)');
     using bindingsArrayHelper = csp.BindingsMechanismsTestType.create();
 
     // JS arrays of primitives with holes in them
@@ -161,7 +176,8 @@ describe('CSPFoundation', () => {
     expect(() => bindingsArrayHelper.setArrayFullTypeByValue([elem, , elem])).toThrow("Cannot read properties of undefined (reading '$$')");
   });
 
-  it('Setting array with invalid type throws', () => {
+  it('Setting array with invalid type throws', (ctx) => {
+    ctx.skip(!embindAssertions, 'release build: embind primitive type-conversion checks are ASSERTIONS-gated (debug only)');
     using bindingsArrayHelper = csp.BindingsMechanismsTestType.create();
 
      // @ts-expect-error - Typescript will not allow us to set the wrong type, but want to see what happens anyways
