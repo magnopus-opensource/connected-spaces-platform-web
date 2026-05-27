@@ -7,7 +7,7 @@
  * Utils for memory management, most necessary for containers.
  *
  * Arrays returned from CSP get a [Symbol.dispose] attached at the binding boundary
- * in the DisposableArray<T> WireType adapter (return path), routing through
+ * in the CSPArrayJSDisposable<T> WireType adapter (return path), routing through
  * `disposeArray` below. The intended user-facing pattern is `using arr = ...`
  * on anything CSP returns — including basic-type arrays, where dispose is just
  * a no-op walk.

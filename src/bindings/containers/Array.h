@@ -121,7 +121,7 @@ struct BindingType<bindings::utils::CSPArrayJSDisposable<T>>
     // Return path. Attaches [Symbol.dispose] to allow `using` storage in JS land.
     static WireType toWireType(const bindings::utils::CSPArrayJSDisposable<T>& wrapper, rvp::default_tag)
     {
-        static_assert(!std::is_pointer_v<T>, "DisposableArray<T> BindingType does not handle pointer ownership. You may need to add a new specialization.");
+        static_assert(!std::is_pointer_v<T>, "CSPArrayJSDisposable<T> BindingType does not handle pointer ownership. You may need to add a new specialization.");
 
         const auto& arr = wrapper.arrayView;
         val newJSArray = val::array();
