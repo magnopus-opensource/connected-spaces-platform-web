@@ -7,7 +7,7 @@ namespace bindings::utils {
 
 /*
  * Check to see if we're a C++ bound embind object or not.
- * `isDeleted` is technically a contract check, embind doesn't
+ * `isDeleted` is technically not a contract check, embind doesn't
  * provide something altogether straightforward for this, but this 
  * is as good as standard.
  */
