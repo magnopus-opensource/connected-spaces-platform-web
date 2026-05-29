@@ -117,7 +117,7 @@ struct BindingType<csp::common::Array<T>>
     static csp::common::Array<T> fromWireType(WireType v)
     {
         val js = ValBinding::fromWireType(v);
-        const unsigned len = js["length"].template as<unsigned>();
+        const unsigned len = js["length"].as<unsigned>();
         csp::common::Array<T> out(len);
         for (unsigned i = 0; i < len; ++i)
         {
