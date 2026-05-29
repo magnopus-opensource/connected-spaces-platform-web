@@ -223,40 +223,123 @@ describe('CSPFoundation', () => {
      expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount + 1);
   });
 
-  /* Array of Pointers tests - TODO */
-  /*
+  /* Array of Pointers tests */
+
   it('Round trip array of pointers', () => {
-     
+    using bindingsArrayHelper = csp.BindingsMechanismsTestType.create();
+    const beforeAliveCount = csp.BindingsTestType.aliveCount;
+    using elem1 = csp.BindingsTestType.create(1, "one");
+    using elem2 = csp.BindingsTestType.create(2, "two");
+    const newArr = [elem1, elem2];
+
+    //This will have made 2 more elements, owned by the JS stack
+    const afterAllocationAliveCount = csp.BindingsTestType.aliveCount;
+    expect(afterAllocationAliveCount).equal(beforeAliveCount + 2);
+
+    bindingsArrayHelper.setArrayOfPointersByValue(newArr);
+    let roundTripArr = bindingsArrayHelper.getArrayOfPointersByValue();
+
+    expect(csp.elementEquals(newArr[0], elem1)).toBe(true);
+    expect(csp.elementEquals(newArr[1], elem2)).toBe(true);
+    // I know, the above and below are checking the same thing, but I'm extra paranoid with fundamental interop mechanisms.
+    expect(csp.arrayEquals(newArr, roundTripArr)).toBe(true);
+
+    // There should have been no additional allocations caused by the round trip
+    expect(csp.BindingsTestType.aliveCount).equals(afterAllocationAliveCount);
   });
 
-  it('Getting an array of pointers does not invoke a copy', () => {
-     
+  it('Empty pointer array round trip', () => {
+    using bindingsArrayHelper = csp.BindingsMechanismsTestType.create();
+    const beforeAliveCount = csp.BindingsTestType.aliveCount;
+
+    bindingsArrayHelper.setArrayOfPointersByValue([]);
+    let roundTripArr = bindingsArrayHelper.getArrayOfPointersByValue();
+
+    expect(roundTripArr.length).toBe(0);
+    expect(csp.arrayEquals([], roundTripArr)).toBe(true);
+
+    // There should have been no allocations caused by the round trip
+    expect(csp.BindingsTestType.aliveCount).equals(beforeAliveCount);
   });
 
-  it('Array of pointers going out of scope does not delete underlying C++ objects', () => {
-     
+  it('Only nulls pointer array round trip', () => {
+    using bindingsArrayHelper = csp.BindingsMechanismsTestType.create();
+    const beforeAliveCount = csp.BindingsTestType.aliveCount;
+
+    bindingsArrayHelper.setArrayOfPointersByValue([null, null, null]);
+    let roundTripArr = bindingsArrayHelper.getArrayOfPointersByValue();
+
+    expect(roundTripArr.length).toBe(3);
+    expect(csp.arrayEquals([null, null, null], roundTripArr)).toBe(true);
+
+    // There should have been no allocations caused by the round trip
+    expect(csp.BindingsTestType.aliveCount).equals(beforeAliveCount);
   });
 
-  it('Objects created in TS then set into array of pointers do not copy', () => {
-     
+  it('Array containing nulls pointer array round trip', () => {
+    using bindingsArrayHelper = csp.BindingsMechanismsTestType.create();
+    const beforeAliveCount = csp.BindingsTestType.aliveCount;
+    using elem1 = csp.BindingsTestType.create(1, "one");
+    using elem2 = csp.BindingsTestType.create(2, "two");
+    const newArr = [elem1, null, elem2];
+
+    //This will have made 2 more elements, owned by the JS stack
+    const afterAllocationAliveCount = csp.BindingsTestType.aliveCount;
+    expect(afterAllocationAliveCount).equal(beforeAliveCount + 2);
+
+    bindingsArrayHelper.setArrayOfPointersByValue(newArr);
+    let roundTripArr = bindingsArrayHelper.getArrayOfPointersByValue();
+
+    expect(csp.elementEquals(newArr[0], elem1)).toBe(true);
+    expect(newArr[1]).toBe(null);
+    expect(csp.elementEquals(newArr[2], elem2)).toBe(true);
+    // I know, the above and below are checking the same thing, but I'm extra paranoid with fundamental interop mechanisms.
+    expect(csp.arrayEquals(newArr, roundTripArr)).toBe(true);
+
+    // There should have been no additional allocations caused by the round trip
+    expect(csp.BindingsTestType.aliveCount).equals(afterAllocationAliveCount);
   });
 
-   it('Accessing a null element in a pointer array caused by TS object falling out of scope throws', () => {
+  it('Mutating element via pointer array is reflected in original handle', () => {
+     using bindingsArrayHelper = csp.BindingsMechanismsTestType.create();
      
-   });
+     let ptrList = bindingsArrayHelper.getArrayOfCppOwnedPointers();
+     expect(ptrList[0]?.name).equals("One");
 
-  it('Explicit delete of elements in pointer array deletes underlying C++ memory', () => {
-     
+     if (ptrList[0] != null){
+      ptrList[0].name = "mutatedOne";
+     }
+
+    expect(ptrList[0]?.name).equals("mutatedOne");
+    expect(bindingsArrayHelper.getArrayOfCppOwnedPointers()[0]?.name).equals("mutatedOne");
+    expect(csp.elementEquals(ptrList[0], bindingsArrayHelper.getArrayOfCppOwnedPointers()[0])).toBe(true);
   });
 
-  it('Passing same JS handle in different array elements creates pointers to same C++ object', () => {
+  it('Pointer arrays are independent, pointed to objects are not', () => {
+    using bindingsArrayHelper = csp.BindingsMechanismsTestType.create();
      
+    let ptrList1 = bindingsArrayHelper.getArrayOfCppOwnedPointers();
+    let ptrList2 = bindingsArrayHelper.getArrayOfCppOwnedPointers();
+    expect(csp.arrayEquals(ptrList1, ptrList2)).toBe(true);
+
+    //Change something in one of the lists, both should change
+    if (ptrList1[0] != null){
+      ptrList1[0].name = "mutatedOne";
+    }
+
+    expect(ptrList1[0]?.name).equals("mutatedOne");
+    expect(ptrList2[0]?.name).equals("mutatedOne");
+    
+    //Add an element to one of the lists
+    using elem1 = csp.BindingsTestType.create(1, "one");
+    ptrList1.push(elem1);
+
+    //Only that list should have changed structurally
+    expect(ptrList1.length).equals(3)
+    expect(ptrList2.length).equals(2)
+    expect(csp.arrayEquals(ptrList1, ptrList2)).toBe(false);
   });
-  
-  it('Passing null JS handle creates nullptr in C++ array', () => {
-     
-  });
-  */
+
  
 });
 
