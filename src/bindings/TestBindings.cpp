@@ -8,6 +8,7 @@
 
 #include "containers/Array.h"
 #include "containers/List.h"
+#include "containers/Map.h"
 
 #include "emscripten/bind.h"
 #include "emscripten/val.h"
@@ -221,8 +222,14 @@ EMSCRIPTEN_BINDINGS(CSPTestBindings)
     emscripten::register_type<csp::common::List<BindingsTestType>>("BindingsTestType[]");
     emscripten::register_type<csp::common::List<BindingsTestType*>>("(BindingsTestType | null)[]");
 
+    // Map
+    emscripten::register_type<csp::common::Map<int, int>>("Map<number, number>");
+    emscripten::register_type<csp::common::Map<int, BindingsTestType>>("Map<number, BindingsTestType>");
+    emscripten::register_type<csp::common::Map<int, BindingsTestType*>>("Map<number, (BindingsTestType | null)>");
+
     // Return types, allows embinds machinery to emit a different typescript signature for container returns, meaning we can use `using` in a type-checked manner.
     // You need to remember to convert to these types in the returning methods, but you don't need to worry about it for parameters.
+
     // Array
     emscripten::register_type<bindings::utils::CSPArrayJSDisposable<int>>("(number[] & Disposable)");
     emscripten::register_type<bindings::utils::CSPArrayJSDisposable<BindingsTestType>>("(BindingsTestType[] & Disposable)");
@@ -230,6 +237,10 @@ EMSCRIPTEN_BINDINGS(CSPTestBindings)
     // List
     emscripten::register_type<bindings::utils::CSPListJSDisposable<int>>("(number[] & Disposable)");
     emscripten::register_type<bindings::utils::CSPListJSDisposable<BindingsTestType>>("(BindingsTestType[] & Disposable)");
+
+    // Map
+    emscripten::register_type<bindings::utils::CSPMapJSDisposable<int, int>>("(Map<number, number> & Disposable)");
+    emscripten::register_type<bindings::utils::CSPMapJSDisposable<int, BindingsTestType>>("(Map<number, BindingsTestType> & Disposable)");
     
     emscripten::class_<BindingMechanismsTestType>("BindingsMechanismsTestType")
         .class_function("create", +[](){ return BindingMechanismsTestType(); })
@@ -274,16 +285,30 @@ EMSCRIPTEN_BINDINGS(CSPTestBindings)
         .function("getListOfPointersByConstRef", &BindingMechanismsTestType::GetListOfPointersByConstRef)
         .function("getListOfCppOwnedPointers", &BindingMechanismsTestType::GetListOfCppOwnedPointers)
         .function("setListOfPointersByValue(value)", &BindingMechanismsTestType::SetListOfPointersByValue)
-        .function("setListOfPointersByConstRef(value)", &BindingMechanismsTestType::SetListOfPointersByConstRef);
+        .function("setListOfPointersByConstRef(value)", &BindingMechanismsTestType::SetListOfPointersByConstRef)
+        /////
+         .function("getMapBasicTypeByValue", +[](const BindingMechanismsTestType& self) {
+            return bindings::utils::CSPMapJSDisposable<int, int>{self.GetMapBasicTypeByValue()};
+        })
+        .function("getMapBasicTypeByConstRef", +[](const BindingMechanismsTestType& self) {
+            return bindings::utils::CSPMapJSDisposable<int, int>{self.GetMapBasicTypeByConstRef()};
+        })
+        .function("setMapBasicTypeByValue(value)", &BindingMechanismsTestType::SetMapBasicTypeByValue)
+        .function("setMapBasicTypeByConstRef(value)", &BindingMechanismsTestType::SetMapBasicTypeByConstRef)
+        .function("getMapFullTypeByValue", +[](const BindingMechanismsTestType& self) {
+            return bindings::utils::CSPMapJSDisposable<int, BindingsTestType>{self.GetMapFullTypeByValue()};
+        })
+        .function("getMapFullTypeByConstRef", +[](const BindingMechanismsTestType& self) {
+            return bindings::utils::CSPMapJSDisposable<int, BindingsTestType>{self.GetMapFullTypeByConstRef()};
+        })
+        .function("setMapFullTypeByValue(value)", &BindingMechanismsTestType::SetMapFullTypeByValue)
+        .function("setMapFullTypeByConstRef(value)", &BindingMechanismsTestType::SetMapFullTypeByConstRef)
+        .function("getMapOfPointersByValue", &BindingMechanismsTestType::GetMapOfPointersByValue)
+        .function("getMapOfPointersByConstRef", &BindingMechanismsTestType::GetMapOfPointersByConstRef)
+        .function("getMapOfCppOwnedPointers", &BindingMechanismsTestType::GetMapOfCppOwnedPointers)
+        .function("setMapOfPointersByValue(value)", &BindingMechanismsTestType::SetMapOfPointersByValue)
+        .function("setMapOfPointersByConstRef(value)", &BindingMechanismsTestType::SetMapOfPointersByConstRef);
         /*
-        .function("getMapBasicTypeByValue", &BindingMechanismsTestType::GetMapBasicTypeByValue)
-        .function("getMapBasicTypeByConstRef", &BindingMechanismsTestType::GetMapBasicTypeByConstRef)
-        .function("setMapBasicTypeByValue", &BindingMechanismsTestType::SetMapBasicTypeByValue)
-        .function("setMapBasicTypeByConstRef", &BindingMechanismsTestType::SetMapBasicTypeByConstRef)
-        .function("getMapFullTypeByValue", &BindingMechanismsTestType::GetMapFullTypeByValue)
-        .function("getMapFullTypeByConstRef", &BindingMechanismsTestType::GetMapFullTypeByConstRef)
-        .function("setMapFullTypeByValue", &BindingMechanismsTestType::SetMapFullTypeByValue)
-        .function("setMapFullTypeByConstRef", &BindingMechanismsTestType::SetMapFullTypeByConstRef)
         .function("getOptionalBasicTypeByValue", &BindingMechanismsTestType::GetOptionalBasicTypeByValue)
         .function("getOptionalBasicTypeByConstRef", &BindingMechanismsTestType::GetOptionalBasicTypeByConstRef)
         .function("setOptionalBasicTypeByValue", &BindingMechanismsTestType::SetOptionalBasicTypeByValue)
@@ -296,9 +321,5 @@ EMSCRIPTEN_BINDINGS(CSPTestBindings)
         .function("getCspStringByConstRef", &BindingMechanismsTestType::GetCspStringByConstRef)
         .function("setCspStringByValue", &BindingMechanismsTestType::SetCspStringByValue)
         .function("setCspStringByConstRef", &BindingMechanismsTestType::SetCspStringByConstRef)
-        .function("getMapOfPointersByValue", &BindingMechanismsTestType::GetMapOfPointersByValue)
-        .function("getMapOfPointersByConstRef", &BindingMechanismsTestType::GetMapOfPointersByConstRef)
-        .function("setMapOfPointersByValue", &BindingMechanismsTestType::SetMapOfPointersByValue)
-        .function("setMapOfPointersByConstRef", &BindingMechanismsTestType::SetMapOfPointersByConstRef);
     */
 }
