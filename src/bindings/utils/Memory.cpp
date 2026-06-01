@@ -18,6 +18,10 @@
  *
  * `disposeElement` is the single-object counterpart. You can use this if you
  * like as a user, but it's mostly here so it can be called by array disposal.
+ *
+ * `disposeMap` is the JS Map counterpart of `disposeArray`. It disposes the Map's
+ * values only; keys are left alone because map keys are constrained to primitives
+ * (see Map.h IsValidMapKey) and so own no C++ memory.
  */
 
 namespace {
@@ -74,9 +78,25 @@ void DisposeArray(emscripten::val arr) {
     DisposeAll(arr);
 }
 
+/*
+ * Dispose every bound handle held as a *value* in a JS Map. Keys are intentionally
+ * left untouched: map keys are constrained to primitives (see Map.h IsValidMapKey) and
+ * so own no C++ memory. Throws if not a map. Should tolerate null input and empty values.
+ * This is the path `using` routes through, so it must work uniformly on whatever shape
+ * a map return happens to have.
+ */
+void DisposeMap(emscripten::val map) {
+    if (!map.instanceof(emscripten::val::global("Map"))) {
+        throw std::runtime_error("disposeMap was passed a non-Map value");
+    }
+    // Array.from(map.values()) yields the values in an array, so we can reuse the array disposal machinery we already have.
+    DisposeAll(emscripten::val::global("Array").call<emscripten::val>("from", map.call<emscripten::val>("values")));
+}
+
 }
 
 EMSCRIPTEN_BINDINGS(CSPMemory) {
     emscripten::function("disposeElement", &DisposeElement);
     emscripten::function("disposeArray", &DisposeArray);
+    emscripten::function("disposeMap", &DisposeMap);
 }
