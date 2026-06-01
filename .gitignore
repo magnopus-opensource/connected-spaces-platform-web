@@ -51,12 +51,15 @@ CMakeUserPresets.json
 # External projects
 *-prefix/
 
-build/
-install/
+/build/
+/install/
+
+.vscode
 
 ### Node / Vitest ###
 node_modules/
 .vitest-cache/
+.vitest-attachments/
 *.tsbuildinfo
 
 .claude
