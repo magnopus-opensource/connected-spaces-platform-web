@@ -2,6 +2,12 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import { loadCSP } from '../loadModule';
 import type { MainModule } from 'connected-spaces-platform-bindings';
 
+
+/*
+ * This is only a temporary test to demonstrate that an actual CSP method can be bound.
+ * It will be deleted when we begin wallpapering the API proper.
+ */
+
 describe('CSPFoundation', () => {
   let csp: MainModule;
 

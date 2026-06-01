@@ -3,7 +3,7 @@
     "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "lib": ["ES2022", "DOM"],
+    "lib": ["ES2022", "DOM", "ESNext.Disposable"],
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
@@ -13,11 +13,15 @@
     "skipLibCheck": true,
     "isolatedModules": true,
     "noEmit": true,
-    "types": ["vitest/globals", "@vitest/browser/providers/playwright"],
+    "types": ["vitest/globals", "@vitest/browser-playwright/context"],
     "paths": {
       //Terrible hard-coded, this is really just for autocomplete
       "connected-spaces-platform-bindings": ["../CSP-WASM-Bindings/connected-spaces-platform-bindings.d.ts"]
     }
   },
-  "include": ["**/*.ts"]
+  "include": ["**/*.ts"],
+  // vitest.config.ts is a node-side build script with a different runtime
+  // contract than the browser tests; typechecking it here would require
+  // @types/node and would pollute test code with node globals.
+  "exclude": ["vitest.config.ts"]
 }
