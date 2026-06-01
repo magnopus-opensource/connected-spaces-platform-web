@@ -30,7 +30,7 @@ namespace {
  */
 void DisposeElement(emscripten::val v) {
     if (!bindings::utils::IsBoundHandle(v)) {
-        throw std::runtime_error("deleteElement was passed a value that is not a bound handle");
+        throw std::runtime_error("disposeElement was passed a value that is not a bound handle");
     }
 
     if (v.call<bool>("isDeleted")) {

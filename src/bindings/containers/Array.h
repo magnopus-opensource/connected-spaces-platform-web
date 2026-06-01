@@ -86,7 +86,7 @@ struct BindingType<csp::common::Array<T>>
     using WireType   = ValBinding::WireType;
 
     // Parameter-path only: no [Symbol.dispose] attached. Returns go through
-    // bindings::utils::DisposableArray<T> instead.
+    // bindings::utils::CSPArrayJSDisposable<T> instead.
     static WireType toWireType(const csp::common::Array<T>& arr, rvp::default_tag)
     {
         static_assert(!std::is_pointer_v<T>, "common::Array<T> BindingType does not handle pointer ownership. You may need to add a new specialization.");
