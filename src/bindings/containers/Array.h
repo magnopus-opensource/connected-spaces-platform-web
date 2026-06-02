@@ -45,16 +45,22 @@ namespace bindings::utils
  * In the case of a value return out of CSP `Array<T> Func();`, it populates the optional.
  * In the case of a reference return `Array<T>& Func();`, it points the view to the CSP owned memory directly.
  * You should use `view` to get at the memory here in Wiretype bindings, it'll always point to the right thing.
+ * Note that this does not mean that const refs don't copy over the boundary, just that we avoid a copy
+ * when using this wrapper type. You could get rid of the `view` and just use `owned` and things would work identically,
+ * just with a redundant copy in the bindings for no reason.
  */
  template <typename T>
-class CSPArrayJSDisposable {
-    // ownedArray must be declared before arrayView: member init order follows
-    // declaration order, and the rvalue ctor binds arrayView to *ownedArray.
-    private:
-    std::optional<csp::common::Array<T>> ownedArray;
-    public:
-    //Points to either externally managed memory, or `ownedArray`. Use this in the Wiretype bindings.
-    const csp::common::Array<T>& arrayView;
+  class CSPArrayJSDisposable {
+      // ownedArray must be declared before arrayView: member init order follows
+      // declaration order, and the rvalue ctor binds arrayView to *ownedArray.
+      private:
+        // In theory, if we hit a reference return that is non-copyable, we could use this as the branching axis
+        // for owned/non-owned memory in the wiretype bindings, rather than pointer/value. It would be more
+        // honest in a way, albeit more complex conceptually.
+        std::optional<csp::common::Array<T>> ownedArray; 
+      public:
+        //Points to either externally managed memory, or `ownedArray`. Use this in the Wiretype bindings.
+        const csp::common::Array<T>& arrayView;
 
     CSPArrayJSDisposable(csp::common::Array<T>&& array) : ownedArray(std::move(array)), arrayView(*ownedArray) {}
     CSPArrayJSDisposable(const csp::common::Array<T>& array) : ownedArray(std::nullopt), arrayView(array) {}
@@ -89,12 +95,21 @@ struct BindingType<csp::common::Array<T>>
     // bindings::utils::CSPArrayJSDisposable<T> instead.
     static WireType toWireType(const csp::common::Array<T>& arr, rvp::default_tag)
     {
-        static_assert(!std::is_pointer_v<T>, "common::Array<T> BindingType does not handle pointer ownership. You may need to add a new specialization.");
-
         val newJSArray = val::array();
         for (size_t i = 0; i < arr.Size(); ++i)
         {
-            newJSArray.set(i, arr[i]);
+            if constexpr (std::is_pointer_v<T>)
+            {
+                // Pointer element: hand JS a non-owning reference to CSP-owned memory.
+                // Deleting/disposing the handle will not destroy the C++ object.
+                newJSArray.set(i, arr[i], emscripten::return_value_policy::reference());
+            }
+            else
+            {
+                // Value element: embind copies it across the boundary.
+                // Disposal is necessary (via `using` or otherwise) otherwise these copies are a big leak.
+                newJSArray.set(i, arr[i]);
+            }
         }
         return ValBinding::toWireType(newJSArray, rvp::default_tag{});
     }
@@ -102,11 +117,22 @@ struct BindingType<csp::common::Array<T>>
     static csp::common::Array<T> fromWireType(WireType v)
     {
         val js = ValBinding::fromWireType(v);
-        const unsigned len = js["length"].template as<unsigned>();
+        const unsigned len = js["length"].as<unsigned>();
         csp::common::Array<T> out(len);
         for (unsigned i = 0; i < len; ++i)
         {
-            out[i] = js[i].template as<T>();
+            if constexpr (std::is_pointer_v<T>)
+            {
+                // Pointer element: borrow the raw address from the JS handle (no copy) to pass back to CSP.
+                // The array references memory owned elsewhere, so these pointers dangle
+                // if the underlying objects are deleted while the array still holds them.
+                out[i] = js[i].as<T>(emscripten::allow_raw_pointers());
+            }
+            else
+            {
+                // Value element: embind copies it across the boundary.
+                out[i] = js[i].as<T>();
+            }
         }
         return out;
     }
@@ -121,13 +147,20 @@ struct BindingType<bindings::utils::CSPArrayJSDisposable<T>>
     // Return path. Attaches [Symbol.dispose] to allow `using` storage in JS land.
     static WireType toWireType(const bindings::utils::CSPArrayJSDisposable<T>& wrapper, rvp::default_tag)
     {
-        static_assert(!std::is_pointer_v<T>, "CSPArrayJSDisposable<T> BindingType does not handle pointer ownership. You may need to add a new specialization.");
-
         const auto& arr = wrapper.arrayView;
         val newJSArray = val::array();
         for (size_t i = 0; i < arr.Size(); ++i)
         {
-            newJSArray.set(i, arr[i]);
+            if constexpr (std::is_pointer_v<T>)
+            {
+                // Pointer element: hand JS a NON-OWNING reference to CSP-owned memory.
+                newJSArray.set(i, arr[i], emscripten::return_value_policy::reference());
+            }
+            else
+            {
+                // Value element: embind copies it across the boundary.
+                newJSArray.set(i, arr[i]);
+            }
         }
 
         // Attach [Symbol.dispose] so JS `using` releases bound handles at scope exit.

@@ -75,6 +75,110 @@ describe('CSPFoundation', () => {
   });
 
   /*
+   * This test is very important for our non-owning pointers in array strategy.
+   * If we can rely on the embind proxies being GC'd, we don't need to do anything
+   * very fancy to delete them on disposal. We can just not call delete, and thus
+   * not need to attach a dispose Symbol, to non-owning pointer arrays.
+   */
+  it('reference-returned pointer proxies are eligible for GC when dropped', async () => {
+    using bindingsArrayHelper = csp.BindingsMechanismsTestType.create();
+    using anchor = csp.BindingsTestType.create(1, 'one');
+    bindingsArrayHelper.setArrayOfPointersByValue([anchor]);
+
+    // FinalizationRegistry callbacks fire when the registered object is GC'd.
+    // If proxies were pinned by some embind internal, ~zero callbacks would fire.
+    // If they're GC-eligible, most will fire under memory pressure.
+    let collected = 0;
+    const registry = new FinalizationRegistry(() => { collected++; });
+    const N = 10_000;
+
+    // Inner scope so references drop after the block.
+    (() => {
+      for (let i = 0; i < N; i++) {
+        const arr = bindingsArrayHelper.getArrayOfPointersByValue();
+        registry.register(arr[0]!, undefined);
+        // Intentionally no dispose — that's the whole point.
+      }
+    })();
+
+    // Encourage GC via large allocations. JS engines run major GC when heap
+    // pressure rises; we can't force it but we can make it very likely.
+    for (let i = 0; i < 50; i++) {
+      // Allocate, then let the buffer drop. 
+      new ArrayBuffer(10_000_000);
+    }
+
+    // Yield to the event loop so GC + finalization callbacks drain. Two ticks
+    // because finalizers schedule on a separate microtask queue in some engines.
+    await new Promise(r => setTimeout(r, 100));
+    await new Promise(r => setTimeout(r, 0));
+
+    // Threshold is intentionally generous. Across runs we expect 80-99%, but
+    // GC timing isn't guaranteed; 50% is enough to distinguish "proxies can
+    // be reclaimed" from "proxies are pinned" without flaking on slow GC.
+    expect(collected).toBeGreaterThan(N * 0.5);
+  });
+
+  /*
+   * Test that objects in C++ are disconnected from non-owning proxies.
+   * No matter how many proxies we create, we don't call constructors
+   * or destructors on underlying C++ objects
+   */
+  it('reference-returned proxies do not pin the underlying C++ object', () => {
+    using bindingsArrayHelper = csp.BindingsMechanismsTestType.create();
+    using anchor = csp.BindingsTestType.create(1, 'one');
+    bindingsArrayHelper.setArrayOfPointersByValue([anchor]);
+
+    const baseline = csp.BindingsTestType.aliveCount;
+
+    // Create and drop 100K reference-returned proxies without disposing them.
+    // If the proxies somehow took ownership of the underlying object, aliveCount
+    // would diverge. We expect it to stay flat — only `anchor` owns the C++ instance.
+    for (let i = 0; i < 100_000; i++) {
+      const arr = bindingsArrayHelper.getArrayOfPointersByValue();
+      expect(arr[0]?.value).toBe(1);
+      // Intentionally no dispose — that's the whole point.
+    }
+
+    expect(csp.BindingsTestType.aliveCount).toBe(baseline);
+  });
+
+  /*
+   * This _really_ proves the assumption that finalizers are clearing up any
+   * CPP memory that embind might be using in its internal proxy implementation,
+   * using the wasm heap rather than a semantic check via AliveCount.
+   * This is because any C++ object is actually 2 objects right, it's the actual
+   * C++ memory as you'd expect, but then embind has a proxy object in order
+   * to marshall to JS. I'm concerned about the proxy objects here.
+   * Non-owning pointers are truly non-owning and do not leak.
+   */
+  it('reference-returned proxies do not grow wasm heap', () => {
+    using bindingsArrayHelper = csp.BindingsMechanismsTestType.create();
+    using anchor = csp.BindingsTestType.create(1, 'one');
+    bindingsArrayHelper.setArrayOfPointersByValue([anchor]);
+
+    // Warm up so we can get to steady state behavior, early calls can always be doing
+    // dynamic caching and whatnot, just for safety.
+    for (let i = 0; i < 1000; i++) {
+      const arr = bindingsArrayHelper.getArrayOfPointersByValue();
+      void arr[0]?.value;
+    }
+
+    // Take baseline.
+    const heapBefore = (csp as unknown as { HEAPU8: Uint8Array }).HEAPU8.byteLength;
+
+    // Steady-state loop. If even 1 byte per proxy leaks in C++, ~100K iterations
+    // crosses one 64 KB page boundary and HEAPU8 grows. If nothing leaks, flat.
+    for (let i = 0; i < 100_000; i++) {
+      const arr = bindingsArrayHelper.getArrayOfPointersByValue();
+      void arr[0]?.value;
+    }
+
+    const heapAfter = (csp as unknown as { HEAPU8: Uint8Array }).HEAPU8.byteLength;
+    expect(heapAfter).toBe(heapBefore);
+  });
+
+  /*
    * Array<T> memory tests.
    * We've gone to some effort to allow Array<T>'s (and other containers) that come out of CSP
    * to be declared with `using`, and get automatically deallocated at scope exit. 
@@ -228,6 +332,60 @@ describe('CSPFoundation', () => {
     expect(() => csp.disposeArray(42)).toThrow();
     expect(() => csp.disposeArray('nope')).toThrow();
     expect(() => csp.disposeArray({})).toThrow();
+  });
+
+  it('Cpp Objects accessible via pointer arrays without allocating', () => {
+     using bindingsArrayHelper = csp.BindingsMechanismsTestType.create();
+     const beforeAliveCount = csp.BindingsTestType.aliveCount;
+
+     let pointerArray = bindingsArrayHelper.getArrayOfCppOwnedPointers();
+     expect(pointerArray.length).toBe(2);
+     expect(pointerArray[0]?.name).toBe("One");
+     expect(pointerArray[1]?.value).toBe(2);
+     expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount);
+  });
+
+  it('JS owned object in pointer array that falls out of scope is undefined', () => {
+    using bindingsArrayHelper = csp.BindingsMechanismsTestType.create();
+    const beforeAliveCount = csp.BindingsTestType.aliveCount;
+
+    {
+      using elem1 = csp.BindingsTestType.create(1, "one");
+      const newArr = [elem1]
+
+      bindingsArrayHelper.setArrayOfPointersByValue(newArr);
+      //elem1 falls out of scope, C++ array now holds a dangling pointer. Probably bad behavior from the JS developer :P
+    }
+
+    let roundTripArr = bindingsArrayHelper.getArrayOfPointersByValue();
+
+    expect(roundTripArr.length).toBe(1);
+    //Actually accessing the dangling pointer would be non-deterministic UB, so, we'll just use aliveCount
+    //Elem1 is disposed, despite the array length still being 1.
+    expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount);
+  });
+
+  it('Explicit delete of elements in pointer array deletes underlying C++ memory', () => {
+    using bindingsArrayHelper = csp.BindingsMechanismsTestType.create();
+    const beforeAliveCount = csp.BindingsTestType.aliveCount;
+
+    // No `using` here: we're managing lifetime explicitly via .delete() on the
+    // round-trip handles below, to observe what that does to AliveCount.
+    const elem1 = csp.BindingsTestType.create(1, "one");
+    const elem2 = csp.BindingsTestType.create(2, "two");
+    expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount + 2);
+
+    bindingsArrayHelper.setArrayOfPointersByValue([elem1, elem2]);
+    let pointerArray = bindingsArrayHelper.getArrayOfPointersByValue();
+
+    pointerArray[0]!.delete();
+    expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount + 1);
+
+    pointerArray[1]!.delete();
+    expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount);
+
+    // elem1 / elem2 are now dangling JS handles — their C++ objects were
+    // destroyed via the round-trip handles. Don't dispose or .delete() them.
   });
 
 });

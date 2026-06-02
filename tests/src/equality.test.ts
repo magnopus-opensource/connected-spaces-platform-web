@@ -166,4 +166,30 @@ describe('elementEquals', () => {
     expect(csp.elementEquals(a, differingInnerType)).toBe(false);
     expect(csp.elementEquals(a, differingOuterShape)).toBe(false);
   });
+
+  it('Array of pointers equate based on underlying object equality', () => {
+    using bindingsArrayHelper = csp.BindingsMechanismsTestType.create();
+     
+    let ptrList1 = bindingsArrayHelper.getArrayOfCppOwnedPointers();
+
+    // Mirror the data the the CppOwnedPointers gives us
+    using entry1 = csp.BindingsTestType.create(1, 'One');
+    using entry2 = csp.BindingsTestType.create(2, 'Two');
+
+    bindingsArrayHelper.setArrayOfPointersByValue([entry1, entry2]);
+    let ptrList2 = bindingsArrayHelper.getArrayOfPointersByValue();
+
+    // Different arrays, but still equivalent according to equality operators
+    expect(ptrList1).not.equals(ptrList2);
+    expect(csp.arrayEquals(ptrList1, ptrList2)).toBe(true);
+
+    // Being paranoid, check that these are actually different arrays with disconnected elements
+     if (ptrList1[0] != null){
+      ptrList1[0].name = "mutatedOne";
+     }
+
+     expect(csp.arrayEquals(ptrList1, ptrList2)).toBe(false);
+     expect(ptrList1[0]?.name).equals("mutatedOne");
+     expect(ptrList2[0]?.name).equals("One");
+  });
 });

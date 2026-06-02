@@ -36,7 +36,7 @@ target_link_options(connected-spaces-platform-bindings PRIVATE
     -lwebsocket.js
     -sFETCH
     -sPTHREAD_POOL_SIZE_STRICT=0
-    "-sEXPORTED_FUNCTIONS=['_malloc','_free','_exit']"
+    "-sEXPORTED_FUNCTIONS=['_malloc','_free','_exit']" 
     -sEXPORT_ES6=1
     -sMODULARIZE=1
     -sEXPORT_NAME=createModule
@@ -45,7 +45,7 @@ target_link_options(connected-spaces-platform-bindings PRIVATE
     -sALLOW_MEMORY_GROWTH=1
     -sINITIAL_MEMORY=33554432
     -sMAXIMUM_MEMORY=1073741824
-    "-sEXPORTED_RUNTIME_METHODS=['ccall','setValue','getValue','addFunction','removeFunction','UTF8ToString','stringToUTF8','lengthBytesUTF8']"
+    "-sEXPORTED_RUNTIME_METHODS=['ccall','setValue','getValue','addFunction','removeFunction','UTF8ToString','stringToUTF8','lengthBytesUTF8','HEAPU8']"
     "-sINCOMING_MODULE_JS_API=['buffer','fetchSettings','instantiateWasm','locateFile','mainScriptUrlOrBlob','wasmMemory']"
     --emit-tsd=connected-spaces-platform-bindings.d.ts
     --no-entry
