@@ -286,7 +286,6 @@ EMSCRIPTEN_BINDINGS(CSPTestBindings)
         .function("getListOfCppOwnedPointers", &BindingMechanismsTestType::GetListOfCppOwnedPointers)
         .function("setListOfPointersByValue(value)", &BindingMechanismsTestType::SetListOfPointersByValue)
         .function("setListOfPointersByConstRef(value)", &BindingMechanismsTestType::SetListOfPointersByConstRef)
-        /////
          .function("getMapBasicTypeByValue", +[](const BindingMechanismsTestType& self) {
             return bindings::utils::CSPMapJSDisposable<int, int>{self.GetMapBasicTypeByValue()};
         })
