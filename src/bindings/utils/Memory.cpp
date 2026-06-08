@@ -86,7 +86,8 @@ void DisposeArray(emscripten::val arr) {
  * a map return happens to have.
  */
 void DisposeMap(emscripten::val map) {
-    if (!map.instanceof(emscripten::val::global("Map"))) {
+    static const emscripten::val globalMap = emscripten::val::global("Map");
+    if (!map.instanceof(globalMap)) {
         throw std::runtime_error("disposeMap was passed a non-Map value");
     }
     // Array.from(map.values()) yields the values in an array, so we can reuse the array disposal machinery we already have.
