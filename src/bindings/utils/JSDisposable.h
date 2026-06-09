@@ -51,5 +51,7 @@ namespace bindings::utils
     JSDisposable(JSDisposable&&) = delete;
     JSDisposable& operator=(const JSDisposable&) = delete;
     JSDisposable& operator=(JSDisposable&&) = delete;
+    // reject const prvalues out of an overabundance of caution. Stop const values going to the const-ref constructor and dangling.
+    JSDisposable(const T&& obj) = delete;  
 };
 } // namespace bindings::utils
