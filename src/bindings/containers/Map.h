@@ -8,7 +8,7 @@
 #include <type_traits>
 
 /*
- * Binding machinery for csp::common::Map 
+ * Binding machinery for csp::common::Map
  * Include this file, then register bindings to function that consume/return List as follows.
 ```
 EMSCRIPTEN_BINDINGS(MyBindingsModule)
@@ -54,7 +54,7 @@ template <> struct IsValidMapKey<csp::common::String> : std::true_type {};
  * registered inside EMSCRIPTEN_BINDINGS via emscripten::register_type<>("...") so embind
  * has a typeid->name entry (otherwise "Missing binding for type" at module init) and the
  * generated .d.ts gets a meaningful element type rather than `any`.
- * 
+ *
  * For example, to register both an argument type, and a return type that is `using` enabled :
  *  emscripten::register_type<csp::common::Map<KeyType, ValueType>>("Map<KeyType, StorageType>");
  *  emscripten::register_type<bindings::utils::CSPMapDisposable<KeyType, ValueType>>("(Map<KeyType, StorageType> & Disposable)");
@@ -162,8 +162,13 @@ struct BindingType<bindings::utils::JSDisposable<csp::common::Map<Key, Value>>>
         // Attach [Symbol.dispose] so JS `using` releases bound handles at scope exit.
         static const val symbolDispose = val::global("Symbol")["dispose"];
         static const val disposeMapFn = val::module_property("disposeMap");
-        // bind our disposal function with the new array arg to the arrays Symbol.dispose slot.
-        newJSMap.set(symbolDispose, disposeMapFn.call<val>("bind", val::undefined(), newJSMap));
+
+        // Bind our disposal function with the new array arg to the arrays Symbol.dispose slot.
+        // We define it as a non-enumerable property using a descriptor.
+        val descriptor = val::object();
+        descriptor.set("value", disposeMapFn.call<val>("bind", val::undefined(), newJSMap));
+        descriptor.set("enumerable", false);
+        val::global("Object").call<void>("defineProperty", newJSMap, symbolDispose, descriptor);
 
         return ValBinding::toWireType(newJSMap, rvp::default_tag{});
     }

@@ -90,4 +90,32 @@ describe('Map bindings', () => {
     expect(helper.getMapOfCppOwnedPointers().get(1)?.name).equals('mutatedOne');
     expect(csp.elementEquals(ptrMap.get(1), helper.getMapOfCppOwnedPointers().get(1))).toBe(true);
   });
+
+  it('Map dispose function is not enumerable', () => {
+    using bindingsMapHelper = csp.BindingsMechanismsTestType.create();
+    const newMap = new Map([[1, 10], [2, 20], [3, 30]]);
+
+    bindingsMapHelper.setMapBasicTypeByValue(newMap);
+    using roundTripMap = bindingsMapHelper.getMapBasicTypeByValue();
+
+    // Check that the dispose function exists
+    expect(Symbol.dispose in roundTripMap).toBe(true);
+    expect(typeof roundTripMap[Symbol.dispose]).toBe('function');
+
+    expect(roundTripMap.propertyIsEnumerable(Symbol.dispose)).toBe(false);
+  });
+
+  it('Map round trip strict Vitest equality', () => {
+    using bindingsMapHelper = csp.BindingsMechanismsTestType.create();
+    const newMap = new Map([[1, 10], [2, 20], [3, 30]]);
+
+    bindingsMapHelper.setMapBasicTypeByValue(newMap);
+    using roundTripMap = bindingsMapHelper.getMapBasicTypeByValue();
+
+    // Ensure that the round-tripped map is deeply equal to the original using the Vitest matcher.
+    // It checks all enumerable properties as well as map contents, so it will fail if the dispose
+    // function is enumerable. This fact could otherwise trip up developers writing tests on maps
+    // coming out of the bindings.
+    expect(roundTripMap).toStrictEqual(newMap);
+  });
 });
