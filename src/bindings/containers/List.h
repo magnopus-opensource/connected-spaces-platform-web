@@ -7,7 +7,7 @@
 #include <type_traits>
 
 /*
- * Binding machinery for csp::common::List 
+ * Binding machinery for csp::common::List
  * Include this file, then register bindings to function that consume/return List as follows.
 ```
 EMSCRIPTEN_BINDINGS(MyBindingsModule)
@@ -33,7 +33,7 @@ emscripten::class_<TypeToBind>("TypeToBind")
  * registered inside EMSCRIPTEN_BINDINGS via emscripten::register_type<>("...") so embind
  * has a typeid->name entry (otherwise "Missing binding for type" at module init) and the
  * generated .d.ts gets a meaningful element type rather than `any`.
- * 
+ *
  * For example, to register both an argument type, and a return type that is `using` enabled :
  *  emscripten::register_type<csp::common::List<MyType>>("MyType[]");
  *  emscripten::register_type<bindings::utils::CSPListDisposable<MyType>>("(MyType[] & Disposable)");
@@ -121,8 +121,13 @@ struct BindingType<bindings::utils::JSDisposable<csp::common::List<T>>>
         // Attach [Symbol.dispose] so JS `using` releases bound handles at scope exit.
         static const val symbolDispose = val::global("Symbol")["dispose"];
         static const val disposeArrayFn = val::module_property("disposeArray");
-        // bind our disposal function with the new array arg to the arrays Symbol.dispose slot.
-        newJSArray.set(symbolDispose, disposeArrayFn.call<val>("bind", val::undefined(), newJSArray));
+
+        // Bind our disposal function with the new array arg to the arrays Symbol.dispose slot.
+        // We define it as a non-enumerable property using a descriptor.
+        val descriptor = val::object();
+        descriptor.set("value", disposeArrayFn.call<val>("bind", val::undefined(), newJSArray));
+        descriptor.set("enumerable", false);
+        val::global("Object").call<void>("defineProperty", newJSArray, symbolDispose, descriptor);
 
         return ValBinding::toWireType(newJSArray, rvp::default_tag{});
     }

@@ -23,23 +23,24 @@ describe('CSPFoundation', () => {
     }
   });
 
-/* 
+/*
  * Test the binding of Array<T>, using internal binding test types (at least at the moment)
  *
  * Remember that [1,2] === [1,2] is a FALSE statement in JS. I know, i know, I find
  * this troubling too, but that's the way it is.
  * Native style deep equality for containers is provided via utility methods, which
  * seems to be the JS way of doing this sort of thing, you can't overload operators
- * or do any sort of fudging to make JS equality operators not perform identity equality. 
+ * or do any sort of fudging to make JS equality operators not perform identity equality.
  */
 
   it('Array equality', () => {
     using elem1 = csp.BindingsTestType.create(1, "one");
     using elem2 = csp.BindingsTestType.create(2, "two");
     using wrong = csp.BindingsTestType.create(999, "nope");
-    // vitest's `toEqual` would have wrongly passed here because both arrays
-    // contain BindingsTestType instances — that's the whole reason we use
-    // arrayEquals instead.
+
+    // Vitest's `toEqual` would have wrongly passed here because both arrays
+    // contain BindingsTestType instances without JS enumerable properties - that's the whole reason
+    // we use arrayEquals instead.
     expect(csp.arrayEquals([elem1, elem2], [elem1, wrong])).toBe(false);
     expect(csp.arrayEquals([elem1, elem2], [elem1, elem2])).toBe(true);
   });
@@ -155,9 +156,8 @@ describe('CSPFoundation', () => {
       // Mutating one array should not effect the other
       using replacement = csp.BindingsTestType.create(3, "three");
       roundTripArr1[0] = replacement;
-      
-      expect(csp.arrayEquals(roundTripArr1, roundTripArr2)).toBe(false);
 
+      expect(csp.arrayEquals(roundTripArr1, roundTripArr2)).toBe(false);
   });
 
   it('Setting a sparse array throws', (ctx) => {
@@ -302,7 +302,7 @@ describe('CSPFoundation', () => {
 
   it('Mutating element via pointer array is reflected in original handle', () => {
      using bindingsArrayHelper = csp.BindingsMechanismsTestType.create();
-     
+
      let ptrList = bindingsArrayHelper.getArrayOfCppOwnedPointers();
      expect(ptrList[0]?.name).equals("One");
 
@@ -317,7 +317,7 @@ describe('CSPFoundation', () => {
 
   it('Pointer arrays are independent, pointed to objects are not', () => {
     using bindingsArrayHelper = csp.BindingsMechanismsTestType.create();
-     
+
     let ptrList1 = bindingsArrayHelper.getArrayOfCppOwnedPointers();
     let ptrList2 = bindingsArrayHelper.getArrayOfCppOwnedPointers();
     expect(csp.arrayEquals(ptrList1, ptrList2)).toBe(true);
@@ -329,7 +329,7 @@ describe('CSPFoundation', () => {
 
     expect(ptrList1[0]?.name).equals("mutatedOne");
     expect(ptrList2[0]?.name).equals("mutatedOne");
-    
+
     //Add an element to one of the lists
     using elem1 = csp.BindingsTestType.create(1, "one");
     ptrList1.push(elem1);
@@ -340,6 +340,33 @@ describe('CSPFoundation', () => {
     expect(csp.arrayEquals(ptrList1, ptrList2)).toBe(false);
   });
 
- 
+  it('Array dispose function is not enumerable', () => {
+    using bindingsArrayHelper = csp.BindingsMechanismsTestType.create();
+    const newArr = [1, 2, 3];
+
+    bindingsArrayHelper.setArrayBasicTypeByValue(newArr);
+    using roundTripArr = bindingsArrayHelper.getArrayBasicTypeByValue();
+
+    // Check that the dispose function exists
+    expect(Symbol.dispose in roundTripArr).toBe(true);
+    expect(typeof roundTripArr[Symbol.dispose]).toBe('function');
+
+    expect(roundTripArr.propertyIsEnumerable(Symbol.dispose)).toBe(false);
+  });
+
+  it('Array round trip strict Vitest equality', () => {
+    using bindingsArrayHelper = csp.BindingsMechanismsTestType.create();
+    const newArr = [1, 2, 3];
+
+    bindingsArrayHelper.setArrayBasicTypeByValue(newArr);
+    using roundTripArr = bindingsArrayHelper.getArrayBasicTypeByValue();
+
+    // Ensure that the round-tripped array is deeply equal to the original using the Vitest matcher.
+    // It checks all enumerable properties as well as array contents, so it will fail if the dispose
+    // function is enumerable. This fact could otherwise trip up developers writing tests on arrays
+    // coming out of the bindings.
+    expect(roundTripArr).toStrictEqual(newArr);
+  });
+
 });
 

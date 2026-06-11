@@ -90,4 +90,32 @@ describe('List bindings', () => {
     expect(helper.getListOfCppOwnedPointers()[0]?.name).equals('mutatedOne');
     expect(csp.elementEquals(ptrList[0], helper.getListOfCppOwnedPointers()[0])).toBe(true);
   });
+
+  it('List dispose function is not enumerable', () => {
+    using helper = csp.BindingsMechanismsTestType.create();
+    const newList = [1, 2, 3];
+
+    helper.setListBasicTypeByValue(newList);
+    using roundTripList = helper.getListBasicTypeByValue();
+
+    // Check that the dispose function exists
+    expect(Symbol.dispose in roundTripList).toBe(true);
+    expect(typeof roundTripList[Symbol.dispose]).toBe('function');
+
+    expect(roundTripList.propertyIsEnumerable(Symbol.dispose)).toBe(false);
+  });
+
+  it('List round trip strict Vitest equality', () => {
+    using helper = csp.BindingsMechanismsTestType.create();
+    const newList = [1, 2, 3];
+
+    helper.setListBasicTypeByValue(newList);
+    using roundTripList = helper.getListBasicTypeByValue();
+
+    // Ensure that the round-tripped list is deeply equal to the original array using the Vitest
+    // matcher. It checks all enumerable properties as well as array contents, so it will fail if
+    // the dispose function is enumerable. This fact could otherwise trip up developers writing
+    // tests on lists coming out of the bindings.
+    expect(roundTripList).toStrictEqual(newList);
+  });
 });
