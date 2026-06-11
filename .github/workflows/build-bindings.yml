@@ -52,11 +52,11 @@ jobs:
       - name: Install Conan
         shell: pwsh
         run: pip install "conan==2.27.0"
-        
+
       - name: Detect Conan build profile
         shell: pwsh
         run: conan profile detect --force
-        
+
       - name: Conan install
         shell: bash
         run: |
@@ -85,7 +85,7 @@ jobs:
       - name: Install Test dependencies
         shell: bash
         working-directory: ./tests
-        run: npm install
+        run: npm ci
 
       - name: Install Playwright browsers
         shell: bash
