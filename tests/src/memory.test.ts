@@ -388,5 +388,231 @@ describe('CSPFoundation', () => {
     // destroyed via the round-trip handles. Don't dispose or .delete() them.
   });
 
+  /*
+   * Map<K, V> memory tests.
+   * These mirror the Array<T> memory tests above — Maps that come out of CSP are likewise
+   * `using`-enabled and route through disposeMap at scope exit. The key difference is that
+   * disposeMap disposes the map's *values* only; keys are constrained to primitives and so
+   * own no C++ memory (see the keys-untouched test below).
+   */
+
+  it('Using on a returned map of handles releases every value at scope exit', () => {
+    using bindingsMapHelper = csp.BindingsMechanismsTestType.create();
+    using elem1 = csp.BindingsTestType.create(1, 'one');
+    using elem2 = csp.BindingsTestType.create(2, 'two');
+    bindingsMapHelper.setMapFullTypeByValue(new Map([[1, elem1], [2, elem2]]));
+
+    const beforeGet = csp.BindingsTestType.aliveCount;
+    {
+      using map = bindingsMapHelper.getMapFullTypeByValue();
+      expect(csp.BindingsTestType.aliveCount).toBe(beforeGet + 2);
+      expect(map.size).toBe(2);
+    }
+    // Scope exit, destructors should run.
+    expect(csp.BindingsTestType.aliveCount).toBe(beforeGet);
+  });
+
+  it('Using on a const-ref returned map of handles releases every value at scope exit', () => {
+    using bindingsMapHelper = csp.BindingsMechanismsTestType.create();
+    using elem1 = csp.BindingsTestType.create(1, 'one');
+    bindingsMapHelper.setMapFullTypeByValue(new Map([[1, elem1]]));
+
+    const beforeGet = csp.BindingsTestType.aliveCount;
+    {
+      using map = bindingsMapHelper.getMapFullTypeByConstRef();
+      expect(csp.BindingsTestType.aliveCount).toBe(beforeGet + 1);
+      expect(map.size).toBe(1);
+    }
+    // Scope exit, destructors should run.
+    expect(csp.BindingsTestType.aliveCount).toBe(beforeGet);
+  });
+
+  it('Using on a map of basic types is a tolerated no-op on disposal', () => {
+    using bindingsMapHelper = csp.BindingsMechanismsTestType.create();
+    bindingsMapHelper.setMapBasicTypeByValue(new Map([[1, 10], [2, 20], [3, 30]]));
+    expect(() => {
+      using map = bindingsMapHelper.getMapBasicTypeByValue();
+      expect(map.size).toBe(3);
+    }).not.toThrow();
+  });
+
+  it('Releases map handles when the scope exits via exception', () => {
+    using bindingsMapHelper = csp.BindingsMechanismsTestType.create();
+    using elem1 = csp.BindingsTestType.create(1, 'one');
+    using elem2 = csp.BindingsTestType.create(2, 'two');
+    bindingsMapHelper.setMapFullTypeByValue(new Map([[1, elem1], [2, elem2]]));
+
+    const beforeGet = csp.BindingsTestType.aliveCount;
+    expect(() => {
+      using map = bindingsMapHelper.getMapFullTypeByValue();
+      expect(csp.BindingsTestType.aliveCount).toBe(beforeGet + 2);
+      throw new Error('Oh no!');
+    }).toThrow('Oh no!');
+    expect(csp.BindingsTestType.aliveCount).toBe(beforeGet);
+  });
+
+  it('Disposing an empty returned map is a no-op', () => {
+    using bindingsMapHelper = csp.BindingsMechanismsTestType.create();
+    bindingsMapHelper.setMapFullTypeByValue(new Map());
+    const beforeGet = csp.BindingsTestType.aliveCount;
+    {
+      using map = bindingsMapHelper.getMapFullTypeByValue();
+      expect(csp.BindingsTestType.aliveCount).toBe(beforeGet); // No values in empty map, no alive count increment
+      expect(map.size).toBe(0);
+    }
+    expect(csp.BindingsTestType.aliveCount).toBe(beforeGet);
+  });
+
+  it('Map getter result without `using` leaks until manually disposed', () => {
+    using bindingsMapHelper = csp.BindingsMechanismsTestType.create();
+    using elem1 = csp.BindingsTestType.create(1, 'one');
+    bindingsMapHelper.setMapFullTypeByValue(new Map([[1, elem1]]));
+
+    const beforeGet = csp.BindingsTestType.aliveCount;
+    const leaked = bindingsMapHelper.getMapFullTypeByValue();
+    expect(csp.BindingsTestType.aliveCount).toBe(beforeGet + 1);
+    // Symbol.dispose is reachable and cleans up.
+    leaked[Symbol.dispose]();
+    expect(csp.BindingsTestType.aliveCount).toBe(beforeGet);
+  });
+
+  it('Disposing a returned map does not affect the underlying C++ storage', () => {
+    using bindingsMapHelper = csp.BindingsMechanismsTestType.create();
+    using elem1 = csp.BindingsTestType.create(1, 'one');
+    bindingsMapHelper.setMapFullTypeByValue(new Map([[1, elem1]]));
+
+    const beforeGet = csp.BindingsTestType.aliveCount;
+    { using map = bindingsMapHelper.getMapFullTypeByValue(); }
+    expect(csp.BindingsTestType.aliveCount).toBe(beforeGet);
+    // Storage survives despite the scope exit — we can fetch again.
+    using map2 = bindingsMapHelper.getMapFullTypeByValue();
+    expect(map2.get(1)!.value).toBe(1);
+  });
+
+  it('Pre-deleting a value in a returned map does not break dispose', () => {
+    using bindingsMapHelper = csp.BindingsMechanismsTestType.create();
+    using elem1 = csp.BindingsTestType.create(1, 'one');
+    using elem2 = csp.BindingsTestType.create(2, 'two');
+    bindingsMapHelper.setMapFullTypeByValue(new Map([[1, elem1], [2, elem2]]));
+
+    const beforeGet = csp.BindingsTestType.aliveCount;
+    expect(() => {
+      using map = bindingsMapHelper.getMapFullTypeByValue();
+      map.get(1)!.delete();
+    }).not.toThrow();
+    expect(csp.BindingsTestType.aliveCount).toBe(beforeGet);
+
+    // The returned map is a copy, so explicitly deleting a value must not touch the
+    // underlying C++ storage — re-fetching still yields both entries.
+    using map2 = bindingsMapHelper.getMapFullTypeByValue();
+    expect(map2.size).toBe(2);
+    expect(map2.get(1)!.value).toBe(1);
+    expect(map2.get(2)!.value).toBe(2);
+  });
+
+  it('disposeMap is directly callable as a manual alternative to using', () => {
+    using bindingsMapHelper = csp.BindingsMechanismsTestType.create();
+    using elem1 = csp.BindingsTestType.create(1, 'one');
+    bindingsMapHelper.setMapFullTypeByValue(new Map([[1, elem1]]));
+
+    const beforeGet = csp.BindingsTestType.aliveCount;
+    const map = bindingsMapHelper.getMapFullTypeByValue();
+    expect(csp.BindingsTestType.aliveCount).toBe(beforeGet + 1);
+    csp.disposeMap(map);
+    expect(csp.BindingsTestType.aliveCount).toBe(beforeGet);
+  });
+
+  it('disposeMap on a plain JS Map of primitives is tolerated', () => {
+    expect(() => csp.disposeMap(new Map([[1, 10], [2, 20]]))).not.toThrow();
+    expect(() => csp.disposeMap(new Map())).not.toThrow();
+  });
+
+  it('disposeMap disposes handles nested in array values', () => {
+    const a = csp.BindingsTestType.create(1, 'one');
+    const b = csp.BindingsTestType.create(2, 'two');
+    const before = csp.BindingsTestType.aliveCount;
+    // Value disposal routes through Array.from(map.values()) then the array walker, so it
+    // recurses into array values just like disposeArray recurses into nested arrays.
+    csp.disposeMap(new Map([[1, [a, b]]]));
+    expect(csp.BindingsTestType.aliveCount).toBe(before - 2);
+  });
+
+  it('disposeMap throws on non-Map input', () => {
+    expect(() => csp.disposeMap(42)).toThrow();
+    expect(() => csp.disposeMap('nope')).toThrow();
+    expect(() => csp.disposeMap({})).toThrow();
+    expect(() => csp.disposeMap([])).toThrow(); // arrays are not Maps
+  });
+
+  it('disposeMap disposes values but leaves keys untouched', () => {
+    // Real bindings constrain keys to primitives, but disposeMap takes `any`, so we can
+    // hand it a Map with a bound handle as *both* key and value to prove only the value
+    // is disposed. This is the core contract of disposeMap.
+    const keyHandle = csp.BindingsTestType.create(1, 'key');
+    const valueHandle = csp.BindingsTestType.create(2, 'value');
+    const before = csp.BindingsTestType.aliveCount;
+
+    csp.disposeMap(new Map([[keyHandle, valueHandle]]));
+
+    // Exactly one disposal: the value. The key handle is spared.
+    expect(csp.BindingsTestType.aliveCount).toBe(before - 1);
+    expect(keyHandle.isDeleted()).toBe(false);
+    expect(valueHandle.isDeleted()).toBe(true);
+
+    keyHandle.delete(); // Clean up the key we deliberately kept alive.
+  });
+
+  it('Cpp objects accessible via pointer maps without allocating', () => {
+    using bindingsMapHelper = csp.BindingsMechanismsTestType.create();
+    const beforeAliveCount = csp.BindingsTestType.aliveCount;
+
+    let pointerMap = bindingsMapHelper.getMapOfCppOwnedPointers();
+    expect(pointerMap.size).toBe(2);
+    expect(pointerMap.get(1)?.name).toBe('One');
+    expect(pointerMap.get(2)?.value).toBe(2);
+    expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount);
+  });
+
+  it('JS owned object in pointer map that falls out of scope is undefined', () => {
+    using bindingsMapHelper = csp.BindingsMechanismsTestType.create();
+    const beforeAliveCount = csp.BindingsTestType.aliveCount;
+
+    {
+      using elem1 = csp.BindingsTestType.create(1, 'one');
+      bindingsMapHelper.setMapOfPointersByValue(new Map([[1, elem1]]));
+      // elem1 falls out of scope, C++ map now holds a dangling pointer. Probably bad behavior from the JS developer :P
+    }
+
+    let roundTripMap = bindingsMapHelper.getMapOfPointersByValue();
+
+    expect(roundTripMap.size).toBe(1);
+    // Actually accessing the dangling pointer would be non-deterministic UB, so we'll just use aliveCount.
+    // elem1 is disposed, despite the map size still being 1.
+    expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount);
+  });
+
+  it('Explicit delete of values in pointer map deletes underlying C++ memory', () => {
+    using bindingsMapHelper = csp.BindingsMechanismsTestType.create();
+    const beforeAliveCount = csp.BindingsTestType.aliveCount;
+
+    // No `using` here: we're managing lifetime explicitly via .delete() on the
+    // round-trip handles below, to observe what that does to AliveCount.
+    const elem1 = csp.BindingsTestType.create(1, "one");
+    const elem2 = csp.BindingsTestType.create(2, "two");
+    expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount + 2);
+
+    bindingsMapHelper.setMapOfPointersByValue(new Map([[1, elem1], [2, elem2]]));
+    let pointerMap = bindingsMapHelper.getMapOfPointersByValue();
+
+    pointerMap.get(1)!.delete();
+    expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount + 1);
+
+    pointerMap.get(2)!.delete();
+    expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount);
+
+    // elem1 / elem2 are now dangling JS handles — their C++ objects were
+    // destroyed via the round-trip handles. Don't dispose or .delete() them.
+  });
+
 });
 

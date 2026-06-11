@@ -2,6 +2,7 @@
 #include "emscripten/bind.h"
 #include "emscripten/val.h"
 #include "CSP/Common/List.h"
+#include "../utils/JSDisposable.h"
 #include <optional>
 #include <type_traits>
 
@@ -12,12 +13,12 @@
 EMSCRIPTEN_BINDINGS(MyBindingsModule)
 {
 emscripten::register_type<csp::common::List<StorageType>>("StorageType[]");
-emscripten::register_type<bindings::utils::CSPListJSDisposable<StorageType>>("(StorageType[] & Disposable)");
+emscripten::register_type<bindings::utils::JSDisposable<csp::common::List<StorageType>>>("(StorageType[] & Disposable)");
 
 emscripten::class_<TypeToBind>("TypeToBind")
     .class_function("create", +[](){ return TypeToBind(); })
     .function("functionThatReturnsList", +[](const TypeToBind& self) {
-        return bindings::utils::CSPListJSDisposable<StorageType>{self.FunctionThatReturnsList()};
+        return bindings::utils::JSDisposable<csp::common::List<StorageType>>{self.FunctionThatReturnsList()};
     })
     .function("functionThatTakesList(value)", &TypeToBind::FunctionThatTakesList);
 }
@@ -25,54 +26,6 @@ emscripten::class_<TypeToBind>("TypeToBind")
 *
 * Lists and Arrays are conceptually identical from a JS/TS perspective, they both present as native JS/TS arrays.
 */
-
-namespace bindings::utils
-{
-/*
- * Return-only wrapper for lists crossing C++ -> JS.
- *
- * TS's `using` requires the static type to declare `[Symbol.dispose]`, but embind
- * registers one TS name per C++ type and uses it in both return and parameter
- * positions. We can't make `csp::common::List<T>` itself appear as `T[] & Disposable`
- * without breaking typescript validation on setters for regular value arrays of primitives.
- * (a plain `[1,2,3]` literal isn't assignable to that type).
- * So, we route returns through a distinct wrapper type registered
- * as `(T[] & Disposable)`, while `csp::common::List<T>` stays `T[]` for parameters.
- *
- * This does mean you need to convert to this type at the binding site for returns,
- * which is a trade-off. Forgetting to do this will cause the typescript type checker
- * to disallow you from using `using` when storing a list return.
- *
- * Supports both owned and non owned memory.
- * In the case of a value return out of CSP `Array<T> Func();`, it populates the optional.
- * In the case of a reference return `Array<T>& Func();`, it points the view to the CSP owned memory directly.
- * You should use `view` to get at the memory here in Wiretype bindings, it'll always point to the right thing.
- * Note that this does not mean that const refs don't copy over the boundary, just that we avoid a copy
- * when using this wrapper type. You could get rid of the `view` and just use `owned` and things would work identically,
- * just with a redundant copy in the bindings for no reason.
- */
- template <typename T>
-  class CSPListJSDisposable {
-      // ownedList must be declared before listView: member init order follows
-      // declaration order, and the rvalue ctor binds listView to *ownedList.
-      private:
-        // In theory, if we hit a reference return that is non-copyable, we could use this as the branching axis
-        // for owned/non-owned memory in the wiretype bindings, rather than pointer/value. It would be more
-        // honest in a way, albeit more complex conceptually.
-        std::optional<csp::common::List<T>> ownedList;
-      public:
-        //Points to either externally managed memory, or `ownedList`. Use this in the Wiretype bindings.
-        const csp::common::List<T>& listView;
-
-    CSPListJSDisposable(csp::common::List<T>&& array) : ownedList(std::move(array)), listView(*ownedList) {}
-    CSPListJSDisposable(const csp::common::List<T>& array) : ownedList(std::nullopt), listView(array) {}
-
-    CSPListJSDisposable(const CSPListJSDisposable&) = delete;
-    CSPListJSDisposable(CSPListJSDisposable&&) = delete;
-    CSPListJSDisposable& operator=(const CSPListJSDisposable&) = delete;
-    CSPListJSDisposable& operator=(CSPListJSDisposable&&) = delete;
-};
-} // namespace bindings::utils
 
 /*
  * Bind List to a js/ts type. Will most likely copy each element (js.set calls ToWireType).
@@ -94,7 +47,7 @@ struct BindingType<csp::common::List<T>>
     using WireType   = ValBinding::WireType;
 
     // Parameter-path only: no [Symbol.dispose] attached. Returns go through
-    // bindings::utils::CSPListJSDisposable<T> instead.
+    // bindings::utils::JSDisposable<csp::common::List<T>> instead.
     static WireType toWireType(const csp::common::List<T>& list, rvp::default_tag)
     {
         val newJSArray = val::array();
@@ -141,15 +94,15 @@ struct BindingType<csp::common::List<T>>
 };
 
 template <typename T>
-struct BindingType<bindings::utils::CSPListJSDisposable<T>>
+struct BindingType<bindings::utils::JSDisposable<csp::common::List<T>>>
 {
     using ValBinding = BindingType<val>;
     using WireType   = ValBinding::WireType;
 
     // Return path. Attaches [Symbol.dispose] to allow `using` storage in JS land.
-    static WireType toWireType(const bindings::utils::CSPListJSDisposable<T>& wrapper, rvp::default_tag)
+    static WireType toWireType(const bindings::utils::JSDisposable<csp::common::List<T>>& wrapper, rvp::default_tag)
     {
-        const auto& list = wrapper.listView;
+        const auto& list = wrapper.view;
         val newJSArray = val::array();
         for (size_t i = 0; i < list.Size(); ++i)
         {
