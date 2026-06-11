@@ -3,6 +3,7 @@
 #include "emscripten/val.h"
 #include "CSP/Common/Map.h"
 #include "CSP/Common/String.h"
+#include "../utils/JSDisposable.h"
 #include <optional>
 #include <type_traits>
 
@@ -13,12 +14,12 @@
 EMSCRIPTEN_BINDINGS(MyBindingsModule)
 {
 emscripten::register_type<csp::common::Map<KeyType, StorageType>>("Map<KeyType, StorageType>");
-emscripten::register_type<bindings::utils::CSPMapJSDisposable<KeyType, StorageType>>("(Map<KeyType, STorageType> & Disposable)");
+emscripten::register_type<bindings::utils::JSDisposable<csp::common::Map<KeyType, StorageType>>>("(Map<KeyType, STorageType> & Disposable)");
 
 emscripten::class_<TypeToBind>("TypeToBind")
     .class_function("create", +[](){ return TypeToBind(); })
     .function("functionThatReturnsMap", +[](const TypeToBind& self) {
-        return bindings::utils::CSPMapJSDisposable<KeyType, StorageType>{self.FunctionThatReturnsMap()};
+        return bindings::utils::JSDisposable<csp::common::Map<KeyType, StorageType>>{self.FunctionThatReturnsMap()};
     })
     .function("functionThatTakesMap(value)", &TypeToBind::FunctionThatTakesMap);
 }
@@ -38,61 +39,14 @@ namespace bindings::utils
 * Somewhat tangential, although the same root reasoning, we also don't bother
 * to do disposal cleanup of keys, as they should be primitives and thus not
 * have owning memory implications.
+*
+* Note this probably doesn't currently support enums, but could, just use std::is_enum if that becomes necessary.
 */
 template <typename K>
 struct IsValidMapKey : std::bool_constant<std::is_integral_v<K>> {};
+//Exact match, which is almost always what you want for map keys (will reject cv-qualified references)
 template <> struct IsValidMapKey<csp::common::String> : std::true_type {};
-
-/*
- * Return-only wrapper for Maps crossing C++ -> JS.
- *
-
- * TS's `using` requires the static type to declare `[Symbol.dispose]`, but embind
- * registers one TS name per C++ type and uses it in both return and parameter
- * positions. We can't make `csp::common::Map<K,V>` itself appear as `Map<K,V> & Disposable`
- * without breaking typescript validation on setters for regular value maps of primitives.
- * (a plain new Map() isn't assignable to that type). 
- * So, we route returns through a distinct wrapper type registered
- * as `(Map<K,V> & Disposable)`, while `csp::common::Map<K,V>` stays `Map<K,V>` for parameters.
- *
- * This does mean you need to convert to this type at the binding site for returns,
- * which is a trade-off. Forgetting to do this will cause the typescript type checker
- * to disallow you from using `using` when storing a map return.
- * 
- * Supports both owned and non owned memory.
- * In the case of a value return out of CSP `Map<T> Func();`, it populates the optional.
- * In the case of a reference return `Map<T>& Func();`, it points the view to the CSP owned memory directly.
- * You should use `view` to get at the memory here in Wiretype bindings, it'll always point to the right thing.
- * Note that this does not mean that const refs don't copy over the boundary, just that we avoid a copy
- * when using this wrapper type. You could get rid of the `view` and just use `owned` and things would work identically,
- * just with a redundant copy in the bindings for no reason.
- */
- template <typename Key, typename Value>
-  class CSPMapJSDisposable {
-      static_assert(IsValidMapKey<Key>::value,
-          "csp::common::Map can only be bound with a primitive key type (an integral type, or csp::common::String). "
-          "To allow a new primitive-like key, add an IsValidMapKey specialization.");
-
-      // ownedMap must be declared before mapView: member init order follows
-      // declaration order, and the rvalue ctor binds mapView to *ownedMap.
-      private:
-        // In theory, if we hit a reference return that is non-copyable, we could use this as the branching axis
-        // for owned/non-owned memory in the wiretype bindings, rather than pointer/value. It would be more
-        // honest in a way, albeit more complex conceptually.
-        std::optional<csp::common::Map<Key, Value>> ownedMap; 
-      public:
-        //Points to either externally managed memory, or `ownedList`. Use this in the Wiretype bindings.
-        const csp::common::Map<Key, Value>& mapView;
-
-    CSPMapJSDisposable(csp::common::Map<Key, Value>&& map) : ownedMap(std::move(map)), mapView(*ownedMap) {}
-    CSPMapJSDisposable(const csp::common::Map<Key, Value>& map) : ownedMap(std::nullopt), mapView(map) {}
-
-    CSPMapJSDisposable(const CSPMapJSDisposable&) = delete;
-    CSPMapJSDisposable(CSPMapJSDisposable&&) = delete;
-    CSPMapJSDisposable& operator=(const CSPMapJSDisposable&) = delete;
-    CSPMapJSDisposable& operator=(CSPMapJSDisposable&&) = delete;
-};
-} // namespace bindings::utils
+}
 
 /*
  * Bind Map to a js/ts type. Will most likely copy each element (js.set calls ToWireType).
@@ -110,7 +64,7 @@ namespace emscripten::internal {
 template <typename Key, typename Value>
 struct BindingType<csp::common::Map<Key, Value>>
 {
-    // Guards the parameter path. The return path (CSPMapJSDisposable) carries its own
+    // Guards the parameter path. The return path (the JSDisposable specialization below) carries its own
     // copy of this assert, since binding a map return-only never instantiates this specialization.
     static_assert(bindings::utils::IsValidMapKey<Key>::value,
         "csp::common::Map can only be bound with a primitive key type (an integral type, or csp::common::String). "
@@ -120,7 +74,7 @@ struct BindingType<csp::common::Map<Key, Value>>
     using WireType   = ValBinding::WireType;
 
     // Parameter-path only: no [Symbol.dispose] attached. Returns go through
-    // bindings::utils::CSPMapJSDisposable<Key, Value> instead.
+    // bindings::utils::JSDisposable<csp::common::Map<Key, Value>> instead.
     static WireType toWireType(const csp::common::Map<Key, Value>& map, rvp::default_tag)
     {
         val newJSMap = val::global("Map").new_();
@@ -174,15 +128,20 @@ struct BindingType<csp::common::Map<Key, Value>>
 };
 
 template <typename Key, typename Value>
-struct BindingType<bindings::utils::CSPMapJSDisposable<Key, Value>>
+struct BindingType<bindings::utils::JSDisposable<csp::common::Map<Key, Value>>>
 {
+    // Guards the return path; see the parameter-path specialization above.
+    static_assert(bindings::utils::IsValidMapKey<Key>::value,
+        "csp::common::Map can only be bound with a primitive key type (an integral type, or csp::common::String). "
+        "To allow a new primitive-like key, add an IsValidMapKey specialization.");
+
     using ValBinding = BindingType<val>;
     using WireType   = ValBinding::WireType;
 
     // Return path. Attaches [Symbol.dispose] to allow `using` storage in JS land.
-    static WireType toWireType(const bindings::utils::CSPMapJSDisposable<Key, Value>& wrapper, rvp::default_tag)
+    static WireType toWireType(const bindings::utils::JSDisposable<csp::common::Map<Key, Value>>& wrapper, rvp::default_tag)
     {
-        const auto& map = wrapper.mapView;
+        const auto& map = wrapper.view;
         val newJSMap = val::global("Map").new_();
         for (const auto& [key, value] : map.GetUnderlying())
         {

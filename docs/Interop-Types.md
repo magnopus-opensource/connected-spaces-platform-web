@@ -99,13 +99,13 @@ You must declare the types such that the typescript emitted is annotated correct
     emscripten::register_type<csp::common::Array<BindingsTestType>>("MyType[]"); //Bound value array
     emscripten::register_type<csp::common::Array<BindingsTestType*>>("(MyType | null)[]"); //Bound pointer array
 
-    emscripten::register_type<bindings::utils::CSPArrayJSDisposable<int>>("(number[] & Disposable)"); //Disposable primitive value array
-    emscripten::register_type<bindings::utils::CSPArrayJSDisposable<BindingsTestType>>("(MyType[] & Disposable)"); //Disposable bound value array
+    emscripten::register_type<bindings::utils::JSDisposable<csp::common::Array<int>>>("(number[] & Disposable)"); //Disposable primitive value array
+    emscripten::register_type<bindings::utils::JSDisposable<csp::common::Array<BindingsTestType>>>("(MyType[] & Disposable)"); //Disposable bound value array
 ```
 
 There are a few things here that may seem surprising.
 
-Firstly, `CSPArrayJSDisposable`, what's that? This is how we get `using` support. By binding a different type, we can allow ourselves a different typescript annotation where that type occurs. These can be thought of as the bindings for return types. By doing this, we can still accept regular shaped arrays as function arguments ([1,2,3] would not fit into a `Disposable` slot), whilst not sacrificing disposability for returns where it matters. 
+Firstly, `JSDisposable`, what's that? This is how we get `using` support. By binding a different type, we can allow ourselves a different typescript annotation where that type occurs. These can be thought of as the bindings for return types. By doing this, we can still accept regular shaped arrays as function arguments ([1,2,3] would not fit into a `Disposable` slot), whilst not sacrificing disposability for returns where it matters. 
 
 The tradeoff here is that you must do the type conversion at the binding site. As a general rule, anything that is returning a value array should perform a conversion. If you fail to do this, you will be unable to declare arrays out of CSP as `using`. 
 
@@ -113,7 +113,7 @@ The tradeoff here is that you must do the type conversion at the binding site. A
 .function("setArrayBasicTypeByValue(value)", &MyObjectType::SetArrayBasicTypeByValue) // Setter function, bind normally
 .function("getArrayBasicTypeByValue", +[](const MyObjectType& self) {
         // Getter function, needs to be disposable.
-        return bindings::utils::CSPArrayJSDisposable<int>{self.GetArrayBasicTypeByValue()};
+        return bindings::utils::JSDisposable<csp::common::Array<int>>{self.GetArrayBasicTypeByValue()};
     })
 ```
 
