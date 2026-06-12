@@ -124,8 +124,9 @@ describe('String bindings', () => {
 
   it('Long string round trip', () => {
     using helper = csp.BindingsMechanismsTestType.create();
-    // 60KB string
-    const testString = 'abcdefghij'.repeat(6 * 1024);
+    // 70KB string - There was a stack size of 64KB in the previous CSP wrapper generator.
+    // Ensure that we can handle strings larger than that.
+    const testString = 'abcdefghij'.repeat(7 * 1024);
 
     helper.setCspStringByValue(testString);
     const roundTrip: string = helper.getCspStringByValue();
@@ -197,5 +198,85 @@ describe('String bindings', () => {
     using roundTrip = helper.getArrayStringByValue();
 
     expect(csp.arrayEquals(roundTrip, testArray)).toBe(true);
+  });
+
+  // Map with string tests
+
+  it('Map with string keys round trip by value', () => {
+    using helper = csp.BindingsMechanismsTestType.create();
+    const testMap = new Map<string, number>([
+      ['key1', 1],
+      ['key2', 2]
+    ]);
+
+    helper.setMapStringIntByValue(testMap);
+    using roundTrip = helper.getMapStringIntByValue();
+
+    expect(csp.mapEquals(roundTrip, testMap)).toBe(true);
+  });
+
+  it('Map with string keys round trip by const reference', () => {
+    using helper = csp.BindingsMechanismsTestType.create();
+    const testMap = new Map<string, number>([
+      ['key1', 1],
+      ['key2', 2]
+    ]);
+
+    helper.setMapStringIntByConstRef(testMap);
+    using roundTrip = helper.getMapStringIntByConstRef();
+
+    expect(csp.mapEquals(roundTrip, testMap)).toBe(true);
+  });
+
+  it('Map with empty string key round trip', () => {
+    using helper = csp.BindingsMechanismsTestType.create();
+    const testMap = new Map<string, number>([
+      ['', 1],
+      ['key2', 2]
+    ]);
+
+    helper.setMapStringIntByValue(testMap);
+    using roundTrip = helper.getMapStringIntByValue();
+
+    expect(csp.mapEquals(roundTrip, testMap)).toBe(true);
+  });
+
+  it('Map with string values round trip by value', () => {
+    using helper = csp.BindingsMechanismsTestType.create();
+    const testMap = new Map<string, string>([
+      ['key1', 'value1'],
+      ['key2', 'value2']
+    ]);
+
+    helper.setMapStringStringByValue(testMap);
+    using roundTrip = helper.getMapStringStringByValue();
+
+    expect(csp.mapEquals(roundTrip, testMap)).toBe(true);
+  });
+
+  it('Map with string values round trip by const reference', () => {
+    using helper = csp.BindingsMechanismsTestType.create();
+    const testMap = new Map<string, string>([
+      ['key1', 'value1'],
+      ['key2', 'value2']
+    ]);
+
+    helper.setMapStringStringByConstRef(testMap);
+    using roundTrip = helper.getMapStringStringByConstRef();
+
+    expect(csp.mapEquals(roundTrip, testMap)).toBe(true);
+  });
+
+  it('Map with string values round trip by const reference', () => {
+    using helper = csp.BindingsMechanismsTestType.create();
+    const testMap = new Map<string, string>([
+      ['key1', 'value1'],
+      ['key2', 'value2']
+    ]);
+
+    helper.setMapStringStringByConstRef(testMap);
+    using roundTrip = helper.getMapStringStringByConstRef();
+
+    expect(csp.mapEquals(roundTrip, testMap)).toBe(true);
   });
 });

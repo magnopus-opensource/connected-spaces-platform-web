@@ -114,6 +114,18 @@ public:
     void SetMapFullTypeByValue(csp::common::Map<int, BindingsTestType> value) { m_mapFullType = std::move(value); }
     void SetMapFullTypeByConstRef(const csp::common::Map<int, BindingsTestType>& value) { m_mapFullType = value; }
 
+    // Map<string, int>
+    csp::common::Map<csp::common::String, int> GetMapStringIntByValue() const { return m_mapStringInt; }
+    const csp::common::Map<csp::common::String, int>& GetMapStringIntByConstRef() const { return m_mapStringInt; }
+    void SetMapStringIntByValue(csp::common::Map<csp::common::String, int> value) { m_mapStringInt = std::move(value); }
+    void SetMapStringIntByConstRef(const csp::common::Map<csp::common::String, int>& value) { m_mapStringInt = value; }
+
+    // Map<string, string>
+    csp::common::Map<csp::common::String, csp::common::String> GetMapStringStringByValue() const { return m_mapStringString; }
+    const csp::common::Map<csp::common::String, csp::common::String>& GetMapStringStringByConstRef() const { return m_mapStringString; }
+    void SetMapStringStringByValue(csp::common::Map<csp::common::String, csp::common::String> value) { m_mapStringString = std::move(value); }
+    void SetMapStringStringByConstRef(const csp::common::Map<csp::common::String, csp::common::String>& value) { m_mapStringString = value; }
+
     // Optional<int>
     csp::common::Optional<int> GetOptionalBasicTypeByValue() const { return m_optionalBasicType; }
     const csp::common::Optional<int>& GetOptionalBasicTypeByConstRef() const { return m_optionalBasicType; }
@@ -138,7 +150,7 @@ public:
      * although given that JS is garbage collected, is a recipe for dangling references unless the JS implementor is careful.
      * The normal expression of pointer lists is one-directional, and should give JS access to objects owned in C++ by reference.
      * Hence, the alternate getter. (No real need to test const-ref of pointers, the mechanisms are unrelated)
-    */
+     */
 
     // Array of pointers
     csp::common::Array<BindingsTestType*> GetArrayOfPointersByValue() const { return m_arrayOfPointers; }
@@ -156,7 +168,7 @@ public:
 
     // Map of pointers
     csp::common::Map<int, BindingsTestType*> GetMapOfPointersByValue() const { return m_mapOfPointers; }
-    const csp::common::Map<int, BindingsTestType*> GetMapOfPointersByConstRef() const { return m_mapOfPointers; }
+    const csp::common::Map<int, BindingsTestType*>& GetMapOfPointersByConstRef() const { return m_mapOfPointers; }
     csp::common::Map<int, BindingsTestType*> GetMapOfCppOwnedPointers() const { return m_mapOfCppOwnedPointers; }
     void SetMapOfPointersByValue(csp::common::Map<int, BindingsTestType*> value) { m_mapOfPointers = std::move(value); }
     void SetMapOfPointersByConstRef(const csp::common::Map<int, BindingsTestType*>& value) { m_mapOfPointers = value; }
@@ -169,6 +181,8 @@ private:
     csp::common::List<BindingsTestType> m_listFullType;
     csp::common::Map<int, int> m_mapBasicType;
     csp::common::Map<int, BindingsTestType> m_mapFullType;
+    csp::common::Map<csp::common::String, int> m_mapStringInt;
+    csp::common::Map<csp::common::String, csp::common::String> m_mapStringString;
     csp::common::Optional<int> m_optionalBasicType;
     csp::common::Optional<BindingsTestType> m_optionalFullType;
     csp::common::String m_cspString;
@@ -236,6 +250,8 @@ EMSCRIPTEN_BINDINGS(CSPTestBindings)
     emscripten::register_type<csp::common::Map<int, int>>("Map<number, number>");
     emscripten::register_type<csp::common::Map<int, BindingsTestType>>("Map<number, BindingsTestType>");
     emscripten::register_type<csp::common::Map<int, BindingsTestType*>>("Map<number, (BindingsTestType | null)>");
+    emscripten::register_type<csp::common::Map<csp::common::String, int>>("Map<string, number>");
+    emscripten::register_type<csp::common::Map<csp::common::String, csp::common::String>>("Map<string, string>");
 
     // Return types, allows embinds machinery to emit a different typescript signature for container returns, meaning we can use `using` in a type-checked manner.
     // You need to remember to convert to these types in the returning methods, but you don't need to worry about it for parameters.
@@ -252,6 +268,8 @@ EMSCRIPTEN_BINDINGS(CSPTestBindings)
     // Map
     emscripten::register_type<bindings::utils::JSDisposable<csp::common::Map<int, int>>>("(Map<number, number> & Disposable)");
     emscripten::register_type<bindings::utils::JSDisposable<csp::common::Map<int, BindingsTestType>>>("(Map<number, BindingsTestType> & Disposable)");
+    emscripten::register_type<bindings::utils::JSDisposable<csp::common::Map<csp::common::String, int>>>("(Map<string, number> & Disposable)");
+    emscripten::register_type<bindings::utils::JSDisposable<csp::common::Map<csp::common::String, csp::common::String>>>("(Map<string, string> & Disposable)");
 
     emscripten::class_<BindingMechanismsTestType>("BindingsMechanismsTestType")
         .class_function("create", +[](){ return BindingMechanismsTestType(); })
@@ -326,6 +344,22 @@ EMSCRIPTEN_BINDINGS(CSPTestBindings)
         .function("getMapOfCppOwnedPointers", &BindingMechanismsTestType::GetMapOfCppOwnedPointers)
         .function("setMapOfPointersByValue(value)", &BindingMechanismsTestType::SetMapOfPointersByValue)
         .function("setMapOfPointersByConstRef(value)", &BindingMechanismsTestType::SetMapOfPointersByConstRef)
+        .function("getMapStringIntByValue", +[](const BindingMechanismsTestType& self) {
+            return bindings::utils::JSDisposable<csp::common::Map<csp::common::String, int>>{self.GetMapStringIntByValue()};
+        })
+        .function("getMapStringIntByConstRef", +[](const BindingMechanismsTestType& self) {
+            return bindings::utils::JSDisposable<csp::common::Map<csp::common::String, int>>{self.GetMapStringIntByConstRef()};
+        })
+        .function("setMapStringIntByValue(value)", &BindingMechanismsTestType::SetMapStringIntByValue)
+        .function("setMapStringIntByConstRef(value)", &BindingMechanismsTestType::SetMapStringIntByConstRef)
+        .function("getMapStringStringByValue", +[](const BindingMechanismsTestType& self) {
+            return bindings::utils::JSDisposable<csp::common::Map<csp::common::String, csp::common::String>>{self.GetMapStringStringByValue()};
+        })
+        .function("getMapStringStringByConstRef", +[](const BindingMechanismsTestType& self) {
+            return bindings::utils::JSDisposable<csp::common::Map<csp::common::String, csp::common::String>>{self.GetMapStringStringByConstRef()};
+        })
+        .function("setMapStringStringByValue(value)", &BindingMechanismsTestType::SetMapStringStringByValue)
+        .function("setMapStringStringByConstRef(value)", &BindingMechanismsTestType::SetMapStringStringByConstRef)
         .function("getCspStringByValue", &BindingMechanismsTestType::GetCspStringByValue)
         .function("getCspStringByConstRef", &BindingMechanismsTestType::GetCspStringByConstRef)
         .function("setCspStringByValue", &BindingMechanismsTestType::SetCspStringByValue)
