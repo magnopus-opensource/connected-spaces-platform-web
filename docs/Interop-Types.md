@@ -50,6 +50,28 @@ There are two specificities to be aware of.
 - Whilst the values of a map may be bound to any type, as either a value or pointer type, the keys are more limiting. In order to play nice with JS/TS identity comparison, important for maps to function semantically, keys must be bindable as JS primitives. Effectively an integral or string type. This also allows us not to worry about allocation and disposal in keys, which is nice. 
 
 
+## Strings
+
+C++ strings and in particular the `csp::common::String` type are presented in JavaScript as the standard JS `string`.
+
+As such, for functions with string parameters or return types as below:
+
+```cpp
+csp::common::String GetString() { return csp::common::String("Hello!"); }
+void SetString (csp::common::String string);
+```
+
+the bindings will enable standard JavaScript strings to be used:
+
+```ts
+const str = csp.getString(); // 'Hello!'
+csp.setString('Hello back!');
+```
+
+The binding for string piggy-backs on the built-in Embind implementation for `std::string`, and because of that involve an extra copy into an `std::string` that we may look to remove in future if it becomes an issue.
+
+Note that due to string always being stack-based, there is no need to dispose them so TS/JS do not have any additional `dispose` function as with other interop types.
+
 ***
 
 _For the following conceptual documentation, we tend to use `Array` as an example. But the concepts apply to all interop container types._
