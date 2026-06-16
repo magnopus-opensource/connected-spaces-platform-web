@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { loadCSP } from '../loadModule';
-import type { MainModule } from 'connected-spaces-platform-bindings';
+import createModule, { type MainModule } from 'connected-spaces-platform-bindings';
 
 describe('CSPFoundation', () => {
   let csp: MainModule;
@@ -9,14 +9,14 @@ describe('CSPFoundation', () => {
     csp = await loadCSP();
   });
 
-/* 
- * Test some assumptions about emscripten and automatic memory management
- * Arguably we're testing the library here, but browsers are
- * mysterious things and this proves we can rely on this sort
- * of thing at least on the chromium target.
- * 
- * Quite important i'd say, we'll likely build user patterns around these assumptions.
- */
+  /*
+   * Test some assumptions about emscripten and automatic memory management
+   * Arguably we're testing the library here, but browsers are
+   * mysterious things and this proves we can rely on this sort
+   * of thing at least on the chromium target.
+   *
+   * Quite important i'd say, we'll likely build user patterns around these assumptions.
+   */
 
   it('Delete releases C++ memory', () => {
     const before = csp.BindingsTestType.aliveCount;
@@ -28,7 +28,7 @@ describe('CSPFoundation', () => {
     expect(csp.BindingsTestType.aliveCount).toBe(before);
   });
 
- it('Releases C++ memory at scope exit', () => {
+  it('Releases C++ memory at scope exit', () => {
     const before = csp.BindingsTestType.aliveCount;
 
     {
@@ -65,13 +65,15 @@ describe('CSPFoundation', () => {
   it('Throws on double delete', () => {
     const t = csp.BindingsTestType.create(42, 'hello');
     t.delete();
-    expect(() => t.delete()).toThrow("BindingsTestType instance already deleted");
+    expect(() => t.delete()).toThrow('BindingsTestType instance already deleted');
   });
 
   it('Throws when accessing a deleted handle', () => {
     const t = csp.BindingsTestType.create(42, 'hello');
     t.delete();
-    expect(() => t.value).toThrow("cannot call emscripten binding method BindingsTestType.value getter on deleted object");
+    expect(() => t.value).toThrow(
+      'cannot call emscripten binding method BindingsTestType.value getter on deleted object'
+    );
   });
 
   /*
@@ -89,7 +91,9 @@ describe('CSPFoundation', () => {
     // If proxies were pinned by some embind internal, ~zero callbacks would fire.
     // If they're GC-eligible, most will fire under memory pressure.
     let collected = 0;
-    const registry = new FinalizationRegistry(() => { collected++; });
+    const registry = new FinalizationRegistry(() => {
+      collected++;
+    });
     const N = 10_000;
 
     // Inner scope so references drop after the block.
@@ -104,14 +108,14 @@ describe('CSPFoundation', () => {
     // Encourage GC via large allocations. JS engines run major GC when heap
     // pressure rises; we can't force it but we can make it very likely.
     for (let i = 0; i < 50; i++) {
-      // Allocate, then let the buffer drop. 
+      // Allocate, then let the buffer drop.
       new ArrayBuffer(10_000_000);
     }
 
     // Yield to the event loop so GC + finalization callbacks drain. Two ticks
     // because finalizers schedule on a separate microtask queue in some engines.
-    await new Promise(r => setTimeout(r, 100));
-    await new Promise(r => setTimeout(r, 0));
+    await new Promise((r) => setTimeout(r, 100));
+    await new Promise((r) => setTimeout(r, 0));
 
     // Threshold is intentionally generous. Across runs we expect 80-99%, but
     // GC timing isn't guaranteed; 50% is enough to distinguish "proxies can
@@ -152,36 +156,118 @@ describe('CSPFoundation', () => {
    * to marshall to JS. I'm concerned about the proxy objects here.
    * Non-owning pointers are truly non-owning and do not leak.
    */
-  it('reference-returned proxies do not grow wasm heap', () => {
-    using bindingsArrayHelper = csp.BindingsMechanismsTestType.create();
-    using anchor = csp.BindingsTestType.create(1, 'one');
+  it('reference-returned proxies do not grow wasm heap', async () => {
+    // The following is based on the Emscripten compiler settings at the time of writing
+    // (see CMakeLists.txt).
+    // If those ever change this test may need to be updated to remain valid:
+    // - INITIAL_MEMORY=32MB
+    // - ALLOW_MEMORY_GROWTH=1 (enabled)
+    // - MEMORY_GROWTH_GEOMETRIC_STEP unset (defaults to 0.20)
+    // - MEMORY_GROWTH_LINEAR_STEP unset (growth is geometric by default)
+    // - MALLOC unset (defaults to dlmalloc)
+    // (Documentation: https://emscripten.org/docs/tools_reference/settings_reference.html)
+
+    // Use a fresh module instance so the heap starts at exactly INITIAL_MEMORY.
+    // This guarantees the sensitivity analysis below holds regardless of what other
+    // tests have already allocated in the shared csp instance.
+    const freshCsp = await createModule();
+
+    using bindingsArrayHelper = freshCsp.BindingsMechanismsTestType.create();
+    using anchor = freshCsp.BindingsTestType.create(1, 'one');
     bindingsArrayHelper.setArrayOfPointersByValue([anchor]);
 
-    // Warm up so we can get to steady state behavior, early calls can always be doing
-    // dynamic caching and whatnot, just for safety.
-    for (let i = 0; i < 1000; i++) {
+    // Leak large value-copied allocations until the heap is forced to grow, then take the
+    // baseline. This bounds how much free space the pointer loop has to absorb in order to detect
+    // any leaks.
+    //
+    // Using an initial memory size of 32MB and a geometric growth step of 0.20, the first growth
+    // event will expand the heap by 32MB * 0.20 = 6.4MB, rounded up to the next 64KB WASM page
+    // boundary so ~6.44MB.
+    // With 500k iterations we can detect leaks of ~6.44MB / 500k = ~13.5 bytes per call.
+    // dlmalloc's (Emscripten's default malloc) minimum chunk size is ~24 bytes, so this catches any
+    // non-trivial WASM heap allocation that isn't freed - including the transient Array<T*> backing
+    // buffer (~20 bytes) if embind ever failed to destroy it.
+
+    // 512 KB string
+    const bigString = 'x'.repeat(512 * 1024);
+    using filler = freshCsp.BindingsTestType.create(0, bigString);
+    bindingsArrayHelper.setArrayFullTypeByValue([filler]);
+
+    // Leak memory until the heap grows
+    let sentinel = (freshCsp as unknown as { HEAPU8: Uint8Array }).HEAPU8.byteLength;
+    while ((freshCsp as unknown as { HEAPU8: Uint8Array }).HEAPU8.byteLength === sentinel) {
+      const arr = bindingsArrayHelper.getArrayFullTypeByValue();
+      void arr[0]?.value;
+      // Intentional leak - we want these to accumulate and force a heap growth.
+    }
+
+    // Heap has just grown - take the baseline measurement.
+    const heapBefore = (freshCsp as unknown as { HEAPU8: Uint8Array }).HEAPU8.byteLength;
+
+    for (let i = 0; i < 500_000; i++) {
       const arr = bindingsArrayHelper.getArrayOfPointersByValue();
       void arr[0]?.value;
     }
 
-    // Take baseline.
-    const heapBefore = (csp as unknown as { HEAPU8: Uint8Array }).HEAPU8.byteLength;
-
-    // Steady-state loop. If even 1 byte per proxy leaks in C++, ~100K iterations
-    // crosses one 64 KB page boundary and HEAPU8 grows. If nothing leaks, flat.
-    for (let i = 0; i < 100_000; i++) {
-      const arr = bindingsArrayHelper.getArrayOfPointersByValue();
-      void arr[0]?.value;
-    }
-
-    const heapAfter = (csp as unknown as { HEAPU8: Uint8Array }).HEAPU8.byteLength;
+    const heapAfter = (freshCsp as unknown as { HEAPU8: Uint8Array }).HEAPU8.byteLength;
     expect(heapAfter).toBe(heapBefore);
+  });
+
+  /*
+   * This test exists primarily to verify the assumptions in the other heap growth tests given the
+   * Emscripten compiler settings used to build the library (see CMakeLists.txt).
+   * It proves the sensitivity of the heap growth detection in the previous test, and that the heap
+   * does in fact grow as we expect when we leak value-copied objects.
+   */
+  it('value-returned arrays do grow wasm heap', async () => {
+    // Use a fresh module instance
+    const freshCsp = await createModule();
+
+    using bindingsArrayHelper = freshCsp.BindingsMechanismsTestType.create();
+    // 512 KB string
+    const bigString = 'x'.repeat(512 * 1024);
+    using filler = freshCsp.BindingsTestType.create(0, bigString);
+    bindingsArrayHelper.setArrayFullTypeByValue([filler]);
+
+    let sentinel = (freshCsp as unknown as { HEAPU8: Uint8Array }).HEAPU8.byteLength;
+    expect(sentinel).toBe(32 * 1024 * 1024); // INITIAL_MEMORY = 32MB
+
+    // Leak memory until the heap grows
+    while ((freshCsp as unknown as { HEAPU8: Uint8Array }).HEAPU8.byteLength === sentinel) {
+      const arr = bindingsArrayHelper.getArrayFullTypeByValue();
+      void arr[0]?.value;
+      // Intentional leak - we want these to accumulate and force a heap growth.
+    }
+
+    // Heap has just grown - take the baseline measurement.
+    const heapBefore = (freshCsp as unknown as { HEAPU8: Uint8Array }).HEAPU8.byteLength;
+
+    // Check it has grown by the expected amount.
+    // Emscripten targets INITIAL_MEMORY * (1 + GEOMETRIC_STEP) = 32MB * 1.2 = 38.4MB,
+    // then rounds up to the next 64KB WASM page boundary.
+    const wasmPageSize = 65536;
+    const growthTarget = (32 + 32 * 0.2) * 1024 * 1024; // 38.4MB
+    const expectedHeapAfterFirstGrowth = Math.ceil(growthTarget / wasmPageSize) * wasmPageSize; // 40304640
+    expect(heapBefore).toBe(expectedHeapAfterFirstGrowth);
+
+    const string = 'x'.repeat(1024);
+    using anchor = freshCsp.BindingsTestType.create(1, string);
+    bindingsArrayHelper.setArrayFullTypeByValue([anchor]);
+
+    // 10000 calls × 1KB = 10 MB of undisposed C++ allocations
+    for (let i = 0; i < 10_000; i++) {
+      const arr = bindingsArrayHelper.getArrayFullTypeByValue();
+      void arr[0]?.value;
+    }
+
+    const heapAfter = (freshCsp as unknown as { HEAPU8: Uint8Array }).HEAPU8.byteLength;
+    expect(heapAfter).toBeGreaterThan(heapBefore);
   });
 
   /*
    * Array<T> memory tests.
    * We've gone to some effort to allow Array<T>'s (and other containers) that come out of CSP
-   * to be declared with `using`, and get automatically deallocated at scope exit. 
+   * to be declared with `using`, and get automatically deallocated at scope exit.
    */
 
   it('Using on a returned array of handles releases every element at scope exit', () => {
@@ -275,7 +361,9 @@ describe('CSPFoundation', () => {
     bindingsArrayHelper.setArrayFullTypeByValue([elem1]);
 
     const beforeGet = csp.BindingsTestType.aliveCount;
-    { using arr = bindingsArrayHelper.getArrayFullTypeByValue(); }
+    {
+      using arr = bindingsArrayHelper.getArrayFullTypeByValue();
+    }
     expect(csp.BindingsTestType.aliveCount).toBe(beforeGet);
     // Storage survives despite the scope exit — we can fetch again.
     using arr2 = bindingsArrayHelper.getArrayFullTypeByValue();
@@ -335,14 +423,14 @@ describe('CSPFoundation', () => {
   });
 
   it('Cpp Objects accessible via pointer arrays without allocating', () => {
-     using bindingsArrayHelper = csp.BindingsMechanismsTestType.create();
-     const beforeAliveCount = csp.BindingsTestType.aliveCount;
+    using bindingsArrayHelper = csp.BindingsMechanismsTestType.create();
+    const beforeAliveCount = csp.BindingsTestType.aliveCount;
 
-     let pointerArray = bindingsArrayHelper.getArrayOfCppOwnedPointers();
-     expect(pointerArray.length).toBe(2);
-     expect(pointerArray[0]?.name).toBe("One");
-     expect(pointerArray[1]?.value).toBe(2);
-     expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount);
+    let pointerArray = bindingsArrayHelper.getArrayOfCppOwnedPointers();
+    expect(pointerArray.length).toBe(2);
+    expect(pointerArray[0]?.name).toBe('One');
+    expect(pointerArray[1]?.value).toBe(2);
+    expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount);
   });
 
   it('JS owned object in pointer array that falls out of scope is undefined', () => {
@@ -350,8 +438,8 @@ describe('CSPFoundation', () => {
     const beforeAliveCount = csp.BindingsTestType.aliveCount;
 
     {
-      using elem1 = csp.BindingsTestType.create(1, "one");
-      const newArr = [elem1]
+      using elem1 = csp.BindingsTestType.create(1, 'one');
+      const newArr = [elem1];
 
       bindingsArrayHelper.setArrayOfPointersByValue(newArr);
       //elem1 falls out of scope, C++ array now holds a dangling pointer. Probably bad behavior from the JS developer :P
@@ -371,8 +459,8 @@ describe('CSPFoundation', () => {
 
     // No `using` here: we're managing lifetime explicitly via .delete() on the
     // round-trip handles below, to observe what that does to AliveCount.
-    const elem1 = csp.BindingsTestType.create(1, "one");
-    const elem2 = csp.BindingsTestType.create(2, "two");
+    const elem1 = csp.BindingsTestType.create(1, 'one');
+    const elem2 = csp.BindingsTestType.create(2, 'two');
     expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount + 2);
 
     bindingsArrayHelper.setArrayOfPointersByValue([elem1, elem2]);
@@ -400,7 +488,12 @@ describe('CSPFoundation', () => {
     using bindingsMapHelper = csp.BindingsMechanismsTestType.create();
     using elem1 = csp.BindingsTestType.create(1, 'one');
     using elem2 = csp.BindingsTestType.create(2, 'two');
-    bindingsMapHelper.setMapFullTypeByValue(new Map([[1, elem1], [2, elem2]]));
+    bindingsMapHelper.setMapFullTypeByValue(
+      new Map([
+        [1, elem1],
+        [2, elem2]
+      ])
+    );
 
     const beforeGet = csp.BindingsTestType.aliveCount;
     {
@@ -429,7 +522,13 @@ describe('CSPFoundation', () => {
 
   it('Using on a map of basic types is a tolerated no-op on disposal', () => {
     using bindingsMapHelper = csp.BindingsMechanismsTestType.create();
-    bindingsMapHelper.setMapBasicTypeByValue(new Map([[1, 10], [2, 20], [3, 30]]));
+    bindingsMapHelper.setMapBasicTypeByValue(
+      new Map([
+        [1, 10],
+        [2, 20],
+        [3, 30]
+      ])
+    );
     expect(() => {
       using map = bindingsMapHelper.getMapBasicTypeByValue();
       expect(map.size).toBe(3);
@@ -440,7 +539,12 @@ describe('CSPFoundation', () => {
     using bindingsMapHelper = csp.BindingsMechanismsTestType.create();
     using elem1 = csp.BindingsTestType.create(1, 'one');
     using elem2 = csp.BindingsTestType.create(2, 'two');
-    bindingsMapHelper.setMapFullTypeByValue(new Map([[1, elem1], [2, elem2]]));
+    bindingsMapHelper.setMapFullTypeByValue(
+      new Map([
+        [1, elem1],
+        [2, elem2]
+      ])
+    );
 
     const beforeGet = csp.BindingsTestType.aliveCount;
     expect(() => {
@@ -482,7 +586,9 @@ describe('CSPFoundation', () => {
     bindingsMapHelper.setMapFullTypeByValue(new Map([[1, elem1]]));
 
     const beforeGet = csp.BindingsTestType.aliveCount;
-    { using map = bindingsMapHelper.getMapFullTypeByValue(); }
+    {
+      using map = bindingsMapHelper.getMapFullTypeByValue();
+    }
     expect(csp.BindingsTestType.aliveCount).toBe(beforeGet);
     // Storage survives despite the scope exit — we can fetch again.
     using map2 = bindingsMapHelper.getMapFullTypeByValue();
@@ -493,7 +599,12 @@ describe('CSPFoundation', () => {
     using bindingsMapHelper = csp.BindingsMechanismsTestType.create();
     using elem1 = csp.BindingsTestType.create(1, 'one');
     using elem2 = csp.BindingsTestType.create(2, 'two');
-    bindingsMapHelper.setMapFullTypeByValue(new Map([[1, elem1], [2, elem2]]));
+    bindingsMapHelper.setMapFullTypeByValue(
+      new Map([
+        [1, elem1],
+        [2, elem2]
+      ])
+    );
 
     const beforeGet = csp.BindingsTestType.aliveCount;
     expect(() => {
@@ -523,7 +634,14 @@ describe('CSPFoundation', () => {
   });
 
   it('disposeMap on a plain JS Map of primitives is tolerated', () => {
-    expect(() => csp.disposeMap(new Map([[1, 10], [2, 20]]))).not.toThrow();
+    expect(() =>
+      csp.disposeMap(
+        new Map([
+          [1, 10],
+          [2, 20]
+        ])
+      )
+    ).not.toThrow();
     expect(() => csp.disposeMap(new Map())).not.toThrow();
   });
 
@@ -597,11 +715,16 @@ describe('CSPFoundation', () => {
 
     // No `using` here: we're managing lifetime explicitly via .delete() on the
     // round-trip handles below, to observe what that does to AliveCount.
-    const elem1 = csp.BindingsTestType.create(1, "one");
-    const elem2 = csp.BindingsTestType.create(2, "two");
+    const elem1 = csp.BindingsTestType.create(1, 'one');
+    const elem2 = csp.BindingsTestType.create(2, 'two');
     expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount + 2);
 
-    bindingsMapHelper.setMapOfPointersByValue(new Map([[1, elem1], [2, elem2]]));
+    bindingsMapHelper.setMapOfPointersByValue(
+      new Map([
+        [1, elem1],
+        [2, elem2]
+      ])
+    );
     let pointerMap = bindingsMapHelper.getMapOfPointersByValue();
 
     pointerMap.get(1)!.delete();
@@ -613,6 +736,4 @@ describe('CSPFoundation', () => {
     // elem1 / elem2 are now dangling JS handles — their C++ objects were
     // destroyed via the round-trip handles. Don't dispose or .delete() them.
   });
-
 });
-
