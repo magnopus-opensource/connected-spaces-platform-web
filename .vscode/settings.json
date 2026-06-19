@@ -12,5 +12,5 @@
     "editor.defaultFormatter": "ms-vscode.cpptools"
   },
   "files.trimTrailingWhitespace": true,
-  "files.insertFinalNewline": false
+  "files.insertFinalNewline": true
 }
