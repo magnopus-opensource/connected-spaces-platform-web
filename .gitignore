@@ -54,7 +54,7 @@ CMakeUserPresets.json
 /build/
 /install/
 
-.vscode
+.vscode/c_cpp_properties.json
 
 ### Node / Vitest ###
 node_modules/
