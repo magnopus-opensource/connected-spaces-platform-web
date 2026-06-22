@@ -16,3 +16,10 @@ install(FILES
       "${CMAKE_CURRENT_BINARY_DIR}/package.json" # Configured above, makes this an npm package
       DESTINATION .
   )
+
+# Hand-written type overlays with generics and better parameter names.
+# One .d.ts per C++ source file, combined via type-overlays/index.d.ts.
+install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/src/type-overlays/"
+      DESTINATION type-overlays
+      FILES_MATCHING PATTERN "*.d.ts"
+  )

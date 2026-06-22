@@ -417,8 +417,13 @@ describe('CSPFoundation', () => {
   });
 
   it('disposeArray throws on non-array input', () => {
+    // @ts-expect-error: intentionally testing non-array input
     expect(() => csp.disposeArray(42)).toThrow();
+
+    // @ts-expect-error: intentionally testing non-array input
     expect(() => csp.disposeArray('nope')).toThrow();
+
+    // @ts-expect-error: intentionally testing non-array input
     expect(() => csp.disposeArray({})).toThrow();
   });
 
@@ -656,9 +661,16 @@ describe('CSPFoundation', () => {
   });
 
   it('disposeMap throws on non-Map input', () => {
+    // @ts-expect-error: intentionally testing non-map input
     expect(() => csp.disposeMap(42)).toThrow();
+
+    // @ts-expect-error: intentionally testing non-map input
     expect(() => csp.disposeMap('nope')).toThrow();
+
+    // @ts-expect-error: intentionally testing non-map input
     expect(() => csp.disposeMap({})).toThrow();
+
+    // @ts-expect-error: intentionally testing non-map input
     expect(() => csp.disposeMap([])).toThrow(); // arrays are not Maps
   });
 

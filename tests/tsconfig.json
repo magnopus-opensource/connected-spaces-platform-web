@@ -16,7 +16,7 @@
     "types": ["vitest/globals", "@vitest/browser-playwright/context"],
     "paths": {
       //Terrible hard-coded, this is really just for autocomplete
-      "connected-spaces-platform-bindings": ["../CSP-WASM-Bindings/connected-spaces-platform-bindings.d.ts"]
+      "connected-spaces-platform-bindings": ["../CSP-WASM-Bindings/type-overlays/index.d.ts"]
     }
   },
   "include": ["**/*.ts"],
