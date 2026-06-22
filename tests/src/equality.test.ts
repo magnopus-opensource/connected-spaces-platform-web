@@ -7,12 +7,12 @@ import type { MainModule } from 'connected-spaces-platform-bindings';
  * elementEquals delegates to JS === for primitives and identical handles,
  * recurses into arrayEquals for arrays, and defers to a bound `equals`
  * method for C++ class instances (BindingsTestType has one via operator==).
- * 
+ *
  * We provide this method mostly for container equality, which would be burdensome
- * to dispatch on manually every time, although in theory it should be a 
- * "one stop shop" for all equality when you don't know or care if you have a 
+ * to dispatch on manually every time, although in theory it should be a
+ * "one stop shop" for all equality when you don't know or care if you have a
  * raw JS object or a bound C++ object, and don't want any surprises.
- * 
+ *
  * A large part of this file was LLM generated as it's mostly rote, then the tests were curated.
  */
 
@@ -43,8 +43,11 @@ describe('equality', () => {
 
   it('Mismatched primitive types are not equal', () => {
     // typeof "number" vs typeof "string"
+    // @ts-expect-error: intentionally testing type mismatch
     expect(csp.elementEquals(1, '1')).toBe(false);
+
     // typeof "boolean" vs typeof "number"
+    // @ts-expect-error: intentionally testing type mismatch
     expect(csp.elementEquals(true, 1)).toBe(false);
   });
 
@@ -141,6 +144,7 @@ describe('equality', () => {
   });
 
   it('Array vs non-array of same length is not equal', () => {
+    // @ts-expect-error: intentionally testing type mismatch
     expect(csp.elementEquals([1, 2, 3], '123')).toBe(false);
   });
 
@@ -169,7 +173,7 @@ describe('equality', () => {
 
   it('Array of pointers equate based on underlying object equality', () => {
     using bindingsArrayHelper = csp.BindingsMechanismsTestType.create();
-     
+
     let ptrList1 = bindingsArrayHelper.getArrayOfCppOwnedPointers();
 
     // Mirror the data the the CppOwnedPointers gives us
@@ -196,7 +200,7 @@ describe('equality', () => {
   /*
    * Maps. mapEquals is the Map analogue of arrayEquals and recurses through elementEquals
    * the same way, so most of the tests below are deliberately named to mirror the array
-   * tests above. 
+   * tests above.
    */
   it('Empty maps are equal', () => {
     expect(csp.mapEquals(new Map(), new Map())).toBe(true);
@@ -321,11 +325,22 @@ describe('equality', () => {
   // would short-circuit. Not sure about this, feels like a javascripty thing that
   // could be unexpected no matter what side of the fence you come down on.
   it('Map vs non-Map is not equal', () => {
-    expect(csp.mapEquals([], [])).toBe(false); //Arrays not maps          
-    expect(csp.mapEquals({}, {})).toBe(false); //Objects not maps
+    // @ts-expect-error: intentionally testing non-maps
+    expect(csp.mapEquals([], [])).toBe(false); // Arrays not maps
+
+    // @ts-expect-error: intentionally testing non-maps
+    expect(csp.mapEquals({}, {})).toBe(false); // Objects not maps
+
+    // @ts-expect-error: intentionally testing non-maps
     expect(csp.mapEquals(new Map(), [])).toBe(false);
+
+    // @ts-expect-error: intentionally testing non-maps
     expect(csp.mapEquals(new Map(), {})).toBe(false);
+
+    // @ts-expect-error: intentionally testing non-maps
     expect(csp.mapEquals(new Map(), null)).toBe(false);
+
+    // @ts-expect-error: intentionally testing non-maps
     expect(csp.mapEquals(1, 2)).toBe(false);
   });
 
@@ -368,6 +383,7 @@ describe('equality', () => {
   });
 
    it('Map values of undefined', () => {
+    // @ts-expect-error: intentionally testing undefined values
     expect(csp.mapEquals(undefined, undefined)).toBe(true);
   });
 });
