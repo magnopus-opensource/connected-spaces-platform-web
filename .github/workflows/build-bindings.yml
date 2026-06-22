@@ -5,8 +5,9 @@ on:
   workflow_dispatch:
   workflow_call:
   push:
-      branches: [main] # This is really just to seed the cache on main so PR's can reuse the same cache entries.
-                       # We could add a concurrency group if the redundancy bothers us for this, but I'm not fussed.
+    branches:
+      [main] # This is really just to seed the cache on main so PR's can reuse the same cache entries.
+      # We could add a concurrency group if the redundancy bothers us for this, but I'm not fussed.
 jobs:
   emscripten-build:
     runs-on: windows-latest
@@ -31,7 +32,7 @@ jobs:
         uses: emscripten-core/setup-emsdk@v15
         with:
           version: 5.0.2
-          actions-cache-folder: 'emsdk-cache'
+          actions-cache-folder: "emsdk-cache"
 
       # emcc's --emit-tsd shells out to `tsc`. emsdk 5.0.2 invokes it with
       # `--outFile`, which errors under TypeScript 6.x. Pin to the latest 5.x
@@ -59,6 +60,12 @@ jobs:
 
       - name: Conan install
         shell: bash
+        env:
+          # CMake 4 dropped support for cmake_minimum_required(VERSION <3.5), which
+          # some older transitive Conan recipes (e.g. asyncplusplus/1.2) still
+          # declare.
+          # If cmake 4 is on the runner, this is neccesary.
+          CMAKE_POLICY_VERSION_MINIMUM: "3.5"
         run: |
           set -eux
           conan install . \
