@@ -386,4 +386,40 @@ describe('equality', () => {
     // @ts-expect-error: intentionally testing undefined values
     expect(csp.mapEquals(undefined, undefined)).toBe(true);
   });
+
+  // optionalEquals tests
+
+  it('Optional undefined equals undefined', () => {
+    expect(csp.optionalEquals(undefined, undefined)).toBe(true);
+  });
+
+  it('Optional basic type not equal to undefined', () => {
+    const value = 123;
+
+    expect(csp.optionalEquals(value, undefined)).toBe(false);
+    expect(csp.optionalEquals(undefined, value)).toBe(false);
+  });
+
+  it('Optional full type not equal to undefined', () => {
+    using bound = csp.BindingsTestType.create(1, 'one');
+
+    expect(csp.optionalEquals(bound, undefined)).toBe(false);
+    expect(csp.optionalEquals(undefined, bound)).toBe(false);
+  });
+
+  it('Optional basic type equality', () => {
+    const value1 = 123;
+    const value2 = 123;
+
+    expect(csp.optionalEquals(value1, value1)).toBe(true);
+    expect(csp.optionalEquals(value1, value2)).toBe(true);
+  });
+
+  it('Optional full type equality', () => {
+    using elem1 = csp.BindingsTestType.create(1, 'one');
+    using elem2 = csp.BindingsTestType.create(1, 'one');
+
+    expect(csp.optionalEquals(elem1, elem1)).toBe(true);
+    expect(csp.optionalEquals(elem1, elem2)).toBe(true);
+  });
 });
