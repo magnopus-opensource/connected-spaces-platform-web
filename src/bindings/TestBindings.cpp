@@ -9,6 +9,7 @@
 #include "containers/Array.h"
 #include "containers/List.h"
 #include "containers/Map.h"
+#include "containers/Optional.h"
 #include "string/String.h"
 #include "utils/JSDisposable.h"
 
@@ -35,7 +36,7 @@ public:
     BindingsTestType(const BindingsTestType& other) : m_value(other.m_value), m_name(other.m_name) { ++AliveCount; }
     BindingsTestType(BindingsTestType&& other) noexcept : m_value(other.m_value), m_name(std::move(other.m_name)) { ++AliveCount; }
 
-    /* No Constructor/Destructor dance when doing copy/move assignment, so AliveCount remains stable*/
+    /* No Constructor/Destructor dance when doing copy/move assignment, so AliveCount remains stable */
     BindingsTestType& operator=(const BindingsTestType&) = default;
     BindingsTestType& operator=(BindingsTestType&&) noexcept = default;
 
@@ -114,13 +115,13 @@ public:
     void SetMapFullTypeByValue(csp::common::Map<int, BindingsTestType> value) { m_mapFullType = std::move(value); }
     void SetMapFullTypeByConstRef(const csp::common::Map<int, BindingsTestType>& value) { m_mapFullType = value; }
 
-    // Map<string, int>
+    // Map<String, int>
     csp::common::Map<csp::common::String, int> GetMapStringIntByValue() const { return m_mapStringInt; }
     const csp::common::Map<csp::common::String, int>& GetMapStringIntByConstRef() const { return m_mapStringInt; }
     void SetMapStringIntByValue(csp::common::Map<csp::common::String, int> value) { m_mapStringInt = std::move(value); }
     void SetMapStringIntByConstRef(const csp::common::Map<csp::common::String, int>& value) { m_mapStringInt = value; }
 
-    // Map<string, string>
+    // Map<String, String>
     csp::common::Map<csp::common::String, csp::common::String> GetMapStringStringByValue() const { return m_mapStringString; }
     const csp::common::Map<csp::common::String, csp::common::String>& GetMapStringStringByConstRef() const { return m_mapStringString; }
     void SetMapStringStringByValue(csp::common::Map<csp::common::String, csp::common::String> value) { m_mapStringString = std::move(value); }
@@ -137,6 +138,12 @@ public:
     const csp::common::Optional<BindingsTestType>& GetOptionalFullTypeByConstRef() const { return m_optionalFullType; }
     void SetOptionalFullTypeByValue(csp::common::Optional<BindingsTestType> value) { m_optionalFullType = std::move(value); }
     void SetOptionalFullTypeByConstRef(const csp::common::Optional<BindingsTestType>& value) { m_optionalFullType = value; }
+
+    // Optional<String>
+    csp::common::Optional<csp::common::String> GetOptionalStringByValue() const { return m_optionalString; }
+    const csp::common::Optional<csp::common::String>& GetOptionalStringByConstRef() const { return m_optionalString; }
+    void SetOptionalStringByValue(csp::common::Optional<csp::common::String> value) { m_optionalString = std::move(value); }
+    void SetOptionalStringByConstRef(const csp::common::Optional<csp::common::String>& value) { m_optionalString = value; }
 
     // String
     csp::common::String GetCspStringByValue() const { return m_cspString; }
@@ -185,6 +192,7 @@ private:
     csp::common::Map<csp::common::String, csp::common::String> m_mapStringString;
     csp::common::Optional<int> m_optionalBasicType;
     csp::common::Optional<BindingsTestType> m_optionalFullType;
+    csp::common::Optional<csp::common::String> m_optionalString;
     csp::common::String m_cspString;
 
     csp::common::Array<BindingsTestType*> m_arrayOfPointers;
@@ -193,7 +201,7 @@ private:
     csp::common::List<BindingsTestType*> m_listOfCppOwnedPointers; //Prefilled in constructor
     csp::common::Map<int, BindingsTestType*> m_mapOfPointers;
     csp::common::Map<int, BindingsTestType*> m_mapOfCppOwnedPointers; //Prefilled in constructor
-    // Optional to pointer isn't a pattern we express (i think).
+    // Optional to pointer isn't a pattern we express (I think).
 
     // We may need to add List<T*>* for annoying reasons, I believe this is a pattern
     // expressed due to the legacy wrapper generator, which we may need to support
@@ -270,6 +278,11 @@ EMSCRIPTEN_BINDINGS(CSPTestBindings)
     emscripten::register_type<bindings::utils::JSDisposable<csp::common::Map<int, BindingsTestType>>>("(Map<number, BindingsTestType> & Disposable)");
     emscripten::register_type<bindings::utils::JSDisposable<csp::common::Map<csp::common::String, int>>>("(Map<string, number> & Disposable)");
     emscripten::register_type<bindings::utils::JSDisposable<csp::common::Map<csp::common::String, csp::common::String>>>("(Map<string, string> & Disposable)");
+
+    // Optional
+    emscripten::register_optional<int>();
+    emscripten::register_optional<BindingsTestType>();
+    emscripten::register_optional<csp::common::String>();
 
     emscripten::class_<BindingMechanismsTestType>("BindingsMechanismsTestType")
         .class_function("create", +[](){ return BindingMechanismsTestType(); })
@@ -363,8 +376,7 @@ EMSCRIPTEN_BINDINGS(CSPTestBindings)
         .function("getCspStringByValue", &BindingMechanismsTestType::GetCspStringByValue)
         .function("getCspStringByConstRef", &BindingMechanismsTestType::GetCspStringByConstRef)
         .function("setCspStringByValue", &BindingMechanismsTestType::SetCspStringByValue)
-        .function("setCspStringByConstRef", &BindingMechanismsTestType::SetCspStringByConstRef);
-        /*
+        .function("setCspStringByConstRef", &BindingMechanismsTestType::SetCspStringByConstRef)
         .function("getOptionalBasicTypeByValue", &BindingMechanismsTestType::GetOptionalBasicTypeByValue)
         .function("getOptionalBasicTypeByConstRef", &BindingMechanismsTestType::GetOptionalBasicTypeByConstRef)
         .function("setOptionalBasicTypeByValue", &BindingMechanismsTestType::SetOptionalBasicTypeByValue)
@@ -373,5 +385,8 @@ EMSCRIPTEN_BINDINGS(CSPTestBindings)
         .function("getOptionalFullTypeByConstRef", &BindingMechanismsTestType::GetOptionalFullTypeByConstRef)
         .function("setOptionalFullTypeByValue", &BindingMechanismsTestType::SetOptionalFullTypeByValue)
         .function("setOptionalFullTypeByConstRef", &BindingMechanismsTestType::SetOptionalFullTypeByConstRef)
-        */
+        .function("getOptionalStringByValue", &BindingMechanismsTestType::GetOptionalStringByValue)
+        .function("getOptionalStringByConstRef", &BindingMechanismsTestType::GetOptionalStringByConstRef)
+        .function("setOptionalStringByValue", &BindingMechanismsTestType::SetOptionalStringByValue)
+        .function("setOptionalStringByConstRef", &BindingMechanismsTestType::SetOptionalStringByConstRef);
 }
