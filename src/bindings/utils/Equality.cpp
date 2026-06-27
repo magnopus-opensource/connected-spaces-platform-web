@@ -1,7 +1,7 @@
+#include "Handles.h"
 #include "emscripten/bind.h"
 #include "emscripten/val.h"
-#include "Handles.h"
-  
+
 namespace {
 
 // Forward declarations to support recursion
@@ -14,7 +14,8 @@ bool MapEquals(emscripten::val a, emscripten::val b);
  * A bound C++ type will defer to a bound ".equals" method, which is assumed to call
  * the C++ equality operator.
  */
-bool ElementEquals(emscripten::val a, emscripten::val b){
+bool ElementEquals(emscripten::val a, emscripten::val b)
+{
 
     // Identical primitives or identical handles to the same C++ instance
     if (a.strictlyEquals(b)) {
@@ -25,20 +26,20 @@ bool ElementEquals(emscripten::val a, emscripten::val b){
     const std::string typeA = a.typeOf().as<std::string>();
     const std::string typeB = b.typeOf().as<std::string>();
 
-     // Mixed type can't be equal. (is the string comparison neccesary?)
+    // Mixed type can't be equal. (is the string comparison neccesary?)
     if (typeA != typeB) {
         return false;
     }
 
     // Below this point, we should have complex, non primitive objects of the same type. (Primitives are dealt with in the strictlyEquals check, which does NAN != NAN as expected)
-    if (typeA != "object") { 
+    if (typeA != "object") {
         return false;
     }
 
     // Null is "object" in JS, special-case it.
     if (a.isNull() || b.isNull()) {
         return a.isNull() && b.isNull();
-    } 
+    }
 
     // Recurse if we find an array. ArrayEquals ends up calling this function.
     if (a.isArray() && b.isArray()) {
@@ -51,10 +52,10 @@ bool ElementEquals(emscripten::val a, emscripten::val b){
         return MapEquals(a, b);
     }
 
-    // Beyond this point we're only making meaningful claims for bound C++ objects. 
+    // Beyond this point we're only making meaningful claims for bound C++ objects.
     // This check is arguably true by definition of having made it this far, but check anyway.
-    if (!bindings::utils::IsBoundHandle(a) || !bindings::utils::IsBoundHandle(b)){
-         return false;
+    if (!bindings::utils::IsBoundHandle(a) || !bindings::utils::IsBoundHandle(b)) {
+        return false;
     }
 
     // Constructor.name is the string passed to emscripten::class_<T>("Name"). Check if they're the same type.
@@ -80,33 +81,34 @@ bool ElementEquals(emscripten::val a, emscripten::val b){
  * There is no way to do complex type constraints in embind without manually declaring every possible type
  * therefore, we use `any` here, and plan to do a manual typescript overlay file that
  * uses typescript generics to constrain these vals to the same [T].
- * 
+ *
  * Will accept any array type that exposes a "length" property and has a [] operator.
  */
-bool ArrayEquals(emscripten::val a, emscripten::val b) {
+bool ArrayEquals(emscripten::val a, emscripten::val b)
+{
 
-      // Early out reference equality and type checks.
-      if (a.strictlyEquals(b)){
-         return true;
-      }
-      if (!a.isArray() || !b.isArray()) {
+    // Early out reference equality and type checks.
+    if (a.strictlyEquals(b)) {
+        return true;
+    }
+    if (!a.isArray() || !b.isArray()) {
         return false;
-      }
+    }
 
-      // Are they the same length?
-      const unsigned aLength = a["length"].as<unsigned>();
-      const unsigned bLength = b["length"].as<unsigned>();
-      if (aLength != bLength) {
+    // Are they the same length?
+    const unsigned aLength = a["length"].as<unsigned>();
+    const unsigned bLength = b["length"].as<unsigned>();
+    if (aLength != bLength) {
         return false;
-      }
+    }
 
-      // Do elementwise comparison, using a function that accounts for both JS and CPP bound objects, along with array recursion
-      for (unsigned i = 0; i < aLength; ++i) {
-          if (!ElementEquals(a[i], b[i])) {
-             return false;
-          }
-      }
-      return true;
+    // Do elementwise comparison, using a function that accounts for both JS and CPP bound objects, along with array recursion
+    for (unsigned i = 0; i < aLength; ++i) {
+        if (!ElementEquals(a[i], b[i])) {
+            return false;
+        }
+    }
+    return true;
 }
 
 /*
@@ -120,46 +122,48 @@ bool ArrayEquals(emscripten::val a, emscripten::val b) {
  * As with arrayEquals, embind can't express the key/value type constraint, so we take `any`
  * and rely on a planned typescript overlay to constrain both maps to the same <K, V>.
  */
-bool MapEquals(emscripten::val a, emscripten::val b) {
+bool MapEquals(emscripten::val a, emscripten::val b)
+{
 
-      // Early out reference equality and type checks.
-      if (a.strictlyEquals(b)){
+    // Early out reference equality and type checks.
+    if (a.strictlyEquals(b)) {
         return true;
-      }
+    }
 
-      // Are both inputs maps?
-      static const emscripten::val mapGlobal = emscripten::val::global("Map");
-      if (!a.instanceof(mapGlobal) || !b.instanceof(mapGlobal)) {
+    // Are both inputs maps?
+    static const emscripten::val mapGlobal = emscripten::val::global("Map");
+    if (!a.instanceof(mapGlobal) || !b.instanceof(mapGlobal)) {
         return false;
-      }
+    }
 
-      // Are they the same size?
-      if (a["size"].as<unsigned>() != b["size"].as<unsigned>()){
+    // Are they the same size?
+    if (a["size"].as<unsigned>() != b["size"].as<unsigned>()) {
         return false;
-      }
+    }
 
-      // Array.from(map) yields [[key, value], ...]. Order is irrelevant: for each key in a,
-      // look the key up in b and deeply compare the values.
-      // Equal sizes plus every key of a present-and-matching in b implies map equality.
-      const emscripten::val entriesA = emscripten::val::global("Array").call<emscripten::val>("from", a);
-      const unsigned length = entriesA["length"].as<unsigned>();
-      for (unsigned i = 0; i < length; ++i) {
-          const emscripten::val entryA = entriesA[i];
-          const emscripten::val key = entryA[0];
+    // Array.from(map) yields [[key, value], ...]. Order is irrelevant: for each key in a,
+    // look the key up in b and deeply compare the values.
+    // Equal sizes plus every key of a present-and-matching in b implies map equality.
+    const emscripten::val entriesA = emscripten::val::global("Array").call<emscripten::val>("from", a);
+    const unsigned length = entriesA["length"].as<unsigned>();
+    for (unsigned i = 0; i < length; ++i) {
+        const emscripten::val entryA = entriesA[i];
+        const emscripten::val key = entryA[0];
 
-          if (!b.call<bool>("has", key)) {
+        if (!b.call<bool>("has", key)) {
             return false; // key missing from b
-          }
-          if (!ElementEquals(entryA[1], b.call<emscripten::val>("get", key))) {
+        }
+        if (!ElementEquals(entryA[1], b.call<emscripten::val>("get", key))) {
             return false; // values differ
-          }
-      }
-      return true;
+        }
+    }
+    return true;
 }
 }
 
-EMSCRIPTEN_BINDINGS(CSPEquality) {
-      emscripten::function("arrayEquals", &ArrayEquals);
-      emscripten::function("elementEquals", &ElementEquals);
-      emscripten::function("mapEquals", &MapEquals);
-  }
+EMSCRIPTEN_BINDINGS(CSPEquality)
+{
+    emscripten::function("arrayEquals", &ArrayEquals);
+    emscripten::function("elementEquals", &ElementEquals);
+    emscripten::function("mapEquals", &MapEquals);
+}

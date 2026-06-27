@@ -5,12 +5,6 @@
 
 using namespace emscripten;
 
-std::string GetVersionWrapper()
-{
-    return std::string{ csp::CSPFoundation::GetVersion().c_str() };
-}
+std::string GetVersionWrapper() { return std::string { csp::CSPFoundation::GetVersion().c_str() }; }
 
-EMSCRIPTEN_BINDINGS(CSPLibModule)
-{
-    function("GetVersion", &GetVersionWrapper);
-}
+EMSCRIPTEN_BINDINGS(CSPLibModule) { function("GetVersion", &GetVersionWrapper); }

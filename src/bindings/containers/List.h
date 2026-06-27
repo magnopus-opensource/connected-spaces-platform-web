@@ -1,8 +1,8 @@
 #pragma once
+#include "../utils/JSDisposable.h"
+#include "CSP/Common/List.h"
 #include "emscripten/bind.h"
 #include "emscripten/val.h"
-#include "CSP/Common/List.h"
-#include "../utils/JSDisposable.h"
 #include <optional>
 #include <type_traits>
 
@@ -40,33 +40,27 @@ emscripten::class_<TypeToBind>("TypeToBind")
  */
 namespace emscripten::internal {
 
-template <typename T>
-struct BindingType<csp::common::List<T>>
-{
+template <typename T> struct BindingType<csp::common::List<T>> {
     using ValBinding = BindingType<val>;
-    using WireType   = ValBinding::WireType;
+    using WireType = ValBinding::WireType;
 
     // Parameter-path only: no [Symbol.dispose] attached. Returns go through
     // bindings::utils::JSDisposable<csp::common::List<T>> instead.
     static WireType toWireType(const csp::common::List<T>& list, rvp::default_tag)
     {
         val newJSArray = val::array();
-        for (size_t i = 0; i < list.Size(); ++i)
-        {
-            if constexpr (std::is_pointer_v<T>)
-            {
+        for (size_t i = 0; i < list.Size(); ++i) {
+            if constexpr (std::is_pointer_v<T>) {
                 // Pointer element: hand JS a non-owning reference to CSP-owned memory.
                 // Deleting/disposing the handle will not destroy the C++ object.
                 newJSArray.set(i, list[i], emscripten::return_value_policy::reference());
-            }
-            else
-            {
+            } else {
                 // Value element: embind copies it across the boundary.
                 // Disposal is necessary (via `using` or otherwise) otherwise these copies are a big leak.
                 newJSArray.set(i, list[i]);
             }
         }
-        return ValBinding::toWireType(newJSArray, rvp::default_tag{});
+        return ValBinding::toWireType(newJSArray, rvp::default_tag { });
     }
 
     static csp::common::List<T> fromWireType(WireType v)
@@ -74,17 +68,13 @@ struct BindingType<csp::common::List<T>>
         val js = ValBinding::fromWireType(v);
         const unsigned len = js["length"].as<unsigned>();
         csp::common::List<T> out(len);
-        for (unsigned i = 0; i < len; ++i)
-        {
-            if constexpr (std::is_pointer_v<T>)
-            {
+        for (unsigned i = 0; i < len; ++i) {
+            if constexpr (std::is_pointer_v<T>) {
                 // Pointer element: borrow the raw address from the JS handle (no copy) to pass back to CSP.
                 // The array references memory owned elsewhere, so these pointers dangle
                 // if the underlying objects are deleted while the array still holds them.
                 out.Append(js[i].as<T>(emscripten::allow_raw_pointers()));
-            }
-            else
-            {
+            } else {
                 // Value element: embind copies it across the boundary.
                 out.Append(js[i].as<T>());
             }
@@ -93,26 +83,20 @@ struct BindingType<csp::common::List<T>>
     }
 };
 
-template <typename T>
-struct BindingType<bindings::utils::JSDisposable<csp::common::List<T>>>
-{
+template <typename T> struct BindingType<bindings::utils::JSDisposable<csp::common::List<T>>> {
     using ValBinding = BindingType<val>;
-    using WireType   = ValBinding::WireType;
+    using WireType = ValBinding::WireType;
 
     // Return path. Attaches [Symbol.dispose] to allow `using` storage in JS land.
     static WireType toWireType(const bindings::utils::JSDisposable<csp::common::List<T>>& wrapper, rvp::default_tag)
     {
         const auto& list = wrapper.view;
         val newJSArray = val::array();
-        for (size_t i = 0; i < list.Size(); ++i)
-        {
-            if constexpr (std::is_pointer_v<T>)
-            {
+        for (size_t i = 0; i < list.Size(); ++i) {
+            if constexpr (std::is_pointer_v<T>) {
                 // Pointer element: hand JS a NON-OWNING reference to CSP-owned memory.
                 newJSArray.set(i, list[i], emscripten::return_value_policy::reference());
-            }
-            else
-            {
+            } else {
                 // Value element: embind copies it across the boundary.
                 newJSArray.set(i, list[i]);
             }
@@ -129,7 +113,7 @@ struct BindingType<bindings::utils::JSDisposable<csp::common::List<T>>>
         descriptor.set("enumerable", false);
         val::global("Object").call<void>("defineProperty", newJSArray, symbolDispose, descriptor);
 
-        return ValBinding::toWireType(newJSArray, rvp::default_tag{});
+        return ValBinding::toWireType(newJSArray, rvp::default_tag { });
     }
 };
 }
