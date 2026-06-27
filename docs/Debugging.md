@@ -22,6 +22,9 @@ Debugging is performed through the test suite. This project used a vitest test s
 
 To get WASM debugging support, you're going to need to install the [C/C++ Devtools Support (DWARF) extension](https://chromewebstore.google.com/detail/cc++-devtools-support-dwa/pdcpmagijalfljmkmjngeonclgbbannb)
 
+<img width="1280" height="800" alt="DWARF debugger extension image" src="https://github.com/user-attachments/assets/efb8423c-935d-4b93-aa50-bb82e72717d4" />
+
+
 Once that is installed, the next step is to tell our test stack where to find it. You do this by setting the `CSP_DWARF_EXT` environment variable to the path of your extension. This path will look something like mine does : `"C:\Users\Elliot.Morris\AppData\Local\Google\Chrome\User Data\Profile 2\Extensions\pdcpmagijalfljmkmjngeonclgbbannb\0.2.5854.1_0\"`
 
 > [!TIP]
@@ -59,9 +62,11 @@ npm run test:debug
 
 You should see a vitest window like below appear, and the tests should be executed.
 
+<img width="1280" height="800" alt="Vitest test panel image" src="https://github.com/user-attachments/assets/2abba474-028c-44fc-a953-38107d98d054" />
+
 ### Debugging
 
-A convenient way to trigger a breakpoint is to use the `debugger;` command inside one of the typescript tests, which avoids you scrambling to open the developer tools and set a breakpoint in time.
+A convenient way to trigger a breakpoint is to use the `debugger;` command inside one of the typescript tests, which avoids you scrambling to set a breakpoint in time, although do be sure to open developer tools promptly, as that can matter.
 
 For example :
 
@@ -75,3 +80,6 @@ it("exports GetVersion", () => {
 With this in place, launch the `test:debug` profile again,and open the developer tools with `F12`.
 
 Navigate to the `sources` tab. Once execution has stopped at your breakpoint, you will be able to use `Ctrl-P` to search for sources. In this instance, search for `CSPFoundation.cpp`. If you can find it, then things are working out for you! Navigate into it, and set a breakpoint via clicking the gutter next to the static string construction. Click to continue execution, and if things have gone well, the debugger will break inside the C++, and you have a debugger setup, huzah!
+
+<img width="1280" height="800" alt="Gif showing the full debugging flow in action" src="https://github.com/user-attachments/assets/eb7caf94-2363-4f81-ba89-894548cfaf27" />
+
