@@ -14,7 +14,7 @@ describe('CSPFoundation', () => {
   beforeAll(async () => {
     csp = await loadCSP();
 
-    using probe = csp.BindingsMechanismsTestType.create();
+    using probe = csp.ContainerBindingMechanismsTestType.create();
     try {
       probe.setArrayBasicTypeByValue([undefined as unknown as number]);
       embindAssertions = false;
@@ -46,7 +46,7 @@ describe('CSPFoundation', () => {
   });
 
   it('Array round trip basic type', () => {
-    using bindingsArrayHelper = csp.BindingsMechanismsTestType.create();
+    using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
     const newArr = [1,2,3];
 
     bindingsArrayHelper.setArrayBasicTypeByValue(newArr);
@@ -56,7 +56,7 @@ describe('CSPFoundation', () => {
   });
 
   it('Array round trip class type', () => {
-    using bindingsArrayHelper = csp.BindingsMechanismsTestType.create();
+    using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
     using elem1 = csp.BindingsTestType.create(1, "one");
     using elem2 = csp.BindingsTestType.create(2, "two");
     const newArr = [elem1, elem2];
@@ -71,7 +71,7 @@ describe('CSPFoundation', () => {
   });
 
   it('Array round trip single element', () => {
-    using bindingsArrayHelper = csp.BindingsMechanismsTestType.create();
+    using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
     const newArr = [1];
 
     bindingsArrayHelper.setArrayBasicTypeByValue(newArr);
@@ -81,7 +81,7 @@ describe('CSPFoundation', () => {
   });
 
   it('Array round trip large array', () => {
-    using bindingsArrayHelper = csp.BindingsMechanismsTestType.create();
+    using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
     const newArr = Array.from({ length: 10000 }, (_, i) => i);
 
     bindingsArrayHelper.setArrayBasicTypeByValue(newArr);
@@ -91,7 +91,7 @@ describe('CSPFoundation', () => {
   });
 
   it('Array round trip by const ref and by value are equivalent', () => {
-    using bindingsArrayHelper = csp.BindingsMechanismsTestType.create();
+    using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
     const newArr = [1,2,3];
 
     bindingsArrayHelper.setArrayBasicTypeByValue(newArr);
@@ -105,7 +105,7 @@ describe('CSPFoundation', () => {
 
   it('Post-Getter Mutations do not impact underlying data', () => {
 
-      using bindingsArrayHelper = csp.BindingsMechanismsTestType.create();
+      using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
       using elem1 = csp.BindingsTestType.create(1, "one");
       using elem2 = csp.BindingsTestType.create(2, "two");
       const newArr = [elem1, elem2];
@@ -123,7 +123,7 @@ describe('CSPFoundation', () => {
   });
 
   it('Post-Setter Mutations do not impact underlying data', () => {
-      using bindingsArrayHelper = csp.BindingsMechanismsTestType.create();
+      using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
       using elem1 = csp.BindingsTestType.create(1, "one");
       using elem2 = csp.BindingsTestType.create(2, "two");
       const newArr = [elem1, elem2];
@@ -142,7 +142,7 @@ describe('CSPFoundation', () => {
   });
 
   it('Getters return independent arrays', () => {
-      using bindingsArrayHelper = csp.BindingsMechanismsTestType.create();
+      using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
       using elem1 = csp.BindingsTestType.create(1, "one");
       using elem2 = csp.BindingsTestType.create(2, "two");
       const newArr = [elem1, elem2];
@@ -162,7 +162,7 @@ describe('CSPFoundation', () => {
 
   it('Setting a sparse array throws', (ctx) => {
     ctx.skip(!embindAssertions, 'release build: embind primitive type-conversion checks are ASSERTIONS-gated (debug only)');
-    using bindingsArrayHelper = csp.BindingsMechanismsTestType.create();
+    using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
 
     // JS arrays of primitives with holes in them
     expect(() => bindingsArrayHelper.setArrayBasicTypeByValue(new Array(5))).toThrow("Cannot convert \"undefined\" to int");
@@ -178,7 +178,7 @@ describe('CSPFoundation', () => {
 
   it('Setting array with invalid type throws', (ctx) => {
     ctx.skip(!embindAssertions, 'release build: embind primitive type-conversion checks are ASSERTIONS-gated (debug only)');
-    using bindingsArrayHelper = csp.BindingsMechanismsTestType.create();
+    using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
 
      // @ts-expect-error - Typescript will not allow us to set the wrong type, but want to see what happens anyways
      expect(() => bindingsArrayHelper.setArrayBasicTypeByValue(new Array("not a string"))).toThrow("Cannot convert \"not a string\" to int");
@@ -188,7 +188,7 @@ describe('CSPFoundation', () => {
   });
 
   it('Setting null array throws', () => {
-     using bindingsArrayHelper = csp.BindingsMechanismsTestType.create();
+     using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
 
      // @ts-expect-error - Typescript will not allow us to set null but want to see what happens anyways
      expect(() => bindingsArrayHelper.setArrayBasicTypeByValue(null)).toThrow("Cannot read properties of null (reading 'length')");
@@ -207,7 +207,7 @@ describe('CSPFoundation', () => {
    * https://github.com/magnopus-opensource/connected-spaces-platform/blob/96fd3de47c96ca67ae02cc4b7057bd155ec62ddd/Library/include/CSP/Common/Array.h#L138
    */
   it.skip('Repeated sets do not grow lifetime', () => {
-     using bindingsArrayHelper = csp.BindingsMechanismsTestType.create();
+     using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
      const beforeAliveCount = csp.BindingsTestType.aliveCount;
 
      for(let i = 0; i < 10; ++i){
@@ -226,7 +226,7 @@ describe('CSPFoundation', () => {
   /* Array of Pointers tests */
 
   it('Round trip array of pointers', () => {
-    using bindingsArrayHelper = csp.BindingsMechanismsTestType.create();
+    using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
     const beforeAliveCount = csp.BindingsTestType.aliveCount;
     using elem1 = csp.BindingsTestType.create(1, "one");
     using elem2 = csp.BindingsTestType.create(2, "two");
@@ -249,7 +249,7 @@ describe('CSPFoundation', () => {
   });
 
   it('Empty pointer array round trip', () => {
-    using bindingsArrayHelper = csp.BindingsMechanismsTestType.create();
+    using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
     const beforeAliveCount = csp.BindingsTestType.aliveCount;
 
     bindingsArrayHelper.setArrayOfPointersByValue([]);
@@ -263,7 +263,7 @@ describe('CSPFoundation', () => {
   });
 
   it('Only nulls pointer array round trip', () => {
-    using bindingsArrayHelper = csp.BindingsMechanismsTestType.create();
+    using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
     const beforeAliveCount = csp.BindingsTestType.aliveCount;
 
     bindingsArrayHelper.setArrayOfPointersByValue([null, null, null]);
@@ -277,7 +277,7 @@ describe('CSPFoundation', () => {
   });
 
   it('Array containing nulls pointer array round trip', () => {
-    using bindingsArrayHelper = csp.BindingsMechanismsTestType.create();
+    using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
     const beforeAliveCount = csp.BindingsTestType.aliveCount;
     using elem1 = csp.BindingsTestType.create(1, "one");
     using elem2 = csp.BindingsTestType.create(2, "two");
@@ -301,7 +301,7 @@ describe('CSPFoundation', () => {
   });
 
   it('Mutating element via pointer array is reflected in original handle', () => {
-     using bindingsArrayHelper = csp.BindingsMechanismsTestType.create();
+     using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
 
      let ptrList = bindingsArrayHelper.getArrayOfCppOwnedPointers();
      expect(ptrList[0]?.name).equals("One");
@@ -316,7 +316,7 @@ describe('CSPFoundation', () => {
   });
 
   it('Pointer arrays are independent, pointed to objects are not', () => {
-    using bindingsArrayHelper = csp.BindingsMechanismsTestType.create();
+    using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
 
     let ptrList1 = bindingsArrayHelper.getArrayOfCppOwnedPointers();
     let ptrList2 = bindingsArrayHelper.getArrayOfCppOwnedPointers();
@@ -341,7 +341,7 @@ describe('CSPFoundation', () => {
   });
 
   it('Array dispose function is not enumerable', () => {
-    using bindingsArrayHelper = csp.BindingsMechanismsTestType.create();
+    using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
     const newArr = [1, 2, 3];
 
     bindingsArrayHelper.setArrayBasicTypeByValue(newArr);
@@ -355,7 +355,7 @@ describe('CSPFoundation', () => {
   });
 
   it('Array round trip strict Vitest equality', () => {
-    using bindingsArrayHelper = csp.BindingsMechanismsTestType.create();
+    using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
     const newArr = [1, 2, 3];
 
     bindingsArrayHelper.setArrayBasicTypeByValue(newArr);

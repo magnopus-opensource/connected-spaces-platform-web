@@ -22,7 +22,7 @@ describe('List bindings', () => {
   });
 
   it('List round trip basic type', () => {
-    using helper = csp.BindingsMechanismsTestType.create();
+    using helper = csp.ContainerBindingMechanismsTestType.create();
     const newList = [1, 2, 3];
 
     helper.setListBasicTypeByValue(newList);
@@ -32,7 +32,7 @@ describe('List bindings', () => {
   });
 
   it('List round trip class type', () => {
-    using helper = csp.BindingsMechanismsTestType.create();
+    using helper = csp.ContainerBindingMechanismsTestType.create();
     using elem1 = csp.BindingsTestType.create(1, 'one');
     using elem2 = csp.BindingsTestType.create(2, 'two');
     const newList = [elem1, elem2];
@@ -44,7 +44,7 @@ describe('List bindings', () => {
   });
 
   it('List round trip by const ref and by value are equivalent', () => {
-    using helper = csp.BindingsMechanismsTestType.create();
+    using helper = csp.ContainerBindingMechanismsTestType.create();
     const newList = [1, 2, 3];
 
     helper.setListBasicTypeByValue(newList);
@@ -57,7 +57,7 @@ describe('List bindings', () => {
   });
 
   it('Round trip list of pointers', () => {
-    using helper = csp.BindingsMechanismsTestType.create();
+    using helper = csp.ContainerBindingMechanismsTestType.create();
     const beforeAliveCount = csp.BindingsTestType.aliveCount;
     using elem1 = csp.BindingsTestType.create(1, 'one');
     using elem2 = csp.BindingsTestType.create(2, 'two');
@@ -77,7 +77,7 @@ describe('List bindings', () => {
   });
 
   it('Mutating element via pointer list is reflected in original handle', () => {
-    using helper = csp.BindingsMechanismsTestType.create();
+    using helper = csp.ContainerBindingMechanismsTestType.create();
 
     const ptrList = helper.getListOfCppOwnedPointers();
     expect(ptrList[0]?.name).equals('One');
@@ -92,7 +92,7 @@ describe('List bindings', () => {
   });
 
   it('List dispose function is not enumerable', () => {
-    using helper = csp.BindingsMechanismsTestType.create();
+    using helper = csp.ContainerBindingMechanismsTestType.create();
     const newList = [1, 2, 3];
 
     helper.setListBasicTypeByValue(newList);
@@ -106,7 +106,7 @@ describe('List bindings', () => {
   });
 
   it('List round trip strict Vitest equality', () => {
-    using helper = csp.BindingsMechanismsTestType.create();
+    using helper = csp.ContainerBindingMechanismsTestType.create();
     const newList = [1, 2, 3];
 
     helper.setListBasicTypeByValue(newList);
