@@ -14,7 +14,7 @@
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "[cpp]": {
-    "editor.defaultFormatter": "ms-vscode.cpptools"
+    "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd"
   },
   "files.trimTrailingWhitespace": true,
   "files.insertFinalNewline": true
