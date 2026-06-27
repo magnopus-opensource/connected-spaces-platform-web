@@ -1,0 +1,5 @@
+# clangd regularly reports false positive for unused includes that do
+# stuff around template specializations.
+Diagnostics:
+  UnusedIncludes: None
+  MissingIncludes: None

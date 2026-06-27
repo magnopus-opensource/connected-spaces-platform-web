@@ -1,4 +1,9 @@
 {
+  "clangd.arguments": [
+    "--compile-commands-dir=${workspaceFolder}/build/Debug",
+    "--query-driver=**/emscripten/em++*,**/upstream/bin/clang*",
+    "--background-index"
+  ],
   "js/ts.tsdk.path": "./tests/node_modules/typescript/lib",
   "editor.formatOnSave": true,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
