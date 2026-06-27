@@ -33,6 +33,8 @@ target_compile_options(connected-spaces-platform-bindings PRIVATE
 
 target_link_options(connected-spaces-platform-bindings PRIVATE
    $<$<PLATFORM_ID:Emscripten>:
+    # Emit DWARF in the final .wasm for Debug builds only.
+    $<$<CONFIG:Debug>:-g>
     -pthread
     -fwasm-exceptions
     -lembind
