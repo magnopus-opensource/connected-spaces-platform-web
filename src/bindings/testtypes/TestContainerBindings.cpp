@@ -6,11 +6,13 @@
  * bindings migration.
  */
 
-#include "containers/Array.h"
-#include "containers/List.h"
-#include "containers/Map.h"
-#include "string/String.h"
-#include "utils/JSDisposable.h"
+#include "../containers/Array.h"
+#include "../containers/List.h"
+#include "../containers/Map.h"
+#include "../string/String.h"
+#include "../utils/JSDisposable.h"
+#include "BindingsTestType.h"
+
 
 #include "CSP/Common/Array.h"
 #include "CSP/Common/List.h"
@@ -20,39 +22,6 @@
 #include "emscripten/bind.h"
 #include "emscripten/val.h"
 #include <string>
-
-/*
- * A nonsense, instrumentable C++ object that we can bind and test mechanisms with.
- */
-class BindingsTestType {
-public:
-    BindingsTestType() { ++AliveCount; }
-    BindingsTestType(int value, std::string name) : m_value(value), m_name(std::move(name)) { ++AliveCount; }
-
-    BindingsTestType(const BindingsTestType& other) : m_value(other.m_value), m_name(other.m_name) { ++AliveCount; }
-    BindingsTestType(BindingsTestType&& other) noexcept : m_value(other.m_value), m_name(std::move(other.m_name)) { ++AliveCount; }
-
-    /* No Constructor/Destructor dance when doing copy/move assignment, so AliveCount remains stable*/
-    BindingsTestType& operator=(const BindingsTestType&) = default;
-    BindingsTestType& operator=(BindingsTestType&&) noexcept = default;
-
-    ~BindingsTestType() { --AliveCount; }
-
-    int GetValue() const { return m_value; }
-    void SetValue(int value) { m_value = value; }
-
-    const std::string& GetName() const { return m_name; }
-    void SetName(std::string name) { m_name = std::move(name); }
-
-    bool operator==(const BindingsTestType& other) const { return m_value == other.m_value && m_name == other.m_name; }
-
-    // Test instrumentation, keep track of how many instances of this object exist
-    static inline int AliveCount = 0;
-
-private:
-    int m_value = 0;
-    std::string m_name;
-};
 
 /*
  * A class to provide some fundamental patterns as interfaces to test binding mechanisms.
@@ -65,7 +34,7 @@ private:
  * (even with move semantics, it's strictly worse than const ref in my opinion).
  * However, we're just trying to prove interface expressions.
  */
-class BindingMechanismsTestType {
+class ContainerBindingMechanismsTestType {
 public:
     // Array<int>
     csp::common::Array<int> GetArrayBasicTypeByValue() const { return m_arrayBasicType; }
@@ -194,7 +163,7 @@ private:
     // expressed due to the legacy wrapper generator, which we may need to support
     // in a transitionary capacity.
 public:
-    BindingMechanismsTestType() : m_arrayOfCppOwnedPointers(2)
+    ContainerBindingMechanismsTestType() : m_arrayOfCppOwnedPointers(2)
     {
         // Yes, these will technically leak, but who cares in test code.
         m_arrayOfCppOwnedPointers[0] = new BindingsTestType(1, "One");
@@ -208,167 +177,117 @@ public:
     }
 };
 
-EMSCRIPTEN_BINDINGS(CSPTestBindings)
+EMSCRIPTEN_BINDINGS(CSPContainerTestTypeBindings)
 {
 
-    emscripten::class_<BindingsTestType>("BindingsTestType")
+    emscripten::class_<ContainerBindingMechanismsTestType>("ContainerBindingMechanismsTestType")
         .class_function(
-            "create(value, name)", +[](int value, std::string name) { return BindingsTestType(value, std::move(name)); })
-        .property("value", &BindingsTestType::GetValue, &BindingsTestType::SetValue)
-        .property("name", &BindingsTestType::GetName, &BindingsTestType::SetName)
-        .function("equals", &BindingsTestType::operator==)
-        .class_property("aliveCount", &BindingsTestType::AliveCount);
-
-    /*
-     * We'll bind all these as functions because we're looking to test the raw mechanisms as they would apply to
-     * any old method in the API. However, in a real case you'd probably want to bind getter/setter pairs like
-     * this as properties
-     *
-     * Sidenote: pretty sure the value based returns here are going to involve 2 copies. One into the return
-     * value of the method itself, and then once again as the data is copied across the JS/C++ runtime boundaries.
-     * We have options here:
-     *   - Just don't do value returns to owned data like this out of CSP. Tbh, the value return here is contrived anyhow, the const ref one makes
-     * more sense.
-     *   - Have move operators on our container types, then the returns are RVO'd and it won't matter anyway.
-     *   - Do different container element ownership across the interop boundary. Will look into this, although it seems counter to the theory of how
-     * embind wants you to do it.
-     */
-
-    // Array
-    emscripten::register_type<csp::common::Array<int>>("number[]");
-    emscripten::register_type<csp::common::Array<BindingsTestType>>("BindingsTestType[]");
-    emscripten::register_type<csp::common::Array<BindingsTestType*>>("(BindingsTestType | null)[]");
-    emscripten::register_type<csp::common::Array<csp::common::String>>("string[]");
-
-    // List
-    emscripten::register_type<csp::common::List<int>>("number[]");
-    emscripten::register_type<csp::common::List<BindingsTestType>>("BindingsTestType[]");
-    emscripten::register_type<csp::common::List<BindingsTestType*>>("(BindingsTestType | null)[]");
-
-    // Map
-    emscripten::register_type<csp::common::Map<int, int>>("Map<number, number>");
-    emscripten::register_type<csp::common::Map<int, BindingsTestType>>("Map<number, BindingsTestType>");
-    emscripten::register_type<csp::common::Map<int, BindingsTestType*>>("Map<number, (BindingsTestType | null)>");
-    emscripten::register_type<csp::common::Map<csp::common::String, int>>("Map<string, number>");
-    emscripten::register_type<csp::common::Map<csp::common::String, csp::common::String>>("Map<string, string>");
-
-    // Return types, allows embinds machinery to emit a different typescript signature for container returns, meaning we can use `using` in a
-    // type-checked manner. You need to remember to convert to these types in the returning methods, but you don't need to worry about it for
-    // parameters.
-
-    // Array
-    emscripten::register_type<bindings::utils::JSDisposable<csp::common::Array<int>>>("(number[] & Disposable)");
-    emscripten::register_type<bindings::utils::JSDisposable<csp::common::Array<BindingsTestType>>>("(BindingsTestType[] & Disposable)");
-    emscripten::register_type<bindings::utils::JSDisposable<csp::common::Array<csp::common::String>>>("(string[] & Disposable)");
-
-    // List
-    emscripten::register_type<bindings::utils::JSDisposable<csp::common::List<int>>>("(number[] & Disposable)");
-    emscripten::register_type<bindings::utils::JSDisposable<csp::common::List<BindingsTestType>>>("(BindingsTestType[] & Disposable)");
-
-    // Map
-    emscripten::register_type<bindings::utils::JSDisposable<csp::common::Map<int, int>>>("(Map<number, number> & Disposable)");
-    emscripten::register_type<bindings::utils::JSDisposable<csp::common::Map<int, BindingsTestType>>>("(Map<number, BindingsTestType> & Disposable)");
-    emscripten::register_type<bindings::utils::JSDisposable<csp::common::Map<csp::common::String, int>>>("(Map<string, number> & Disposable)");
-    emscripten::register_type<bindings::utils::JSDisposable<csp::common::Map<csp::common::String, csp::common::String>>>("(Map<string, string> & Disposable)");
-
-    emscripten::class_<BindingMechanismsTestType>("BindingsMechanismsTestType")
-        .class_function(
-            "create", +[]() { return BindingMechanismsTestType(); })
+            "create", +[]() { return ContainerBindingMechanismsTestType(); })
         .function(
             "getArrayBasicTypeByValue",
-            +[](const BindingMechanismsTestType& self) { return bindings::utils::JSDisposable<csp::common::Array<int>> { self.GetArrayBasicTypeByValue() }; })
+            +[](const ContainerBindingMechanismsTestType& self) { return bindings::utils::JSDisposable<csp::common::Array<int>> { self.GetArrayBasicTypeByValue() }; })
         .function(
             "getArrayBasicTypeByConstRef",
-            +[](const BindingMechanismsTestType& self) { return bindings::utils::JSDisposable<csp::common::Array<int>> { self.GetArrayBasicTypeByConstRef() }; })
-        .function("setArrayBasicTypeByValue(value)", &BindingMechanismsTestType::SetArrayBasicTypeByValue)
-        .function("setArrayBasicTypeByConstRef(value)", &BindingMechanismsTestType::SetArrayBasicTypeByConstRef)
+            +[](const ContainerBindingMechanismsTestType& self) { return bindings::utils::JSDisposable<csp::common::Array<int>> { self.GetArrayBasicTypeByConstRef() }; })
+        .function("setArrayBasicTypeByValue(value)", &ContainerBindingMechanismsTestType::SetArrayBasicTypeByValue)
+        .function("setArrayBasicTypeByConstRef(value)", &ContainerBindingMechanismsTestType::SetArrayBasicTypeByConstRef)
         .function(
             "getArrayFullTypeByValue",
-            +[](const BindingMechanismsTestType& self) { return bindings::utils::JSDisposable<csp::common::Array<BindingsTestType>> { self.GetArrayFullTypeByValue() }; })
+            +[](const ContainerBindingMechanismsTestType& self) { return bindings::utils::JSDisposable<csp::common::Array<BindingsTestType>> { self.GetArrayFullTypeByValue() }; })
         .function(
             "getArrayFullTypeByConstRef",
-            +[](const BindingMechanismsTestType& self) { return bindings::utils::JSDisposable<csp::common::Array<BindingsTestType>> { self.GetArrayFullTypeByConstRef() }; })
-        .function("setArrayFullTypeByValue(value)", &BindingMechanismsTestType::SetArrayFullTypeByValue)
-        .function("setArrayFullTypeByConstRef(value)", &BindingMechanismsTestType::SetArrayFullTypeByConstRef)
-        .function("getArrayOfPointersByValue", &BindingMechanismsTestType::GetArrayOfPointersByValue)
-        .function("getArrayOfPointersByConstRef", &BindingMechanismsTestType::GetArrayOfPointersByConstRef)
-        .function("getArrayOfCppOwnedPointers", &BindingMechanismsTestType::GetArrayOfCppOwnedPointers)
-        .function("setArrayOfPointersByValue(value)", &BindingMechanismsTestType::SetArrayOfPointersByValue)
-        .function("setArrayOfPointersByConstRef(value)", &BindingMechanismsTestType::SetArrayOfPointersByConstRef)
+            +[](const ContainerBindingMechanismsTestType& self) {
+                return bindings::utils::JSDisposable<csp::common::Array<BindingsTestType>> { self.GetArrayFullTypeByConstRef() };
+            })
+        .function("setArrayFullTypeByValue(value)", &ContainerBindingMechanismsTestType::SetArrayFullTypeByValue)
+        .function("setArrayFullTypeByConstRef(value)", &ContainerBindingMechanismsTestType::SetArrayFullTypeByConstRef)
+        .function("getArrayOfPointersByValue", &ContainerBindingMechanismsTestType::GetArrayOfPointersByValue)
+        .function("getArrayOfPointersByConstRef", &ContainerBindingMechanismsTestType::GetArrayOfPointersByConstRef)
+        .function("getArrayOfCppOwnedPointers", &ContainerBindingMechanismsTestType::GetArrayOfCppOwnedPointers)
+        .function("setArrayOfPointersByValue(value)", &ContainerBindingMechanismsTestType::SetArrayOfPointersByValue)
+        .function("setArrayOfPointersByConstRef(value)", &ContainerBindingMechanismsTestType::SetArrayOfPointersByConstRef)
         .function(
             "getArrayStringByValue",
-            +[](const BindingMechanismsTestType& self) { return bindings::utils::JSDisposable<csp::common::Array<csp::common::String>> { self.GetArrayStringByValue() }; })
+            +[](const ContainerBindingMechanismsTestType& self) { return bindings::utils::JSDisposable<csp::common::Array<csp::common::String>> { self.GetArrayStringByValue() }; })
         .function(
             "getArrayStringByConstRef",
-            +[](const BindingMechanismsTestType& self) { return bindings::utils::JSDisposable<csp::common::Array<csp::common::String>> { self.GetArrayStringByConstRef() }; })
-        .function("setArrayStringByValue(value)", &BindingMechanismsTestType::SetArrayStringByValue)
-        .function("setArrayStringByConstRef(value)", &BindingMechanismsTestType::SetArrayStringByConstRef)
+            +[](const ContainerBindingMechanismsTestType& self) {
+                return bindings::utils::JSDisposable<csp::common::Array<csp::common::String>> { self.GetArrayStringByConstRef() };
+            })
+        .function("setArrayStringByValue(value)", &ContainerBindingMechanismsTestType::SetArrayStringByValue)
+        .function("setArrayStringByConstRef(value)", &ContainerBindingMechanismsTestType::SetArrayStringByConstRef)
         .function(
             "getListBasicTypeByValue",
-            +[](const BindingMechanismsTestType& self) { return bindings::utils::JSDisposable<csp::common::List<int>> { self.GetListBasicTypeByValue() }; })
+            +[](const ContainerBindingMechanismsTestType& self) { return bindings::utils::JSDisposable<csp::common::List<int>> { self.GetListBasicTypeByValue() }; })
         .function(
             "getListBasicTypeByConstRef",
-            +[](const BindingMechanismsTestType& self) { return bindings::utils::JSDisposable<csp::common::List<int>> { self.GetListBasicTypeByConstRef() }; })
-        .function("setListBasicTypeByValue(value)", &BindingMechanismsTestType::SetListBasicTypeByValue)
-        .function("setListBasicTypeByConstRef(value)", &BindingMechanismsTestType::SetListBasicTypeByConstRef)
+            +[](const ContainerBindingMechanismsTestType& self) { return bindings::utils::JSDisposable<csp::common::List<int>> { self.GetListBasicTypeByConstRef() }; })
+        .function("setListBasicTypeByValue(value)", &ContainerBindingMechanismsTestType::SetListBasicTypeByValue)
+        .function("setListBasicTypeByConstRef(value)", &ContainerBindingMechanismsTestType::SetListBasicTypeByConstRef)
         .function(
             "getListFullTypeByValue",
-            +[](const BindingMechanismsTestType& self) { return bindings::utils::JSDisposable<csp::common::List<BindingsTestType>> { self.GetListFullTypeByValue() }; })
+            +[](const ContainerBindingMechanismsTestType& self) { return bindings::utils::JSDisposable<csp::common::List<BindingsTestType>> { self.GetListFullTypeByValue() }; })
         .function(
             "getListFullTypeByConstRef",
-            +[](const BindingMechanismsTestType& self) { return bindings::utils::JSDisposable<csp::common::List<BindingsTestType>> { self.GetListFullTypeByConstRef() }; })
-        .function("setListFullTypeByValue(value)", &BindingMechanismsTestType::SetListFullTypeByValue)
-        .function("setListFullTypeByConstRef(value)", &BindingMechanismsTestType::SetListFullTypeByConstRef)
-        .function("getListOfPointersByValue", &BindingMechanismsTestType::GetListOfPointersByValue)
-        .function("getListOfPointersByConstRef", &BindingMechanismsTestType::GetListOfPointersByConstRef)
-        .function("getListOfCppOwnedPointers", &BindingMechanismsTestType::GetListOfCppOwnedPointers)
-        .function("setListOfPointersByValue(value)", &BindingMechanismsTestType::SetListOfPointersByValue)
-        .function("setListOfPointersByConstRef(value)", &BindingMechanismsTestType::SetListOfPointersByConstRef)
+            +[](const ContainerBindingMechanismsTestType& self) { return bindings::utils::JSDisposable<csp::common::List<BindingsTestType>> { self.GetListFullTypeByConstRef() }; })
+        .function("setListFullTypeByValue(value)", &ContainerBindingMechanismsTestType::SetListFullTypeByValue)
+        .function("setListFullTypeByConstRef(value)", &ContainerBindingMechanismsTestType::SetListFullTypeByConstRef)
+        .function("getListOfPointersByValue", &ContainerBindingMechanismsTestType::GetListOfPointersByValue)
+        .function("getListOfPointersByConstRef", &ContainerBindingMechanismsTestType::GetListOfPointersByConstRef)
+        .function("getListOfCppOwnedPointers", &ContainerBindingMechanismsTestType::GetListOfCppOwnedPointers)
+        .function("setListOfPointersByValue(value)", &ContainerBindingMechanismsTestType::SetListOfPointersByValue)
+        .function("setListOfPointersByConstRef(value)", &ContainerBindingMechanismsTestType::SetListOfPointersByConstRef)
         .function(
             "getMapBasicTypeByValue",
-            +[](const BindingMechanismsTestType& self) { return bindings::utils::JSDisposable<csp::common::Map<int, int>> { self.GetMapBasicTypeByValue() }; })
+            +[](const ContainerBindingMechanismsTestType& self) { return bindings::utils::JSDisposable<csp::common::Map<int, int>> { self.GetMapBasicTypeByValue() }; })
         .function(
             "getMapBasicTypeByConstRef",
-            +[](const BindingMechanismsTestType& self) { return bindings::utils::JSDisposable<csp::common::Map<int, int>> { self.GetMapBasicTypeByConstRef() }; })
-        .function("setMapBasicTypeByValue(value)", &BindingMechanismsTestType::SetMapBasicTypeByValue)
-        .function("setMapBasicTypeByConstRef(value)", &BindingMechanismsTestType::SetMapBasicTypeByConstRef)
+            +[](const ContainerBindingMechanismsTestType& self) { return bindings::utils::JSDisposable<csp::common::Map<int, int>> { self.GetMapBasicTypeByConstRef() }; })
+        .function("setMapBasicTypeByValue(value)", &ContainerBindingMechanismsTestType::SetMapBasicTypeByValue)
+        .function("setMapBasicTypeByConstRef(value)", &ContainerBindingMechanismsTestType::SetMapBasicTypeByConstRef)
         .function(
             "getMapFullTypeByValue",
-            +[](const BindingMechanismsTestType& self) { return bindings::utils::JSDisposable<csp::common::Map<int, BindingsTestType>> { self.GetMapFullTypeByValue() }; })
+            +[](const ContainerBindingMechanismsTestType& self) { return bindings::utils::JSDisposable<csp::common::Map<int, BindingsTestType>> { self.GetMapFullTypeByValue() }; })
         .function(
             "getMapFullTypeByConstRef",
-            +[](const BindingMechanismsTestType& self) { return bindings::utils::JSDisposable<csp::common::Map<int, BindingsTestType>> { self.GetMapFullTypeByConstRef() }; })
-        .function("setMapFullTypeByValue(value)", &BindingMechanismsTestType::SetMapFullTypeByValue)
-        .function("setMapFullTypeByConstRef(value)", &BindingMechanismsTestType::SetMapFullTypeByConstRef)
-        .function("getMapOfPointersByValue", &BindingMechanismsTestType::GetMapOfPointersByValue)
-        .function("getMapOfPointersByConstRef", &BindingMechanismsTestType::GetMapOfPointersByConstRef)
-        .function("getMapOfCppOwnedPointers", &BindingMechanismsTestType::GetMapOfCppOwnedPointers)
-        .function("setMapOfPointersByValue(value)", &BindingMechanismsTestType::SetMapOfPointersByValue)
-        .function("setMapOfPointersByConstRef(value)", &BindingMechanismsTestType::SetMapOfPointersByConstRef)
+            +[](const ContainerBindingMechanismsTestType& self) {
+                return bindings::utils::JSDisposable<csp::common::Map<int, BindingsTestType>> { self.GetMapFullTypeByConstRef() };
+            })
+        .function("setMapFullTypeByValue(value)", &ContainerBindingMechanismsTestType::SetMapFullTypeByValue)
+        .function("setMapFullTypeByConstRef(value)", &ContainerBindingMechanismsTestType::SetMapFullTypeByConstRef)
+        .function("getMapOfPointersByValue", &ContainerBindingMechanismsTestType::GetMapOfPointersByValue)
+        .function("getMapOfPointersByConstRef", &ContainerBindingMechanismsTestType::GetMapOfPointersByConstRef)
+        .function("getMapOfCppOwnedPointers", &ContainerBindingMechanismsTestType::GetMapOfCppOwnedPointers)
+        .function("setMapOfPointersByValue(value)", &ContainerBindingMechanismsTestType::SetMapOfPointersByValue)
+        .function("setMapOfPointersByConstRef(value)", &ContainerBindingMechanismsTestType::SetMapOfPointersByConstRef)
         .function(
             "getMapStringIntByValue",
-            +[](const BindingMechanismsTestType& self) { return bindings::utils::JSDisposable<csp::common::Map<csp::common::String, int>> { self.GetMapStringIntByValue() }; })
+            +[](const ContainerBindingMechanismsTestType& self) {
+                return bindings::utils::JSDisposable<csp::common::Map<csp::common::String, int>> { self.GetMapStringIntByValue() };
+            })
         .function(
             "getMapStringIntByConstRef",
-            +[](const BindingMechanismsTestType& self) { return bindings::utils::JSDisposable<csp::common::Map<csp::common::String, int>> { self.GetMapStringIntByConstRef() }; })
-        .function("setMapStringIntByValue(value)", &BindingMechanismsTestType::SetMapStringIntByValue)
-        .function("setMapStringIntByConstRef(value)", &BindingMechanismsTestType::SetMapStringIntByConstRef)
+            +[](const ContainerBindingMechanismsTestType& self) {
+                return bindings::utils::JSDisposable<csp::common::Map<csp::common::String, int>> { self.GetMapStringIntByConstRef() };
+            })
+        .function("setMapStringIntByValue(value)", &ContainerBindingMechanismsTestType::SetMapStringIntByValue)
+        .function("setMapStringIntByConstRef(value)", &ContainerBindingMechanismsTestType::SetMapStringIntByConstRef)
         .function(
             "getMapStringStringByValue",
-            +[](const BindingMechanismsTestType& self) {
+            +[](const ContainerBindingMechanismsTestType& self) {
                 return bindings::utils::JSDisposable<csp::common::Map<csp::common::String, csp::common::String>> { self.GetMapStringStringByValue() };
             })
         .function(
             "getMapStringStringByConstRef",
-            +[](const BindingMechanismsTestType& self) {
+            +[](const ContainerBindingMechanismsTestType& self) {
                 return bindings::utils::JSDisposable<csp::common::Map<csp::common::String, csp::common::String>> { self.GetMapStringStringByConstRef() };
             })
-        .function("setMapStringStringByValue(value)", &BindingMechanismsTestType::SetMapStringStringByValue)
-        .function("setMapStringStringByConstRef(value)", &BindingMechanismsTestType::SetMapStringStringByConstRef)
-        .function("getCspStringByValue", &BindingMechanismsTestType::GetCspStringByValue)
-        .function("getCspStringByConstRef", &BindingMechanismsTestType::GetCspStringByConstRef)
-        .function("setCspStringByValue", &BindingMechanismsTestType::SetCspStringByValue)
-        .function("setCspStringByConstRef", &BindingMechanismsTestType::SetCspStringByConstRef);
+        .function("setMapStringStringByValue(value)", &ContainerBindingMechanismsTestType::SetMapStringStringByValue)
+        .function("setMapStringStringByConstRef(value)", &ContainerBindingMechanismsTestType::SetMapStringStringByConstRef)
+        .function("getCspStringByValue", &ContainerBindingMechanismsTestType::GetCspStringByValue)
+        .function("getCspStringByConstRef", &ContainerBindingMechanismsTestType::GetCspStringByConstRef)
+        .function("setCspStringByValue", &ContainerBindingMechanismsTestType::SetCspStringByValue)
+        .function("setCspStringByConstRef", &ContainerBindingMechanismsTestType::SetCspStringByConstRef);
     /*
     .function("getOptionalBasicTypeByValue", &BindingMechanismsTestType::GetOptionalBasicTypeByValue)
     .function("getOptionalBasicTypeByConstRef", &BindingMechanismsTestType::GetOptionalBasicTypeByConstRef)

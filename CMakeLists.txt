@@ -6,7 +6,7 @@ project(ConnectedSpacesPlatformWeb VERSION 1.0
 
 add_executable(connected-spaces-platform-bindings
     Bindings.cpp
-    src/bindings/TestBindings.cpp
+    src/bindings/testtypes/TestContainerBindings.cpp
     src/bindings/utils/Equality.cpp
     src/bindings/utils/Memory.cpp
 )
@@ -41,7 +41,7 @@ target_link_options(connected-spaces-platform-bindings PRIVATE
     -lwebsocket.js
     -sFETCH
     -sPTHREAD_POOL_SIZE_STRICT=0
-    "-sEXPORTED_FUNCTIONS=['_malloc','_free','_exit']" 
+    "-sEXPORTED_FUNCTIONS=['_malloc','_free','_exit']"
     -sEXPORT_ES6=1
     -sMODULARIZE=1
     -sEXPORT_NAME=createModule
