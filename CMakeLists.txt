@@ -24,6 +24,9 @@ target_link_libraries(connected-spaces-platform-bindings
 )
 
 target_compile_options(connected-spaces-platform-bindings PRIVATE
+  -Wall
+  -Wextra
+  -Werror
   $<$<PLATFORM_ID:Emscripten>:-pthread>
   $<$<PLATFORM_ID:Emscripten>:-fwasm-exceptions>
 )
