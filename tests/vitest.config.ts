@@ -8,12 +8,18 @@ const repoRoot = resolve(testDir, '..');
 // Arbitrary install location, just what I decided to call it.
 const installDir = resolve(repoRoot, 'CSP-WASM-Bindings');
 
-export default defineConfig(() => {
+// Shared config body. `debug` runs headed with the Chrome DWARF extension loaded
+// for C++ source-level debugging; CSP_DWARF_EXT points at the unpacked DWARF
+// debugger chrome extension:
+// https://chromewebstore.google.com/detail/cc++-devtools-support-dwa/pdcpmagijalfljmkmjngeonclgbbannb
+export function makeConfig({ debug = false } = {}) {
   if (!existsSync(installDir)) {
     throw new Error(
       `Bindings install directory not found: ${installDir}. Build and install the bindings first.`,
     );
   }
+
+  const dwarfExt = process.env.CSP_DWARF_EXT;
 
   return {
     test: {
@@ -21,10 +27,23 @@ export default defineConfig(() => {
       include: ['**/*.test.ts'],
       browser: {
         enabled: true,
-        headless: true,
+        headless: !debug,
         screenshotFailures: false,
-        provider: playwright(),
-        instances: [{ browser: 'chromium' }],
+        provider: playwright(
+          debug
+            ? {
+                // launchPersistentContext + headed is the only way Playwright loads extensions.
+                persistentContext: true,
+                launchOptions: {
+                  args: [
+                    `--disable-extensions-except=${dwarfExt}`,
+                    `--load-extension=${dwarfExt}`,
+                  ],
+                },
+              }
+            : {},
+        ),
+        instances: [{ browser: 'chromium' as const }],
       },
     },
     server: {
@@ -47,4 +66,6 @@ export default defineConfig(() => {
       },
     },
   };
-});
+}
+
+export default defineConfig(() => makeConfig());
