@@ -5,6 +5,7 @@
  * interdependent, so you can't really use many real types early on in the
  * bindings migration.
  */
+#pragma once
 
 #include "../containers/Array.h"
 #include "../containers/List.h"
