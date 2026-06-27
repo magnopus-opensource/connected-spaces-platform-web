@@ -9,7 +9,7 @@
 #include "../containers/Array.h"
 #include "../containers/List.h"
 #include "../containers/Map.h"
-#include "../string/String.h"
+#include "../containers/String.h"
 #include "../utils/JSDisposable.h"
 
 #include "CSP/Common/Array.h"

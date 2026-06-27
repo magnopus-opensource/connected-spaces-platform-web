@@ -9,10 +9,9 @@
 #include "../containers/Array.h"
 #include "../containers/List.h"
 #include "../containers/Map.h"
-#include "../string/String.h"
+#include "../containers/String.h"
 #include "../utils/JSDisposable.h"
 #include "BindingsTestType.h"
-
 
 #include "CSP/Common/Array.h"
 #include "CSP/Common/List.h"
