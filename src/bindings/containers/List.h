@@ -90,16 +90,13 @@ template <typename T> struct BindingType<bindings::utils::JSDisposable<csp::comm
     // Return path. Attaches [Symbol.dispose] to allow `using` storage in JS land.
     static WireType toWireType(const bindings::utils::JSDisposable<csp::common::List<T>>& wrapper, rvp::default_tag)
     {
+        static_assert(!std::is_pointer_v<T>, "JSDisposable<List<T*>> is forbidden: non-owning pointer containers are not disposable.");
+
         const auto& list = wrapper.view;
         val newJSArray = val::array();
         for (size_t i = 0; i < list.Size(); ++i) {
-            if constexpr (std::is_pointer_v<T>) {
-                // Pointer element: hand JS a NON-OWNING reference to CSP-owned memory.
-                newJSArray.set(i, list[i], emscripten::return_value_policy::reference());
-            } else {
-                // Value element: embind copies it across the boundary.
-                newJSArray.set(i, list[i]);
-            }
+            // Value element: embind copies it across the boundary.
+            newJSArray.set(i, list[i]);
         }
 
         // Attach [Symbol.dispose] so JS `using` releases bound handles at scope exit.

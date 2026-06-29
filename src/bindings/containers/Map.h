@@ -127,18 +127,14 @@ template <typename Key, typename Value> struct BindingType<bindings::utils::JSDi
     // Return path. Attaches [Symbol.dispose] to allow `using` storage in JS land.
     static WireType toWireType(const bindings::utils::JSDisposable<csp::common::Map<Key, Value>>& wrapper, rvp::default_tag)
     {
+        static_assert(!std::is_pointer_v<Value>, "JSDisposable<Map<K, V*>> is forbidden: non-owning pointer containers are not disposable.");
+
         const auto& map = wrapper.view;
         val newJSMap = val::global("Map").new_();
         for (const auto& [key, value] : map.GetUnderlying()) {
-            if constexpr (std::is_pointer_v<Value>) {
-                // Pointer element: hand JS a non-owning reference to CSP-owned memory.
-                // Deleting/disposing the handle will not destroy the C++ object.
-                newJSMap.call<void>("set", key, val(value, emscripten::return_value_policy::reference()));
-            } else {
-                // Value element: embind copies it across the boundary.
-                // Disposal is necessary (via `using` or otherwise) otherwise these copies are a big leak.
-                newJSMap.call<void>("set", key, val(value));
-            }
+            // Value element: embind copies it across the boundary.
+            // Disposal is necessary (via `using` or otherwise) otherwise these copies are a big leak.
+            newJSMap.call<void>("set", key, val(value));
         }
 
         // Attach [Symbol.dispose] so JS `using` releases bound handles at scope exit.
