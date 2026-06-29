@@ -4,6 +4,8 @@
  * as you go without doing something like this, because much of CSP is
  * interdependent, so you can't really use many real types early on in the
  * bindings migration.
+ *
+ * This one is for testing interop/container types
  */
 
 #include "../containers/Array.h"

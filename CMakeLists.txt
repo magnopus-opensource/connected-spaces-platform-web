@@ -8,6 +8,7 @@ add_executable(connected-spaces-platform-bindings
     Bindings.cpp
     src/bindings/testtypes/BindingsTestType.cpp
     src/bindings/testtypes/TestContainerBindings.cpp
+    src/bindings/testtypes/TestCallbackBindings.cpp
     src/bindings/utils/Equality.cpp
     src/bindings/utils/Memory.cpp
 )
