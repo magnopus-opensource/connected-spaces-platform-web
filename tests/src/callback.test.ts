@@ -137,4 +137,85 @@ describe('Callbacks', () => {
     });
     expect(secondCallbackCalled).toBe(true);
   });
+
+  it('Value arg is disposable (owned copy)', () => {
+    using helper = csp.CallbacksBindingMechanismsTestType.create();
+
+    let callbackCalled = false;
+    helper.callbackFunctionOnThreadValueArg((valueArg) => {
+      callbackCalled = true;
+      // A by-value arg is an owning copy, so it carries the dispose property.
+      expect(Symbol.dispose in valueArg).toBe(true);
+
+      // Disposing it frees that owned copy: the live count drops by one.
+      // (In reality, you might rebind to `using` instead of explicit disposal, although I would rather an approach that didn't require any manual disposal)
+      const beforeDispose = csp.BindingsTestType.aliveCount;
+      valueArg[Symbol.dispose]();
+      expect(csp.BindingsTestType.aliveCount).toBe(beforeDispose - 1);
+    });
+
+    expect(callbackCalled).toBe(true);
+  });
+
+  /*
+   * Pointers are a tad weird. embind mechanics give every ClassHandle the dispose symbol, but we
+   * deliberately don't put `& Disposable` on them in the TypeScript signature, because a pointer
+   * arg is a non-owning borrow (almost always — Custom Materials are the one present exception).
+   *
+   * At present, pointers do not protect themselves well. You can still call .delete() on them
+   * and it will delete CSP memory (they are however immune from garbage collection).
+   * This is un-ideal, we should do further work in the bindings to remove the ability to do
+   * this by setting a custom no-op Symbol.Dispose.
+   */
+  it('Pointer arg is a non-owning', () => {
+    using helper = csp.CallbacksBindingMechanismsTestType.create();
+
+    let callbackCalled = false;
+    helper.callbackFunctionOnThreadPointerArg((pointerArg) => {
+      callbackCalled = true;
+      // The dispose symbol is present (inherited from ClassHandle) even though the TS type omits it.
+      expect(Symbol.dispose in pointerArg).toBe(true);
+
+      // Disposing however, currently DOES free the CSP-owned pointee.
+      // This should change, it's not acceptable to have to just know ownership.
+      const beforeDispose = csp.BindingsTestType.aliveCount;
+      pointerArg[Symbol.dispose]();
+      expect(csp.BindingsTestType.aliveCount).toBe(beforeDispose - 1);
+    });
+
+    expect(callbackCalled).toBe(true);
+  });
+
+  it('Container of values is disposable (owns its element copies)', () => {
+    using helper = csp.CallbacksBindingMechanismsTestType.create();
+
+    let callbackCalled = false;
+    helper.callbackFunctionOnThreadContainerOfValues((valueContainerArg) => {
+      callbackCalled = true;
+      // The owning container carries the dispose marker...
+      expect(Symbol.dispose in valueContainerArg).toBe(true);
+
+      // Disposing it frees every owned element copy, ie, the live count drops by the element count.
+      const elementCount = valueContainerArg.length;
+      const beforeDispose = csp.BindingsTestType.aliveCount;
+      valueContainerArg[Symbol.dispose]();
+      expect(csp.BindingsTestType.aliveCount).toBe(beforeDispose - elementCount);
+    });
+
+    expect(callbackCalled).toBe(true);
+  });
+
+  it('Container of pointers is not disposable (non-owning)', () => {
+    using helper = csp.CallbacksBindingMechanismsTestType.create();
+
+    let callbackCalled = false;
+    helper.callbackFunctionOnThreadContainerOfPointers((pointerContainerArg) => {
+      callbackCalled = true;
+      expect(Symbol.dispose in pointerContainerArg).toBe(false);
+
+      // Pointer elements are non owning, but pointer containers are also non-disposable, so no disposal test even needed here.
+    });
+
+    expect(callbackCalled).toBe(true);
+  });
 });
