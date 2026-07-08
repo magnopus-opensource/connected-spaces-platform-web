@@ -23,5 +23,5 @@
   // vitest.config.ts is a node-side build script with a different runtime
   // contract than the browser tests; typechecking it here would require
   // @types/node and would pollute test code with node globals.
-  "exclude": ["vitest.config.ts"]
+  "exclude": ["vitest.config.ts", "vitest.debug.config.ts"]
 }

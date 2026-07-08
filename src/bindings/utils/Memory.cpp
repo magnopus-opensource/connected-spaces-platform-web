@@ -1,6 +1,6 @@
+#include "Handles.h"
 #include "emscripten/bind.h"
 #include "emscripten/val.h"
-#include "Handles.h"
 #include <stdexcept>
 
 /*
@@ -32,7 +32,8 @@ namespace {
  * Input must be a bound ClassHandle; anything else (including arrays) throws.
  * An already-deleted handle is tolerated as a no-op.
  */
-void DisposeElement(emscripten::val v) {
+void DisposeElement(emscripten::val v)
+{
     if (!bindings::utils::IsBoundHandle(v)) {
         throw std::runtime_error("disposeElement was passed a value that is not a bound handle");
     }
@@ -48,7 +49,8 @@ void DisposeElement(emscripten::val v) {
  * Recursive walker. Disposes any bound ClassHandle reachable through the array,
  * descends into nested arrays, silently skips everything else.
  */
-void DisposeAll(emscripten::val v) {
+void DisposeAll(emscripten::val v)
+{
     if (v.isArray()) {
         const unsigned length = v["length"].as<unsigned>();
         for (unsigned i = 0; i < length; ++i) {
@@ -71,7 +73,8 @@ void DisposeAll(emscripten::val v) {
  * no handles are a tolerated no-op — this is the path `using` routes through, so it
  * must work uniformly on whatever shape an array return happens to have.
  */
-void DisposeArray(emscripten::val arr) {
+void DisposeArray(emscripten::val arr)
+{
     if (!arr.isArray()) {
         throw std::runtime_error("disposeArray was passed a non-array value");
     }
@@ -85,7 +88,8 @@ void DisposeArray(emscripten::val arr) {
  * This is the path `using` routes through, so it must work uniformly on whatever shape
  * a map return happens to have.
  */
-void DisposeMap(emscripten::val map) {
+void DisposeMap(emscripten::val map)
+{
     static const emscripten::val globalMap = emscripten::val::global("Map");
     if (!map.instanceof(globalMap)) {
         throw std::runtime_error("disposeMap was passed a non-Map value");
@@ -96,7 +100,8 @@ void DisposeMap(emscripten::val map) {
 
 }
 
-EMSCRIPTEN_BINDINGS(CSPMemory) {
+EMSCRIPTEN_BINDINGS(CSPMemory)
+{
     emscripten::function("disposeElement", &DisposeElement);
     emscripten::function("disposeArray", &DisposeArray);
     emscripten::function("disposeMap", &DisposeMap);

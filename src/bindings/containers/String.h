@@ -1,7 +1,7 @@
 #pragma once
+#include "CSP/Common/String.h"
 #include "emscripten/bind.h"
 #include "emscripten/val.h"
-#include "CSP/Common/String.h"
 #include <optional>
 #include <string>
 #include <type_traits>
@@ -27,25 +27,20 @@ emscripten::class_<TypeToBind>("TypeToBind")
  */
 namespace emscripten::internal {
 
-template <>
-struct TypeID<csp::common::String> {
-    static constexpr TYPEID get() {
-        return TypeID<std::string>::get();
-    }
+template <> struct TypeID<csp::common::String> {
+    static constexpr TYPEID get() { return TypeID<std::string>::get(); }
 };
 
-template <>
-struct BindingType<csp::common::String>
-{
+template <> struct BindingType<csp::common::String> {
     using StringBinding = BindingType<std::string>;
-    using WireType      = StringBinding::WireType;
+    using WireType = StringBinding::WireType;
 
     static WireType toWireType(const csp::common::String& str, rvp::default_tag)
     {
         // Explicitly construct std::string using length to avoid truncation at the first \0 character
         std::string stdStr(str.c_str(), str.Length());
 
-        return StringBinding::toWireType(stdStr, rvp::default_tag{});
+        return StringBinding::toWireType(stdStr, rvp::default_tag { });
     }
 
     static csp::common::String fromWireType(WireType v)

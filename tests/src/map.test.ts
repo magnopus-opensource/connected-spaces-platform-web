@@ -21,8 +21,12 @@ describe('Map bindings', () => {
   });
 
   it('Map round trip basic type', () => {
-    using helper = csp.BindingsMechanismsTestType.create();
-    const newMap = new Map([[1, 10], [2, 20], [3, 30]]);
+    using helper = csp.ContainerBindingMechanismsTestType.create();
+    const newMap = new Map([
+      [1, 10],
+      [2, 20],
+      [3, 30]
+    ]);
 
     helper.setMapBasicTypeByValue(newMap);
     using roundTrip = helper.getMapBasicTypeByValue();
@@ -31,10 +35,13 @@ describe('Map bindings', () => {
   });
 
   it('Map round trip class type', () => {
-    using helper = csp.BindingsMechanismsTestType.create();
+    using helper = csp.ContainerBindingMechanismsTestType.create();
     using elem1 = csp.BindingsTestType.create(1, 'one');
     using elem2 = csp.BindingsTestType.create(2, 'two');
-    const newMap = new Map([[1, elem1], [2, elem2]]);
+    const newMap = new Map([
+      [1, elem1],
+      [2, elem2]
+    ]);
 
     helper.setMapFullTypeByValue(newMap);
     using roundTrip = helper.getMapFullTypeByValue();
@@ -43,8 +50,12 @@ describe('Map bindings', () => {
   });
 
   it('Map round trip by const ref and by value are equivalent', () => {
-    using helper = csp.BindingsMechanismsTestType.create();
-    const newMap = new Map([[1, 10], [2, 20], [3, 30]]);
+    using helper = csp.ContainerBindingMechanismsTestType.create();
+    const newMap = new Map([
+      [1, 10],
+      [2, 20],
+      [3, 30]
+    ]);
 
     helper.setMapBasicTypeByValue(newMap);
     using byValue = helper.getMapBasicTypeByValue();
@@ -56,11 +67,14 @@ describe('Map bindings', () => {
   });
 
   it('Round trip map of pointers', () => {
-    using helper = csp.BindingsMechanismsTestType.create();
+    using helper = csp.ContainerBindingMechanismsTestType.create();
     const beforeAliveCount = csp.BindingsTestType.aliveCount;
     using elem1 = csp.BindingsTestType.create(1, 'one');
     using elem2 = csp.BindingsTestType.create(2, 'two');
-    const newMap = new Map([[1, elem1], [2, elem2]]);
+    const newMap = new Map([
+      [1, elem1],
+      [2, elem2]
+    ]);
 
     // The two creates above are the only allocations; the round trip should add none.
     const afterAllocationAliveCount = csp.BindingsTestType.aliveCount;
@@ -76,7 +90,7 @@ describe('Map bindings', () => {
   });
 
   it('Mutating value via pointer map is reflected in original handle', () => {
-    using helper = csp.BindingsMechanismsTestType.create();
+    using helper = csp.ContainerBindingMechanismsTestType.create();
 
     const ptrMap = helper.getMapOfCppOwnedPointers();
     expect(ptrMap.get(1)?.name).equals('One');
@@ -92,8 +106,12 @@ describe('Map bindings', () => {
   });
 
   it('Map dispose function is not enumerable', () => {
-    using bindingsMapHelper = csp.BindingsMechanismsTestType.create();
-    const newMap = new Map([[1, 10], [2, 20], [3, 30]]);
+    using bindingsMapHelper = csp.ContainerBindingMechanismsTestType.create();
+    const newMap = new Map([
+      [1, 10],
+      [2, 20],
+      [3, 30]
+    ]);
 
     bindingsMapHelper.setMapBasicTypeByValue(newMap);
     using roundTripMap = bindingsMapHelper.getMapBasicTypeByValue();
@@ -106,8 +124,12 @@ describe('Map bindings', () => {
   });
 
   it('Map round trip strict Vitest equality', () => {
-    using bindingsMapHelper = csp.BindingsMechanismsTestType.create();
-    const newMap = new Map([[1, 10], [2, 20], [3, 30]]);
+    using bindingsMapHelper = csp.ContainerBindingMechanismsTestType.create();
+    const newMap = new Map([
+      [1, 10],
+      [2, 20],
+      [3, 30]
+    ]);
 
     bindingsMapHelper.setMapBasicTypeByValue(newMap);
     using roundTripMap = bindingsMapHelper.getMapBasicTypeByValue();

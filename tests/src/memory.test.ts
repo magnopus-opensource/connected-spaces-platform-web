@@ -83,7 +83,7 @@ describe('CSPFoundation', () => {
    * not need to attach a dispose Symbol, to non-owning pointer arrays.
    */
   it('reference-returned pointer proxies are eligible for GC when dropped', async () => {
-    using bindingsArrayHelper = csp.BindingsMechanismsTestType.create();
+    using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
     using anchor = csp.BindingsTestType.create(1, 'one');
     bindingsArrayHelper.setArrayOfPointersByValue([anchor]);
 
@@ -129,7 +129,7 @@ describe('CSPFoundation', () => {
    * or destructors on underlying C++ objects
    */
   it('reference-returned proxies do not pin the underlying C++ object', () => {
-    using bindingsArrayHelper = csp.BindingsMechanismsTestType.create();
+    using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
     using anchor = csp.BindingsTestType.create(1, 'one');
     bindingsArrayHelper.setArrayOfPointersByValue([anchor]);
 
@@ -172,7 +172,7 @@ describe('CSPFoundation', () => {
     // tests have already allocated in the shared csp instance.
     const freshCsp = await createModule();
 
-    using bindingsArrayHelper = freshCsp.BindingsMechanismsTestType.create();
+    using bindingsArrayHelper = freshCsp.ContainerBindingMechanismsTestType.create();
     using anchor = freshCsp.BindingsTestType.create(1, 'one');
     bindingsArrayHelper.setArrayOfPointersByValue([anchor]);
 
@@ -223,7 +223,7 @@ describe('CSPFoundation', () => {
     // Use a fresh module instance
     const freshCsp = await createModule();
 
-    using bindingsArrayHelper = freshCsp.BindingsMechanismsTestType.create();
+    using bindingsArrayHelper = freshCsp.ContainerBindingMechanismsTestType.create();
     // 512 KB string
     const bigString = 'x'.repeat(512 * 1024);
     using filler = freshCsp.BindingsTestType.create(0, bigString);
@@ -271,7 +271,7 @@ describe('CSPFoundation', () => {
    */
 
   it('Using on a returned array of handles releases every element at scope exit', () => {
-    using bindingsArrayHelper = csp.BindingsMechanismsTestType.create();
+    using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
     using elem1 = csp.BindingsTestType.create(1, 'one');
     using elem2 = csp.BindingsTestType.create(2, 'two');
     bindingsArrayHelper.setArrayFullTypeByValue([elem1, elem2]);
@@ -292,7 +292,7 @@ describe('CSPFoundation', () => {
      * and thus this deletion is necessary. But should we always be copying? That is the question.
      */
 
-    using bindingsArrayHelper = csp.BindingsMechanismsTestType.create();
+    using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
     using elem1 = csp.BindingsTestType.create(1, 'one');
     bindingsArrayHelper.setArrayFullTypeByValue([elem1]);
 
@@ -307,7 +307,7 @@ describe('CSPFoundation', () => {
   });
 
   it('Using on an array of basic types is a tolerated no-op on disposal', () => {
-    using bindingsArrayHelper = csp.BindingsMechanismsTestType.create();
+    using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
     bindingsArrayHelper.setArrayBasicTypeByValue([1, 2, 3]);
     expect(() => {
       using arr = bindingsArrayHelper.getArrayBasicTypeByValue();
@@ -316,7 +316,7 @@ describe('CSPFoundation', () => {
   });
 
   it('Releases array handles when the scope exits via exception', () => {
-    using bindingsArrayHelper = csp.BindingsMechanismsTestType.create();
+    using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
     using elem1 = csp.BindingsTestType.create(1, 'one');
     using elem2 = csp.BindingsTestType.create(2, 'two');
     bindingsArrayHelper.setArrayFullTypeByValue([elem1, elem2]);
@@ -331,7 +331,7 @@ describe('CSPFoundation', () => {
   });
 
   it('Disposing an empty returned array is a no-op', () => {
-    using bindingsArrayHelper = csp.BindingsMechanismsTestType.create();
+    using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
     bindingsArrayHelper.setArrayFullTypeByValue([]);
     const beforeGet = csp.BindingsTestType.aliveCount;
     {
@@ -343,7 +343,7 @@ describe('CSPFoundation', () => {
   });
 
   it('Array getter result without `using` leaks until manually disposed', () => {
-    using bindingsArrayHelper = csp.BindingsMechanismsTestType.create();
+    using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
     using elem1 = csp.BindingsTestType.create(1, 'one');
     bindingsArrayHelper.setArrayFullTypeByValue([elem1]);
 
@@ -356,7 +356,7 @@ describe('CSPFoundation', () => {
   });
 
   it('Disposing a returned array does not affect the underlying C++ storage', () => {
-    using bindingsArrayHelper = csp.BindingsMechanismsTestType.create();
+    using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
     using elem1 = csp.BindingsTestType.create(1, 'one');
     bindingsArrayHelper.setArrayFullTypeByValue([elem1]);
 
@@ -371,7 +371,7 @@ describe('CSPFoundation', () => {
   });
 
   it('Pre-deleting an element in a returned array does not break dispose', () => {
-    using bindingsArrayHelper = csp.BindingsMechanismsTestType.create();
+    using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
     using elem1 = csp.BindingsTestType.create(1, 'one');
     using elem2 = csp.BindingsTestType.create(2, 'two');
     bindingsArrayHelper.setArrayFullTypeByValue([elem1, elem2]);
@@ -392,7 +392,7 @@ describe('CSPFoundation', () => {
   });
 
   it('disposeArray is directly callable as a manual alternative to using', () => {
-    using bindingsArrayHelper = csp.BindingsMechanismsTestType.create();
+    using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
     using elem1 = csp.BindingsTestType.create(1, 'one');
     bindingsArrayHelper.setArrayFullTypeByValue([elem1]);
 
@@ -428,7 +428,7 @@ describe('CSPFoundation', () => {
   });
 
   it('Cpp Objects accessible via pointer arrays without allocating', () => {
-    using bindingsArrayHelper = csp.BindingsMechanismsTestType.create();
+    using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
     const beforeAliveCount = csp.BindingsTestType.aliveCount;
 
     let pointerArray = bindingsArrayHelper.getArrayOfCppOwnedPointers();
@@ -439,7 +439,7 @@ describe('CSPFoundation', () => {
   });
 
   it('JS owned object in pointer array that falls out of scope is undefined', () => {
-    using bindingsArrayHelper = csp.BindingsMechanismsTestType.create();
+    using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
     const beforeAliveCount = csp.BindingsTestType.aliveCount;
 
     {
@@ -459,7 +459,7 @@ describe('CSPFoundation', () => {
   });
 
   it('Explicit delete of elements in pointer array deletes underlying C++ memory', () => {
-    using bindingsArrayHelper = csp.BindingsMechanismsTestType.create();
+    using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
     const beforeAliveCount = csp.BindingsTestType.aliveCount;
 
     // No `using` here: we're managing lifetime explicitly via .delete() on the
@@ -490,7 +490,7 @@ describe('CSPFoundation', () => {
    */
 
   it('Using on a returned map of handles releases every value at scope exit', () => {
-    using bindingsMapHelper = csp.BindingsMechanismsTestType.create();
+    using bindingsMapHelper = csp.ContainerBindingMechanismsTestType.create();
     using elem1 = csp.BindingsTestType.create(1, 'one');
     using elem2 = csp.BindingsTestType.create(2, 'two');
     bindingsMapHelper.setMapFullTypeByValue(
@@ -511,7 +511,7 @@ describe('CSPFoundation', () => {
   });
 
   it('Using on a const-ref returned map of handles releases every value at scope exit', () => {
-    using bindingsMapHelper = csp.BindingsMechanismsTestType.create();
+    using bindingsMapHelper = csp.ContainerBindingMechanismsTestType.create();
     using elem1 = csp.BindingsTestType.create(1, 'one');
     bindingsMapHelper.setMapFullTypeByValue(new Map([[1, elem1]]));
 
@@ -526,7 +526,7 @@ describe('CSPFoundation', () => {
   });
 
   it('Using on a map of basic types is a tolerated no-op on disposal', () => {
-    using bindingsMapHelper = csp.BindingsMechanismsTestType.create();
+    using bindingsMapHelper = csp.ContainerBindingMechanismsTestType.create();
     bindingsMapHelper.setMapBasicTypeByValue(
       new Map([
         [1, 10],
@@ -541,7 +541,7 @@ describe('CSPFoundation', () => {
   });
 
   it('Releases map handles when the scope exits via exception', () => {
-    using bindingsMapHelper = csp.BindingsMechanismsTestType.create();
+    using bindingsMapHelper = csp.ContainerBindingMechanismsTestType.create();
     using elem1 = csp.BindingsTestType.create(1, 'one');
     using elem2 = csp.BindingsTestType.create(2, 'two');
     bindingsMapHelper.setMapFullTypeByValue(
@@ -561,7 +561,7 @@ describe('CSPFoundation', () => {
   });
 
   it('Disposing an empty returned map is a no-op', () => {
-    using bindingsMapHelper = csp.BindingsMechanismsTestType.create();
+    using bindingsMapHelper = csp.ContainerBindingMechanismsTestType.create();
     bindingsMapHelper.setMapFullTypeByValue(new Map());
     const beforeGet = csp.BindingsTestType.aliveCount;
     {
@@ -573,7 +573,7 @@ describe('CSPFoundation', () => {
   });
 
   it('Map getter result without `using` leaks until manually disposed', () => {
-    using bindingsMapHelper = csp.BindingsMechanismsTestType.create();
+    using bindingsMapHelper = csp.ContainerBindingMechanismsTestType.create();
     using elem1 = csp.BindingsTestType.create(1, 'one');
     bindingsMapHelper.setMapFullTypeByValue(new Map([[1, elem1]]));
 
@@ -586,7 +586,7 @@ describe('CSPFoundation', () => {
   });
 
   it('Disposing a returned map does not affect the underlying C++ storage', () => {
-    using bindingsMapHelper = csp.BindingsMechanismsTestType.create();
+    using bindingsMapHelper = csp.ContainerBindingMechanismsTestType.create();
     using elem1 = csp.BindingsTestType.create(1, 'one');
     bindingsMapHelper.setMapFullTypeByValue(new Map([[1, elem1]]));
 
@@ -601,7 +601,7 @@ describe('CSPFoundation', () => {
   });
 
   it('Pre-deleting a value in a returned map does not break dispose', () => {
-    using bindingsMapHelper = csp.BindingsMechanismsTestType.create();
+    using bindingsMapHelper = csp.ContainerBindingMechanismsTestType.create();
     using elem1 = csp.BindingsTestType.create(1, 'one');
     using elem2 = csp.BindingsTestType.create(2, 'two');
     bindingsMapHelper.setMapFullTypeByValue(
@@ -627,7 +627,7 @@ describe('CSPFoundation', () => {
   });
 
   it('disposeMap is directly callable as a manual alternative to using', () => {
-    using bindingsMapHelper = csp.BindingsMechanismsTestType.create();
+    using bindingsMapHelper = csp.ContainerBindingMechanismsTestType.create();
     using elem1 = csp.BindingsTestType.create(1, 'one');
     bindingsMapHelper.setMapFullTypeByValue(new Map([[1, elem1]]));
 
@@ -693,7 +693,7 @@ describe('CSPFoundation', () => {
   });
 
   it('Cpp objects accessible via pointer maps without allocating', () => {
-    using bindingsMapHelper = csp.BindingsMechanismsTestType.create();
+    using bindingsMapHelper = csp.ContainerBindingMechanismsTestType.create();
     const beforeAliveCount = csp.BindingsTestType.aliveCount;
 
     let pointerMap = bindingsMapHelper.getMapOfCppOwnedPointers();
@@ -704,7 +704,7 @@ describe('CSPFoundation', () => {
   });
 
   it('JS owned object in pointer map that falls out of scope is undefined', () => {
-    using bindingsMapHelper = csp.BindingsMechanismsTestType.create();
+    using bindingsMapHelper = csp.ContainerBindingMechanismsTestType.create();
     const beforeAliveCount = csp.BindingsTestType.aliveCount;
 
     {
@@ -722,7 +722,7 @@ describe('CSPFoundation', () => {
   });
 
   it('Explicit delete of values in pointer map deletes underlying C++ memory', () => {
-    using bindingsMapHelper = csp.BindingsMechanismsTestType.create();
+    using bindingsMapHelper = csp.ContainerBindingMechanismsTestType.create();
     const beforeAliveCount = csp.BindingsTestType.aliveCount;
 
     // No `using` here: we're managing lifetime explicitly via .delete() on the

@@ -1,5 +1,5 @@
 ---
 BasedOnStyle: WebKit
-ColumnLimit: 150
-BreakBeforeBraces: Allman
+PackConstructorInitializers: CurrentLine
+ColumnLimit: 180
 ...

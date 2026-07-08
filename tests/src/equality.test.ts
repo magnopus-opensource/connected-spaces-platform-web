@@ -34,7 +34,6 @@ describe('equality', () => {
     expect(csp.elementEquals('hello', 'world')).toBe(false);
   });
 
-
   it('Boolean equality', () => {
     expect(csp.elementEquals(true, true)).toBe(true);
     expect(csp.elementEquals(false, false)).toBe(true);
@@ -121,14 +120,35 @@ describe('equality', () => {
     expect(csp.elementEquals([1, 2, 3], [1, 2, 4])).toBe(false);
   });
 
-
   it('Arrays of differing lengths are not equal', () => {
     expect(csp.elementEquals([1, 2], [1, 2, 3])).toBe(false);
   });
 
   it('Nested arrays compare structurally', () => {
-    expect(csp.elementEquals([[1, 2], [3, 4]], [[1, 2], [3, 4]])).toBe(true);
-    expect(csp.elementEquals([[1, 2], [3, 4]], [[1, 2], [3, 5]])).toBe(false);
+    expect(
+      csp.elementEquals(
+        [
+          [1, 2],
+          [3, 4]
+        ],
+        [
+          [1, 2],
+          [3, 4]
+        ]
+      )
+    ).toBe(true);
+    expect(
+      csp.elementEquals(
+        [
+          [1, 2],
+          [3, 4]
+        ],
+        [
+          [1, 2],
+          [3, 5]
+        ]
+      )
+    ).toBe(false);
   });
 
   it('Array of bound objects compares element-wise via equals()', () => {
@@ -152,19 +172,17 @@ describe('equality', () => {
     // Exercise the full recursive chain you get when you have arrays of arrays.
     const a = [
       [csp.BindingsTestType.create(1, 'one'), csp.BindingsTestType.create(2, 'two')],
-      [csp.BindingsTestType.create(3, 'three')],
+      [csp.BindingsTestType.create(3, 'three')]
     ];
     const b = [
       [csp.BindingsTestType.create(1, 'one'), csp.BindingsTestType.create(2, 'two')],
-      [csp.BindingsTestType.create(3, 'three')],
+      [csp.BindingsTestType.create(3, 'three')]
     ];
     const differingInnerType = [
       [csp.BindingsTestType.create(1, 'one'), csp.BindingsTestType.create(2, 'two')],
-      [csp.BindingsTestType.create(3, 'oops')],
+      [csp.BindingsTestType.create(3, 'oops')]
     ];
-    const differingOuterShape = [
-      [csp.BindingsTestType.create(1, 'one'), csp.BindingsTestType.create(2, 'two')],
-    ];
+    const differingOuterShape = [[csp.BindingsTestType.create(1, 'one'), csp.BindingsTestType.create(2, 'two')]];
 
     expect(csp.elementEquals(a, b)).toBe(true);
     expect(csp.elementEquals(a, differingInnerType)).toBe(false);
@@ -172,7 +190,7 @@ describe('equality', () => {
   });
 
   it('Array of pointers equate based on underlying object equality', () => {
-    using bindingsArrayHelper = csp.BindingsMechanismsTestType.create();
+    using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
 
     let ptrList1 = bindingsArrayHelper.getArrayOfCppOwnedPointers();
 
@@ -188,13 +206,13 @@ describe('equality', () => {
     expect(csp.arrayEquals(ptrList1, ptrList2)).toBe(true);
 
     // Being paranoid, check that these are actually different arrays with disconnected elements
-     if (ptrList1[0] != null){
-      ptrList1[0].name = "mutatedOne";
-     }
+    if (ptrList1[0] != null) {
+      ptrList1[0].name = 'mutatedOne';
+    }
 
-     expect(csp.arrayEquals(ptrList1, ptrList2)).toBe(false);
-     expect(ptrList1[0]?.name).equals("mutatedOne");
-     expect(ptrList2[0]?.name).equals("One");
+    expect(csp.arrayEquals(ptrList1, ptrList2)).toBe(false);
+    expect(ptrList1[0]?.name).equals('mutatedOne');
+    expect(ptrList2[0]?.name).equals('One');
   });
 
   /*
@@ -207,23 +225,49 @@ describe('equality', () => {
   });
 
   it('Maps of primitives equality', () => {
-    const a = new Map([[1, 10], [2, 20]]);
-    const b = new Map([[1, 10], [2, 20]]);
+    const a = new Map([
+      [1, 10],
+      [2, 20]
+    ]);
+    const b = new Map([
+      [1, 10],
+      [2, 20]
+    ]);
     expect(a).not.equals(b); // Distinct references...
     expect(csp.mapEquals(a, b)).toBe(true); // ...but equal by content...
-    expect(csp.mapEquals(a, new Map([[1, 10], [2, 99]]))).toBe(false); // ...and not when a value differs.
+    expect(
+      csp.mapEquals(
+        a,
+        new Map([
+          [1, 10],
+          [2, 99]
+        ])
+      )
+    ).toBe(false); // ...and not when a value differs.
   });
 
   it('Maps of differing sizes are not equal', () => {
-    const a = new Map([[1, 10], [2, 20]]);
+    const a = new Map([
+      [1, 10],
+      [2, 20]
+    ]);
     const b = new Map([[1, 10]]);
     expect(csp.mapEquals(a, b)).toBe(false);
   });
 
   it('Nested maps compare structurally', () => {
-    const a = new Map([[1, new Map([[10, 100]])], [2, new Map([[20, 200]])]]);
-    const b = new Map([[1, new Map([[10, 100]])], [2, new Map([[20, 200]])]]);
-    const differing = new Map([[1, new Map([[10, 100]])], [2, new Map([[20, 999]])]]);
+    const a = new Map([
+      [1, new Map([[10, 100]])],
+      [2, new Map([[20, 200]])]
+    ]);
+    const b = new Map([
+      [1, new Map([[10, 100]])],
+      [2, new Map([[20, 200]])]
+    ]);
+    const differing = new Map([
+      [1, new Map([[10, 100]])],
+      [2, new Map([[20, 999]])]
+    ]);
     expect(csp.mapEquals(a, b)).toBe(true);
     expect(csp.mapEquals(a, differing)).toBe(false);
   });
@@ -235,8 +279,14 @@ describe('equality', () => {
     using b2 = csp.BindingsTestType.create(2, 'two');
 
     // Distinct handles with equal field values, so equality is by value, not identity.
-    const a = new Map([[1, a1], [2, a2]]);
-    const b = new Map([[1, b1], [2, b2]]);
+    const a = new Map([
+      [1, a1],
+      [2, a2]
+    ]);
+    const b = new Map([
+      [1, b1],
+      [2, b2]
+    ]);
     expect(csp.mapEquals(a, b)).toBe(true);
   });
 
@@ -246,8 +296,14 @@ describe('equality', () => {
     using b1 = csp.BindingsTestType.create(1, 'one');
     using b2 = csp.BindingsTestType.create(99, 'two');
 
-    const a = new Map([[1, a1], [2, a2]]);
-    const b = new Map([[1, b1], [2, b2]]);
+    const a = new Map([
+      [1, a1],
+      [2, a2]
+    ]);
+    const b = new Map([
+      [1, b1],
+      [2, b2]
+    ]);
     expect(csp.mapEquals(a, b)).toBe(false);
   });
 
@@ -258,60 +314,68 @@ describe('equality', () => {
 
     //a and b equal each other
     const a = new Map([
-      ['group1', new Map([
-        [1, [csp.BindingsTestType.create(1, 'one'), csp.BindingsTestType.create(2, 'two')]],
-        [2, [csp.BindingsTestType.create(3, 'three')]],
-      ])],
-      ['group2', new Map([
-        [9, [csp.BindingsTestType.create(9, 'nine')]],
-      ])],
+      [
+        'group1',
+        new Map([
+          [1, [csp.BindingsTestType.create(1, 'one'), csp.BindingsTestType.create(2, 'two')]],
+          [2, [csp.BindingsTestType.create(3, 'three')]]
+        ])
+      ],
+      ['group2', new Map([[9, [csp.BindingsTestType.create(9, 'nine')]]])]
     ]);
     const b = new Map([
-      ['group1', new Map([
-        [1, [csp.BindingsTestType.create(1, 'one'), csp.BindingsTestType.create(2, 'two')]],
-        [2, [csp.BindingsTestType.create(3, 'three')]],
-      ])],
-      ['group2', new Map([
-        [9, [csp.BindingsTestType.create(9, 'nine')]],
-      ])],
+      [
+        'group1',
+        new Map([
+          [1, [csp.BindingsTestType.create(1, 'one'), csp.BindingsTestType.create(2, 'two')]],
+          [2, [csp.BindingsTestType.create(3, 'three')]]
+        ])
+      ],
+      ['group2', new Map([[9, [csp.BindingsTestType.create(9, 'nine')]]])]
     ]);
 
     // Each variant below tries to perturb from a/b in just one way
     const differingLeafObject = new Map([
-      ['group1', new Map([
-        [1, [csp.BindingsTestType.create(1, 'one'), csp.BindingsTestType.create(2, 'two')]],
-        [2, [csp.BindingsTestType.create(3, 'oops')]],
-      ])],
-      ['group2', new Map([
-        [9, [csp.BindingsTestType.create(9, 'nine')]],
-      ])],
+      [
+        'group1',
+        new Map([
+          [1, [csp.BindingsTestType.create(1, 'one'), csp.BindingsTestType.create(2, 'two')]],
+          [2, [csp.BindingsTestType.create(3, 'oops')]]
+        ])
+      ],
+      ['group2', new Map([[9, [csp.BindingsTestType.create(9, 'nine')]]])]
     ]);
 
     const differingInnerKey = new Map([
-      ['group1', new Map([
-        [1, [csp.BindingsTestType.create(1, 'one'), csp.BindingsTestType.create(2, 'two')]],
-        [99, [csp.BindingsTestType.create(3, 'three')]],
-      ])],
-      ['group2', new Map([
-        [9, [csp.BindingsTestType.create(9, 'nine')]],
-      ])],
+      [
+        'group1',
+        new Map([
+          [1, [csp.BindingsTestType.create(1, 'one'), csp.BindingsTestType.create(2, 'two')]],
+          [99, [csp.BindingsTestType.create(3, 'three')]]
+        ])
+      ],
+      ['group2', new Map([[9, [csp.BindingsTestType.create(9, 'nine')]]])]
     ]);
 
     const differingArrayShape = new Map([
-      ['group1', new Map([
-        [1, [csp.BindingsTestType.create(1, 'one')]],
-        [2, [csp.BindingsTestType.create(3, 'three')]],
-      ])],
-      ['group2', new Map([
-        [9, [csp.BindingsTestType.create(9, 'nine')]],
-      ])],
+      [
+        'group1',
+        new Map([
+          [1, [csp.BindingsTestType.create(1, 'one')]],
+          [2, [csp.BindingsTestType.create(3, 'three')]]
+        ])
+      ],
+      ['group2', new Map([[9, [csp.BindingsTestType.create(9, 'nine')]]])]
     ]);
 
     const differingOuterShape = new Map([
-      ['group1', new Map([
-        [1, [csp.BindingsTestType.create(1, 'one'), csp.BindingsTestType.create(2, 'two')]],
-        [2, [csp.BindingsTestType.create(3, 'three')]],
-      ])],
+      [
+        'group1',
+        new Map([
+          [1, [csp.BindingsTestType.create(1, 'one'), csp.BindingsTestType.create(2, 'two')]],
+          [2, [csp.BindingsTestType.create(3, 'three')]]
+        ])
+      ]
     ]);
 
     expect(csp.mapEquals(a, b)).toBe(true);
@@ -345,26 +409,50 @@ describe('equality', () => {
   });
 
   it('Same Map reference is equal to itself', () => {
-    const m = new Map([[1, 10], [2, 20]]);
+    const m = new Map([
+      [1, 10],
+      [2, 20]
+    ]);
     expect(csp.mapEquals(m, m)).toBe(true);
   });
 
   it('Maps with the same pairs in a different insertion order are still equal', () => {
-    const a = new Map([[1, 10], [2, 20]]);
-    const b = new Map([[2, 20], [1, 10]]);
+    const a = new Map([
+      [1, 10],
+      [2, 20]
+    ]);
+    const b = new Map([
+      [2, 20],
+      [1, 10]
+    ]);
     expect(csp.mapEquals(a, b)).toBe(true);
   });
 
   it('Maps with different keys are not equal', () => {
-    const a = new Map([[1, 10], [2, 20]]);
-    const b = new Map([[1, 10], [3, 20]]);
+    const a = new Map([
+      [1, 10],
+      [2, 20]
+    ]);
+    const b = new Map([
+      [1, 10],
+      [3, 20]
+    ]);
     expect(csp.mapEquals(a, b)).toBe(false);
   });
 
   it('String-keyed maps compare by key and value', () => {
-    const a = new Map([['one', 1], ['two', 2]]);
-    const b = new Map([['one', 1], ['two', 2]]);
-    const differingKey = new Map([['one', 1], ['xxx', 2]]);
+    const a = new Map([
+      ['one', 1],
+      ['two', 2]
+    ]);
+    const b = new Map([
+      ['one', 1],
+      ['two', 2]
+    ]);
+    const differingKey = new Map([
+      ['one', 1],
+      ['xxx', 2]
+    ]);
     expect(csp.mapEquals(a, b)).toBe(true);
     expect(csp.mapEquals(a, differingKey)).toBe(false);
   });
@@ -373,16 +461,28 @@ describe('equality', () => {
     using a1 = csp.BindingsTestType.create(1, 'one');
     using b1 = csp.BindingsTestType.create(1, 'one');
 
-    const a = new Map([[1, a1], [2, null]]);
-    const b = new Map([[1, b1], [2, null]]);
+    const a = new Map([
+      [1, a1],
+      [2, null]
+    ]);
+    const b = new Map([
+      [1, b1],
+      [2, null]
+    ]);
     expect(csp.mapEquals(a, b)).toBe(true);
 
-    const c = new Map([[1, a1], [2, null]]);
-    const d = new Map([[1, b1], [2, b1]]);
+    const c = new Map([
+      [1, a1],
+      [2, null]
+    ]);
+    const d = new Map([
+      [1, b1],
+      [2, b1]
+    ]);
     expect(csp.mapEquals(c, d)).toBe(false);
   });
 
-   it('Map values of undefined', () => {
+  it('Map values of undefined', () => {
     // @ts-expect-error: intentionally testing undefined values
     expect(csp.mapEquals(undefined, undefined)).toBe(true);
   });

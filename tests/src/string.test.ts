@@ -14,7 +14,7 @@ describe('String bindings', () => {
   });
 
   it('String round trip by value', () => {
-    using helper = csp.BindingsMechanismsTestType.create();
+    using helper = csp.ContainerBindingMechanismsTestType.create();
     const testString = 'Hello, world, by value!';
 
     helper.setCspStringByValue(testString);
@@ -24,7 +24,7 @@ describe('String bindings', () => {
   });
 
   it('String round trip by const reference', () => {
-    using helper = csp.BindingsMechanismsTestType.create();
+    using helper = csp.ContainerBindingMechanismsTestType.create();
     const testString = 'Hello, world, by const reference!';
 
     helper.setCspStringByConstRef(testString);
@@ -34,7 +34,7 @@ describe('String bindings', () => {
   });
 
   it('String round trip by value and const reference are equal', () => {
-    using helper = csp.BindingsMechanismsTestType.create();
+    using helper = csp.ContainerBindingMechanismsTestType.create();
     const testString = 'Hello, world, by const reference!';
 
     helper.setCspStringByValue(testString);
@@ -47,7 +47,7 @@ describe('String bindings', () => {
   });
 
   it('String replacement returns updated value', () => {
-    using helper = csp.BindingsMechanismsTestType.create();
+    using helper = csp.ContainerBindingMechanismsTestType.create();
 
     const testString1 = 'Hello, world!';
     helper.setCspStringByConstRef(testString1);
@@ -62,7 +62,7 @@ describe('String bindings', () => {
   });
 
   it('String with unicode round trip', () => {
-    using helper = csp.BindingsMechanismsTestType.create();
+    using helper = csp.ContainerBindingMechanismsTestType.create();
     const testString = 'впечатляващо! すばらしい! 🚀';
 
     helper.setCspStringByValue(testString);
@@ -79,7 +79,7 @@ describe('String bindings', () => {
   });
 
   it('String with null character round trip', () => {
-    using helper = csp.BindingsMechanismsTestType.create();
+    using helper = csp.ContainerBindingMechanismsTestType.create();
     const testString = 'This should not be \0 truncated!';
 
     helper.setCspStringByValue(testString);
@@ -90,7 +90,7 @@ describe('String bindings', () => {
   });
 
   it('String with only null characters round trip', () => {
-    using helper = csp.BindingsMechanismsTestType.create();
+    using helper = csp.ContainerBindingMechanismsTestType.create();
     const testString = '\0'.repeat(10);
 
     helper.setCspStringByValue(testString);
@@ -101,7 +101,7 @@ describe('String bindings', () => {
   });
 
   it('Empty string round trip by value', () => {
-    using helper = csp.BindingsMechanismsTestType.create();
+    using helper = csp.ContainerBindingMechanismsTestType.create();
     const testString = '';
 
     helper.setCspStringByValue(testString);
@@ -112,7 +112,7 @@ describe('String bindings', () => {
   });
 
   it('String undefined round trip by value', () => {
-    using helper = csp.BindingsMechanismsTestType.create();
+    using helper = csp.ContainerBindingMechanismsTestType.create();
     const testStringUndefined = 'undefined';
 
     helper.setCspStringByValue(testStringUndefined);
@@ -123,7 +123,7 @@ describe('String bindings', () => {
   });
 
   it('Long string round trip', () => {
-    using helper = csp.BindingsMechanismsTestType.create();
+    using helper = csp.ContainerBindingMechanismsTestType.create();
     // 70KB string - There was a stack size of 64KB in the previous CSP wrapper generator.
     // Ensure that we can handle strings larger than that.
     const testString = 'abcdefghij'.repeat(7 * 1024);
@@ -136,7 +136,7 @@ describe('String bindings', () => {
   });
 
   it('Setting null or undefined string throws', () => {
-    using helper = csp.BindingsMechanismsTestType.create();
+    using helper = csp.ContainerBindingMechanismsTestType.create();
 
     // @ts-expect-error - Typescript will not allow us to set null but want to see what happens anyways
     expect(() => helper.setCspStringByValue(null)).toThrow('Cannot pass non-string to std::string');
@@ -150,7 +150,7 @@ describe('String bindings', () => {
   });
 
   it('Setting non-string values throws', () => {
-    using helper = csp.BindingsMechanismsTestType.create();
+    using helper = csp.ContainerBindingMechanismsTestType.create();
 
     // @ts-expect-error - Typescript will not allow us to set non-string values but want to see what happens anyways
     expect(() => helper.setCspStringByValue(123)).toThrow('Cannot pass non-string to std::string');
@@ -171,7 +171,7 @@ describe('String bindings', () => {
   // Array of string tests
 
   it('Array of string round trip by value', () => {
-    using helper = csp.BindingsMechanismsTestType.create();
+    using helper = csp.ContainerBindingMechanismsTestType.create();
     const testArray = ['alpha', 'beta', 'gamma'];
 
     helper.setArrayStringByValue(testArray);
@@ -181,7 +181,7 @@ describe('String bindings', () => {
   });
 
   it('Array of string round trip by const reference', () => {
-    using helper = csp.BindingsMechanismsTestType.create();
+    using helper = csp.ContainerBindingMechanismsTestType.create();
     const testArray = ['hello', 'world'];
 
     helper.setArrayStringByConstRef(testArray);
@@ -191,7 +191,7 @@ describe('String bindings', () => {
   });
 
   it('Array of string empty array round trip', () => {
-    using helper = csp.BindingsMechanismsTestType.create();
+    using helper = csp.ContainerBindingMechanismsTestType.create();
     const testArray: string[] = [];
 
     helper.setArrayStringByValue(testArray);
@@ -203,7 +203,7 @@ describe('String bindings', () => {
   // Map with string tests
 
   it('Map with string keys round trip by value', () => {
-    using helper = csp.BindingsMechanismsTestType.create();
+    using helper = csp.ContainerBindingMechanismsTestType.create();
     const testMap = new Map<string, number>([
       ['key1', 1],
       ['key2', 2]
@@ -216,7 +216,7 @@ describe('String bindings', () => {
   });
 
   it('Map with string keys round trip by const reference', () => {
-    using helper = csp.BindingsMechanismsTestType.create();
+    using helper = csp.ContainerBindingMechanismsTestType.create();
     const testMap = new Map<string, number>([
       ['key1', 1],
       ['key2', 2]
@@ -229,7 +229,7 @@ describe('String bindings', () => {
   });
 
   it('Map with empty string key round trip', () => {
-    using helper = csp.BindingsMechanismsTestType.create();
+    using helper = csp.ContainerBindingMechanismsTestType.create();
     const testMap = new Map<string, number>([
       ['', 1],
       ['key2', 2]
@@ -242,7 +242,7 @@ describe('String bindings', () => {
   });
 
   it('Map with string values round trip by value', () => {
-    using helper = csp.BindingsMechanismsTestType.create();
+    using helper = csp.ContainerBindingMechanismsTestType.create();
     const testMap = new Map<string, string>([
       ['key1', 'value1'],
       ['key2', 'value2']
@@ -255,7 +255,7 @@ describe('String bindings', () => {
   });
 
   it('Map with string values round trip by const reference', () => {
-    using helper = csp.BindingsMechanismsTestType.create();
+    using helper = csp.ContainerBindingMechanismsTestType.create();
     const testMap = new Map<string, string>([
       ['key1', 'value1'],
       ['key2', 'value2']
@@ -268,7 +268,7 @@ describe('String bindings', () => {
   });
 
   it('Map with string values round trip by const reference', () => {
-    using helper = csp.BindingsMechanismsTestType.create();
+    using helper = csp.ContainerBindingMechanismsTestType.create();
     const testMap = new Map<string, string>([
       ['key1', 'value1'],
       ['key2', 'value2']
@@ -304,7 +304,7 @@ describe('String bindings', () => {
     });
 
     it('Repeated string sets do not grow wasm heap', () => {
-      using helper = freshCsp.BindingsMechanismsTestType.create();
+      using helper = freshCsp.ContainerBindingMechanismsTestType.create();
 
       // Leak large objects until the heap is forced to grow for the first time, then take
       // the baseline.
@@ -342,7 +342,7 @@ describe('String bindings', () => {
     it('Strings in arrays do not leak when container is disposed', () => {
       // No need to force an initial heap growth:
       // 1K iterations produces ~100MB of potential leaks >> the 32MB initial memory size.
-      using helper = freshCsp.BindingsMechanismsTestType.create();
+      using helper = freshCsp.ContainerBindingMechanismsTestType.create();
       // 100 strings of ~1KB each
       const largeStrings = Array.from({ length: 100 }, (_, i) => 'x'.repeat(1024) + i);
       helper.setArrayStringByValue(largeStrings);
@@ -363,7 +363,7 @@ describe('String bindings', () => {
     it('Strings as map keys and values do not leak when container is disposed', () => {
       // No need to force an initial heap growth:
       // 1K iterations produces ~100MB of potential leaks >> the 32MB initial memory size.
-      using helper = freshCsp.BindingsMechanismsTestType.create();
+      using helper = freshCsp.ContainerBindingMechanismsTestType.create();
       const testMap = new Map<string, string>(
         Array.from({ length: 100 }, (_, i) => [`key-${'k'.repeat(512)}-${i}`, `val-${'v'.repeat(512)}-${i}`])
       );
