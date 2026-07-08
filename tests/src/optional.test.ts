@@ -12,7 +12,7 @@ describe('Optional bindings', () => {
   // Basic type tests
 
   it('Optional round trip basic type by value', () => {
-    using helper = csp.BindingsMechanismsTestType.create();
+    using helper = csp.ContainerBindingMechanismsTestType.create();
     const value = 123;
 
     helper.setOptionalBasicTypeByValue(value);
@@ -21,8 +21,8 @@ describe('Optional bindings', () => {
     expect(roundTrip).toBe(value);
   });
 
-  it('Optional round trip basic typeundefined by value', () => {
-    using helper = csp.BindingsMechanismsTestType.create();
+  it('Optional round trip basic type undefined by value', () => {
+    using helper = csp.ContainerBindingMechanismsTestType.create();
 
     helper.setOptionalBasicTypeByValue(undefined);
     const roundTrip = helper.getOptionalBasicTypeByValue();
@@ -31,7 +31,7 @@ describe('Optional bindings', () => {
   });
 
   it('Optional basic type equality', () => {
-    using helper = csp.BindingsMechanismsTestType.create();
+    using helper = csp.ContainerBindingMechanismsTestType.create();
     const value = 123;
 
     helper.setOptionalBasicTypeByValue(value);
@@ -41,7 +41,7 @@ describe('Optional bindings', () => {
   });
 
   it('Optional basic type undefined equality', () => {
-    using helper = csp.BindingsMechanismsTestType.create();
+    using helper = csp.ContainerBindingMechanismsTestType.create();
     const value = undefined;
 
     helper.setOptionalBasicTypeByValue(value);
@@ -51,7 +51,7 @@ describe('Optional bindings', () => {
   });
 
   it('Optional round trip basic type by const ref', () => {
-    using helper = csp.BindingsMechanismsTestType.create();
+    using helper = csp.ContainerBindingMechanismsTestType.create();
     const value = 123;
 
     helper.setOptionalBasicTypeByConstRef(value);
@@ -61,7 +61,7 @@ describe('Optional bindings', () => {
   });
 
   it('Optional round trip basic type undefined by const ref', () => {
-    using helper = csp.BindingsMechanismsTestType.create();
+    using helper = csp.ContainerBindingMechanismsTestType.create();
 
     helper.setOptionalBasicTypeByConstRef(undefined);
     const roundTrip = helper.getOptionalBasicTypeByConstRef();
@@ -72,7 +72,7 @@ describe('Optional bindings', () => {
   // Full type tests
 
   it('Optional round trip full type by value', () => {
-    using helper = csp.BindingsMechanismsTestType.create();
+    using helper = csp.ContainerBindingMechanismsTestType.create();
     using elem = csp.BindingsTestType.create(1, 'one');
 
     helper.setOptionalFullTypeByValue(elem);
@@ -82,7 +82,7 @@ describe('Optional bindings', () => {
   });
 
   it('Optional round trip full type undefined by value', () => {
-    using helper = csp.BindingsMechanismsTestType.create();
+    using helper = csp.ContainerBindingMechanismsTestType.create();
 
     helper.setOptionalFullTypeByValue(undefined);
     const roundTrip = helper.getOptionalFullTypeByValue();
@@ -91,7 +91,7 @@ describe('Optional bindings', () => {
   });
 
   it('Optional round trip full type by const ref', () => {
-    using helper = csp.BindingsMechanismsTestType.create();
+    using helper = csp.ContainerBindingMechanismsTestType.create();
     using elem = csp.BindingsTestType.create(1, 'one');
 
     helper.setOptionalFullTypeByConstRef(elem);
@@ -101,7 +101,7 @@ describe('Optional bindings', () => {
   });
 
   it('Optional round trip full type undefined by const ref', () => {
-    using helper = csp.BindingsMechanismsTestType.create();
+    using helper = csp.ContainerBindingMechanismsTestType.create();
 
     helper.setOptionalFullTypeByConstRef(undefined);
     const roundTrip = helper.getOptionalFullTypeByConstRef();
@@ -112,7 +112,7 @@ describe('Optional bindings', () => {
   // String tests
 
   it('Optional round trip string by value', () => {
-    using helper = csp.BindingsMechanismsTestType.create();
+    using helper = csp.ContainerBindingMechanismsTestType.create();
     const value = 'hello';
 
     helper.setOptionalStringByValue(value);
@@ -122,7 +122,7 @@ describe('Optional bindings', () => {
   });
 
   it('Optional round trip string by const ref', () => {
-    using helper = csp.BindingsMechanismsTestType.create();
+    using helper = csp.ContainerBindingMechanismsTestType.create();
     const value = 'hello';
 
     helper.setOptionalStringByConstRef(value);
