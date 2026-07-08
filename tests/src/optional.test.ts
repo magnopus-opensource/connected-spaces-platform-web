@@ -109,6 +109,69 @@ describe('Optional bindings', () => {
     expect(roundTrip).toBeUndefined();
   });
 
+  it('Optional full type by value disposal', () => {
+    using helper = csp.ContainerBindingMechanismsTestType.create();
+    using elem = csp.BindingsTestType.create(1, 'one');
+
+    helper.setOptionalFullTypeByValue(elem);
+    const beforeAliveCount = csp.BindingsTestType.aliveCount;
+
+    {
+      using _roundTrip = helper.getOptionalFullTypeByValue();
+
+      const countDuringAlive = csp.BindingsTestType.aliveCount;
+      expect(countDuringAlive).toBe(beforeAliveCount + 1);
+    }
+
+    const afterAliveCount = csp.BindingsTestType.aliveCount;
+    expect(afterAliveCount).toBe(beforeAliveCount);
+  });
+
+  it('Optional full type by const ref disposal', () => {
+    using helper = csp.ContainerBindingMechanismsTestType.create();
+    using elem = csp.BindingsTestType.create(1, 'one');
+
+    helper.setOptionalFullTypeByConstRef(elem);
+    const beforeAliveCount = csp.BindingsTestType.aliveCount;
+
+    {
+      using _roundTrip = helper.getOptionalFullTypeByConstRef();
+
+      const countDuringAlive = csp.BindingsTestType.aliveCount;
+      expect(countDuringAlive).toBe(beforeAliveCount + 1);
+    }
+
+    const afterAliveCount = csp.BindingsTestType.aliveCount;
+    expect(afterAliveCount).toBe(beforeAliveCount);
+  });
+
+  it('Optional replacement disposal', () => {
+    using helper = csp.ContainerBindingMechanismsTestType.create();
+    using elem1 = csp.BindingsTestType.create(1, 'one');
+    using elem2 = csp.BindingsTestType.create(1, 'two');
+
+    helper.setOptionalFullTypeByValue(elem1);
+
+    const beforeAliveCount = csp.BindingsTestType.aliveCount;
+
+    helper.setOptionalFullTypeByValue(elem2);
+
+    const afterAliveCount = csp.BindingsTestType.aliveCount;
+    expect(afterAliveCount).toBe(beforeAliveCount);
+  });
+
+  it('Optional mutation does not affect original', () => {
+    using helper = csp.ContainerBindingMechanismsTestType.create();
+    using elem = csp.BindingsTestType.create(1, 'one');
+
+    helper.setOptionalFullTypeByConstRef(elem);
+    const roundTrip = helper.getOptionalFullTypeByConstRef();
+
+    elem.name = 'two';
+
+    expect(csp.optionalEquals(roundTrip, elem)).toBe(false);
+  });
+
   // String tests
 
   it('Optional round trip string by value', () => {
