@@ -30,6 +30,15 @@ describe('Optional bindings', () => {
     expect(roundTrip).toBeUndefined();
   });
 
+  it('Optional round trip basic type implicit undefined by value', () => {
+    using helper = csp.ContainerBindingMechanismsTestType.create();
+
+    helper.setOptionalBasicTypeByValue();
+    const roundTrip = helper.getOptionalBasicTypeByValue();
+
+    expect(roundTrip).toBeUndefined();
+  });
+
   it('Optional basic type equality', () => {
     using helper = csp.ContainerBindingMechanismsTestType.create();
     const value = 123;
