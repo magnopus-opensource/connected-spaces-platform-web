@@ -2,7 +2,7 @@
 
 An "interop-type" is a C++ type that goes across the binding surface, presenting an interface that can be used in javascript.
 
-For the most part, when we say this, we mean containers. Whilst every bound type is technically an "interop type", they tend not to require special handling or consideration. The following types however, do :
+For the most part, when we say this, we mean containers. Whilst every bound type is technically an "interop type", they tend not to require special handling or consideration. The following types however, do:
 
 - `Array`
 - `List`
@@ -25,16 +25,16 @@ csp::common::Array<int> GetArray() { return {1, 2, 3}; }
 void SetArray(csp::common::Array<int> array);
 ```
 
-will generate JS/TS code that produces primitive arrays, such as : 
+will generate JS/TS code that produces primitive arrays, such as:
 
 ```ts
 using array = csp.GetArray(); // [1, 2, 3]
-csp.SetArray([1,2,3]);
+csp.SetArray([1, 2, 3]);
 ```
 
 This goes the same for const ref returns and arguments, JS/TS semantics are identical.
 
-Keep in mind that this means that, despite `List` being a dynamically resizable container, JS will not see size updates until it re-fetches the list. This has the advantage of completely removing any potential iterator invalidation bugs, but does have some interface and performance implications. This may change later if we find this simple approach to be unsuitable. 
+Keep in mind that this means that, despite `List` being a dynamically resizable container, JS will not see size updates until it re-fetches the list. This has the advantage of completely removing any potential iterator invalidation bugs, but does have some interface and performance implications. This may change later if we find this simple approach to be unsuitable.
 
 > [!NOTE]
 > As Lists and Arrays are from the JS/TS perspective, the same type, utility functions such as `disposeArray` or `arrayEquals` are the right thing to call on both arrays and lists.
@@ -47,8 +47,51 @@ There are two specificities to be aware of.
 
 - Currently, `csp::common::Map` is based on `std::map`, which is ordered by strict-weak ordering of the key value. This is not the case for JS maps, which are insertion-ordered. In cases of equality, we do not enforce an ordering guarantee, so maps constructed in JS will compare equal (when using the csp utilities) to C++ maps even if out of order. However, order will be preserved when getting a map back from C++ as a return. This will almost never matter.
 
-- Whilst the values of a map may be bound to any type, as either a value or pointer type, the keys are more limiting. In order to play nice with JS/TS identity comparison, important for maps to function semantically, keys must be bindable as JS primitives. Effectively an integral or string type. This also allows us not to worry about allocation and disposal in keys, which is nice. 
+- Whilst the values of a map may be bound to any type, as either a value or pointer type, the keys are more limiting. In order to play nice with JS/TS identity comparison, important for maps to function semantically, keys must be bindable as JS primitives. Effectively an integral or string type. This also allows us not to worry about allocation and disposal in keys, which is nice.
 
+## Optional
+
+With the dynamic nature of JavaScript, there is no need for an 'optional' type as such. The pattern is instead to use a `T | undefined` type in TypeScript for optional values or return types.
+
+The built-in bindings for `std::optional` already work in this way and with `csp::common::Optional` we have aimed to do the same.
+
+This means that for a C++ function returning a `csp::common::optional` value such as the following example:
+
+```cpp
+csp::common::Optional<int> GetValue() { return csp::common::Optional<int>(1); }
+```
+
+the bindings will present it in TypeScript as:
+
+```ts
+getValue(): number | undefined
+```
+
+For function parameters (and object properties) optional values can either be typed as `T | undefined` or `T?`, the difference being that for the former a value must be explicitly provided (even undefined) whereas in the latter the value can be omitted.
+The bindings use the `T?` version for function parameters.
+
+For example with a function accepting an optional parameter:
+
+```cpp
+void SetValue(csp::common::Optional<int> value) { ... }
+```
+
+the TypeScript equivalent will be:
+
+```ts
+setValue(value?: number): void
+```
+
+Which can be used as follows:
+
+```ts
+setValue(1);
+setValue();
+setValue(undefined);
+```
+
+The implementation of the bindings for `csp::common:Optional` uses the built-in Embind bindings for `std::optional`, which some additional handling for optional of types with an attached [Symbol.dispose] to ensure support for `using` on optional values where expected.
+Note the `using` on a value of type `(T & Disposable) | undefined` works because `using` on `undefined` or `null` values is a no-op.
 
 ## Strings
 
@@ -68,15 +111,16 @@ const str = csp.getString(); // 'Hello!'
 csp.setString('Hello back!');
 ```
 
-The binding for string piggy-backs on the built-in Embind implementation for `std::string`, and because of that involve an extra copy into an `std::string` that we may look to remove in future if it becomes an issue.
+The binding for string piggy-backs on the built-in Embind implementation for `std::string`, and because of that involves an extra copy into an `std::string` that we may look to remove in future if it becomes an issue.
 
 Note that due to string always being stack-based, there is no need to dispose them so TS/JS do not have any additional `dispose` function as with other interop types.
 
-***
+---
 
 _For the following conceptual documentation, we tend to use `Array` as an example. But the concepts apply to all interop container types._
 
 ## Value and Pointer Types
+
 > [!Hint]
 >
 > A *Value array* is something like `csp::common::Array<MyType>`.
@@ -87,12 +131,12 @@ A tradeoff in presenting JS array primitives is a need to copy. When accepting o
 
 > [!NOTE]
 >
-> The philosophy on whether to copy `const &` returns and arguments is still developing, and may change 
+> The philosophy on whether to copy `const &` returns and arguments is still developing, and may change
 > as we further integrate the api.
 
 Pointer arrays do not invoke copies (well ... they copy _pointers_ but that's not what people normally mean). A pointer array in the interface implies that the interface is _non owning_. Users should not claim ownership of the objects in a pointer array.
 
-The binding surface supports pointer arrays where the contained objects are owned in JS/TS, as below : 
+The binding surface supports pointer arrays where the contained objects are owned in JS/TS, as below:
 
 ```ts
 using elem1 = csp.MyType.create(1, 'one');
@@ -114,7 +158,7 @@ let elem = array[0];
 
 In order to get the [disposability](#disposability) behavior we're looking for, binding containers has some amount of complexity.
 
-You must declare the types such that the typescript emitted is annotated correctly. A type declaration must exist for each container type that appears in the interface. 
+You must declare the types such that the typescript emitted is annotated correctly. A type declaration must exist for each container type that appears in the interface.
 
 ```cpp
     emscripten::register_type<csp::common::Array<int>>("number[]"); //Primitive value array
@@ -127,9 +171,9 @@ You must declare the types such that the typescript emitted is annotated correct
 
 There are a few things here that may seem surprising.
 
-Firstly, `JSDisposable`, what's that? This is how we get `using` support. By binding a different type, we can allow ourselves a different typescript annotation where that type occurs. These can be thought of as the bindings for return types. By doing this, we can still accept regular shaped arrays as function arguments ([1,2,3] would not fit into a `Disposable` slot), whilst not sacrificing disposability for returns where it matters. 
+Firstly, `JSDisposable`, what's that? This is how we get `using` support. By binding a different type, we can allow ourselves a different typescript annotation where that type occurs. These can be thought of as the bindings for return types. By doing this, we can still accept regular shaped arrays as function arguments ([1,2,3] would not fit into a `Disposable` slot), whilst not sacrificing disposability for returns where it matters.
 
-The tradeoff here is that you must do the type conversion at the binding site. As a general rule, anything that is returning a value array should perform a conversion. If you fail to do this, you will be unable to declare arrays out of CSP as `using`. 
+The tradeoff here is that you must do the type conversion at the binding site. As a general rule, anything that is returning a value array should perform a conversion. If you fail to do this, you will be unable to declare arrays out of CSP as `using`.
 
 ```cpp
 .function("setArrayBasicTypeByValue(value)", &MyObjectType::SetArrayBasicTypeByValue) // Setter function, bind normally
@@ -139,7 +183,7 @@ The tradeoff here is that you must do the type conversion at the binding site. A
     })
 ```
 
-Secondly is why primitive types are disposable? Honestly this is a bit of a style decision. It is a simple rubric to attempt to use `using` whenever possible, and there is no harm to this. Primitives are conceptually value types from a semantic perspective, even though they do not need explicit cleanup. This could reasonably be done the alternate way, demanding users use `const` or `let` rather than `using` for these returns. 
+Secondly is why primitive types are disposable? Honestly this is a bit of a style decision. It is a simple rubric to attempt to use `using` whenever possible, and there is no harm to this. Primitives are conceptually value types from a semantic perspective, even though they do not need explicit cleanup. This could reasonably be done the alternate way, demanding users use `const` or `let` rather than `using` for these returns.
 
 ## Equality
 
@@ -158,9 +202,9 @@ You may find these equality helpers at the top level of the module, they are def
 
 ## Disposability
 
-Much effort has been put to try and generate typescript such that `using` is meaningful. We recommend defaulting to `using` for all possible cases, as it will ensure that necessary leak-avoidance is done. 
+Much effort has been put to try and generate typescript such that `using` is meaningful. We recommend defaulting to `using` for all possible cases, as it will ensure that necessary leak-avoidance is done.
 
-Owned C++ memory, such as in value arrays, must be deleted to avoid leaks, and is thus presented in typescript as `Disposable`. A value array will be presented as `(MyType[] & Disposable)`. This allows it to be declared correctly with `using`. 
+Owned C++ memory, such as in value arrays, must be deleted to avoid leaks, and is thus presented in typescript as `Disposable`. A value array will be presented as `(MyType[] & Disposable)`. This allows it to be declared correctly with `using`.
 
 Non owned memory is not disposable, and if you are type-checking correctly, will reject being declared as `using`, as is appropriate to convey that there is no disposal going on. In an ideal world, the inverse of this check would also exist as a lint rule, to insist that you use `using` unless you explicitly declare that you don't want to, and take on manual disposal responsibility yourself.
 
