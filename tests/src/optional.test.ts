@@ -194,7 +194,7 @@ describe('Optional bindings', () => {
     expect(csp.optionalEquals(roundTrip, value)).toBe(true);
   });
 
-  // Container tests
+  // Optional of container tests
 
   it('Optional round trip container of full types by value', () => {
     using helper = csp.ContainerBindingMechanismsTestType.create();
@@ -263,5 +263,31 @@ describe('Optional bindings', () => {
 
     const aliveCountAfter = csp.BindingsTestType.aliveCount;
     expect(aliveCountAfter).toBe(aliveCountBefore);
+  });
+
+  // Container of optional tests
+
+  it('Container of optional full types round trip by value', () => {
+    using helper = csp.ContainerBindingMechanismsTestType.create();
+    using elem1 = csp.BindingsTestType.create(1, 'one');
+    using elem2 = csp.BindingsTestType.create(2, 'two');
+    const value = [elem1, undefined, elem2];
+
+    helper.setListOfOptionalFullTypeByValue(value);
+    using roundTrip = helper.getListOfOptionalFullTypeByValue();
+
+    expect(csp.arrayEquals(roundTrip, value)).toBe(true);
+  });
+
+  it('Container of optional full types round trip by const ref', () => {
+    using helper = csp.ContainerBindingMechanismsTestType.create();
+    using elem1 = csp.BindingsTestType.create(1, 'one');
+    using elem2 = csp.BindingsTestType.create(2, 'two');
+    const value = [elem1, undefined, elem2];
+
+    helper.setListOfOptionalFullTypeByConstRef(value);
+    using roundTrip = helper.getListOfOptionalFullTypeByConstRef();
+
+    expect(csp.arrayEquals(roundTrip, value)).toBe(true);
   });
 });
