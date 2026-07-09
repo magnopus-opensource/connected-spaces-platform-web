@@ -193,4 +193,75 @@ describe('Optional bindings', () => {
 
     expect(csp.optionalEquals(roundTrip, value)).toBe(true);
   });
+
+  // Container tests
+
+  it('Optional round trip container of full types by value', () => {
+    using helper = csp.ContainerBindingMechanismsTestType.create();
+    using elem1 = csp.BindingsTestType.create(1, 'one');
+    using elem2 = csp.BindingsTestType.create(2, 'two');
+    const value = [elem1, elem2];
+
+    helper.setOptionalListFullTypeByValue(value);
+    const roundTrip = helper.getOptionalListFullTypeByValue();
+
+    expect(csp.optionalEquals(roundTrip, value)).toBe(true);
+  });
+
+  it('Optional round trip container of full types by const ref', () => {
+    using helper = csp.ContainerBindingMechanismsTestType.create();
+    using elem1 = csp.BindingsTestType.create(1, 'one');
+    using elem2 = csp.BindingsTestType.create(2, 'two');
+    const value = [elem1, elem2];
+
+    helper.setOptionalListFullTypeByConstRef(value);
+    const roundTrip = helper.getOptionalListFullTypeByConstRef();
+
+    expect(csp.optionalEquals(roundTrip, value)).toBe(true);
+  });
+
+  it('Optional undefined container by value', () => {
+    using helper = csp.ContainerBindingMechanismsTestType.create();
+    const value = undefined;
+
+    helper.setOptionalListFullTypeByValue(value);
+
+    // using with undefined (or null) is a no-op so no problem in doing this here
+    using roundTrip = helper.getOptionalListFullTypeByValue();
+
+    expect(roundTrip).toBe(undefined);
+  });
+
+  it('Optional undefined container by const ref', () => {
+    using helper = csp.ContainerBindingMechanismsTestType.create();
+    const value = undefined;
+
+    helper.setOptionalListFullTypeByConstRef(value);
+
+    // using with undefined (or null) is a no-op so no problem in doing this here
+    using roundTrip = helper.getOptionalListFullTypeByConstRef();
+
+    expect(roundTrip).toBe(undefined);
+  });
+
+  it('Optional container of full types disposal', () => {
+    using helper = csp.ContainerBindingMechanismsTestType.create();
+    using elem1 = csp.BindingsTestType.create(1, 'one');
+    using elem2 = csp.BindingsTestType.create(2, 'two');
+    const value = [elem1, elem2];
+
+    helper.setOptionalListFullTypeByConstRef(value);
+
+    const aliveCountBefore = csp.BindingsTestType.aliveCount;
+
+    {
+      using _roundTrip = helper.getOptionalListFullTypeByConstRef();
+
+      const aliveCountDuring = csp.BindingsTestType.aliveCount;
+      expect(aliveCountDuring).toBe(aliveCountBefore + value.length);
+    }
+
+    const aliveCountAfter = csp.BindingsTestType.aliveCount;
+    expect(aliveCountAfter).toBe(aliveCountBefore);
+  });
 });

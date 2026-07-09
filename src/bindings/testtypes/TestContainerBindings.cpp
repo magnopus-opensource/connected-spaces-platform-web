@@ -102,11 +102,17 @@ public:
     void SetOptionalFullTypeByValue(csp::common::Optional<BindingsTestType> value) { m_optionalFullType = std::move(value); }
     void SetOptionalFullTypeByConstRef(const csp::common::Optional<BindingsTestType>& value) { m_optionalFullType = value; }
 
-      // Optional<String>
+    // Optional<String>
     csp::common::Optional<csp::common::String> GetOptionalStringByValue() const { return m_optionalString; }
     const csp::common::Optional<csp::common::String>& GetOptionalStringByConstRef() const { return m_optionalString; }
     void SetOptionalStringByValue(csp::common::Optional<csp::common::String> value) { m_optionalString = std::move(value); }
     void SetOptionalStringByConstRef(const csp::common::Optional<csp::common::String>& value) { m_optionalString = value; }
+
+    // Optional<List<BindingsTestType>>
+    csp::common::Optional<csp::common::List<BindingsTestType>> GetOptionalListFullTypeByValue() const { return m_optionalListFullType; }
+    const csp::common::Optional<csp::common::List<BindingsTestType>>& GetOptionalListFullTypeByConstRef() const { return m_optionalListFullType; }
+    void SetOptionalListFullTypeByValue(csp::common::Optional<csp::common::List<BindingsTestType>> value) { m_optionalListFullType = std::move(value); }
+    void SetOptionalListFullTypeByConstRef(const csp::common::Optional<csp::common::List<BindingsTestType>>& value) { m_optionalListFullType = value; }
 
     // String
     csp::common::String GetCspStringByValue() const { return m_cspString; }
@@ -156,6 +162,7 @@ private:
     csp::common::Optional<int> m_optionalBasicType;
     csp::common::Optional<BindingsTestType> m_optionalFullType;
     csp::common::Optional<csp::common::String> m_optionalString;
+    csp::common::Optional<csp::common::List<BindingsTestType>> m_optionalListFullType;
     csp::common::String m_cspString;
 
     csp::common::Array<BindingsTestType*> m_arrayOfPointers;
@@ -306,5 +313,17 @@ EMSCRIPTEN_BINDINGS(CSPContainerTestTypeBindings)
         .function("getOptionalStringByValue", &ContainerBindingMechanismsTestType::GetOptionalStringByValue)
         .function("getOptionalStringByConstRef", &ContainerBindingMechanismsTestType::GetOptionalStringByConstRef)
         .function("setOptionalStringByValue", &ContainerBindingMechanismsTestType::SetOptionalStringByValue)
-        .function("setOptionalStringByConstRef", &ContainerBindingMechanismsTestType::SetOptionalStringByConstRef);
+        .function("setOptionalStringByConstRef", &ContainerBindingMechanismsTestType::SetOptionalStringByConstRef)
+        .function(
+            "getOptionalListFullTypeByValue",
+            +[](const ContainerBindingMechanismsTestType& self) {
+                return bindings::utils::JSDisposable<csp::common::Optional<csp::common::List<BindingsTestType>>> { self.GetOptionalListFullTypeByValue() };
+            })
+        .function(
+            "getOptionalListFullTypeByConstRef",
+            +[](const ContainerBindingMechanismsTestType& self) {
+                return bindings::utils::JSDisposable<csp::common::Optional<csp::common::List<BindingsTestType>>> { self.GetOptionalListFullTypeByConstRef() };
+            })
+        .function("setOptionalListFullTypeByValue", &ContainerBindingMechanismsTestType::SetOptionalListFullTypeByValue)
+        .function("setOptionalListFullTypeByConstRef", &ContainerBindingMechanismsTestType::SetOptionalListFullTypeByConstRef);
 }

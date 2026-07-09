@@ -122,4 +122,6 @@ EMSCRIPTEN_BINDINGS(CSPTestTypeBindings)
     emscripten::register_optional<int>();
     emscripten::register_optional<BindingsTestType>();
     emscripten::register_optional<csp::common::String>();
+    emscripten::register_optional<csp::common::List<BindingsTestType>>();
+    emscripten::register_type<bindings::utils::JSDisposable<csp::common::Optional<csp::common::List<BindingsTestType>>>>("(BindingsTestType[] & Disposable) | undefined");
 }
