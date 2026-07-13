@@ -90,8 +90,20 @@ setValue();
 setValue(undefined);
 ```
 
-The implementation of the bindings for `csp::common:Optional` uses the built-in Embind bindings for `std::optional`, which some additional handling for optional of types with an attached [Symbol.dispose] to ensure support for `using` on optional values where expected.
-Note the `using` on a value of type `(T & Disposable) | undefined` works because `using` on `undefined` or `null` values is a no-op.
+The implementation of the bindings for `csp::common:Optional` uses the built-in Embind bindings for `std::optional`, which some additional handling for optional of types with an attached `[Symbol.dispose]` to ensure support for `using` on optional values where expected.
+Note that `using` on a value of type `(T & Disposable) | undefined` works because `using` on `undefined` or `null` values is a no-op.
+
+One key difference to be mindful of when registering `csp::common::Optional` types is that `emscripten::register_optional` should be used instead of `emscripten::register_type`. For example:
+
+```cpp
+emscripten::register_optional<csp::common::String>();
+```
+
+An exception to that is for registering `csp::common::Optional` of types with an attached `[Symbol.dispose]` for which `emscripten::register_type` should still be used so that they are presented with `Disposable` in TypeScript:
+
+```cpp
+emscripten::register_type<bindings::utils::JSDisposable<csp::common::Optional<csp::common::List<BindingsTestType>>>>("(BindingsTestType[] & Disposable) | undefined");
+```
 
 ## Strings
 
