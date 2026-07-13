@@ -18,7 +18,7 @@ jobs:
         config: [release, debug]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # MSVC is the build-context compiler used by profiles/build/windows.
       # Needed if Conan has to compile any tool_requires from source.
@@ -88,6 +88,11 @@ jobs:
       - name: Install
         shell: bash
         run: cmake --build --preset ${{ matrix.config }} --target install
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
 
       - name: Install Test dependencies
         shell: bash
