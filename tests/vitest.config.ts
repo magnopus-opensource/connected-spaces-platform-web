@@ -20,6 +20,7 @@ export function makeConfig({ debug = false } = {}) {
   }
 
   const dwarfExt = process.env.CSP_DWARF_EXT;
+  const loadDwarfExt = debug && !!dwarfExt;
 
   return {
     test: {
@@ -30,7 +31,7 @@ export function makeConfig({ debug = false } = {}) {
         headless: !debug,
         screenshotFailures: false,
         provider: playwright(
-          debug
+          loadDwarfExt
             ? {
                 // launchPersistentContext + headed is the only way Playwright loads extensions.
                 persistentContext: true,
