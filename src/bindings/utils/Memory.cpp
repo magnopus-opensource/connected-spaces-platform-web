@@ -1,7 +1,8 @@
 #include "Handles.h"
+#include "Memory.h"
 #include "emscripten/bind.h"
 #include "emscripten/val.h"
-#include <stdexcept>
+#include <cassert>
 
 /*
  * Utils for memory management, most necessary for containers.
@@ -22,34 +23,17 @@
  * `disposeMap` is the JS Map counterpart of `disposeArray`. It disposes the Map's
  * values only; keys are left alone because map keys are constrained to primitives
  * (see Map.h IsValidMapKey) and so own no C++ memory.
+ *
+ * These are disposal functions that are sometimes called in destructors, so must not throw.
  */
 
 namespace {
 
 /*
- * Dispose a single bound handle.
- *
- * Input must be a bound ClassHandle; anything else (including arrays) throws.
- * An already-deleted handle is tolerated as a no-op.
- */
-void DisposeElement(emscripten::val v)
-{
-    if (!bindings::utils::IsBoundHandle(v)) {
-        throw std::runtime_error("disposeElement was passed a value that is not a bound handle");
-    }
-
-    if (v.call<bool>("isDeleted")) {
-        return;
-    }
-
-    v.call<void>("delete");
-}
-
-/*
  * Recursive walker. Disposes any bound ClassHandle reachable through the array,
  * descends into nested arrays, silently skips everything else.
  */
-void DisposeAll(emscripten::val v)
+void DisposeAll(emscripten::val v) noexcept
 {
     if (v.isArray()) {
         const unsigned length = v["length"].as<unsigned>();
@@ -64,35 +48,39 @@ void DisposeAll(emscripten::val v)
         return;
     }
 
-    DisposeElement(v);
+    bindings::utils::DisposeElement(v);
 }
 
-/*
- * Dispose every bound handle reachable in a JS array, including through nested arrays.
- * Input must be an array; non-array input throws. Empty arrays and arrays containing
- * no handles are a tolerated no-op — this is the path `using` routes through, so it
- * must work uniformly on whatever shape an array return happens to have.
- */
-void DisposeArray(emscripten::val arr)
+}
+
+namespace bindings::utils {
+
+void DisposeElement(emscripten::val v) noexcept
 {
-    if (!arr.isArray()) {
-        throw std::runtime_error("disposeArray was passed a non-array value");
+    assert(bindings::utils::IsBoundHandle(v) && "disposeElement was passed a value that is not a bound handle");
+    if (!bindings::utils::IsBoundHandle(v)) { //CONSIDERATION FOR CODE REVIEW: Keep the returns for safety, or remove for clarity?
+        return;
     }
+
+    if (v.call<bool>("isDeleted")) {
+        return;
+    }
+
+    v.call<void>("delete");
+}
+
+void DisposeArray(emscripten::val arr) noexcept
+{
+    assert(arr.isArray() && "disposeArray was passed a non-array value");
     DisposeAll(arr);
 }
 
-/*
- * Dispose every bound handle held as a *value* in a JS Map. Keys are intentionally
- * left untouched: map keys are constrained to primitives (see Map.h IsValidMapKey) and
- * so own no C++ memory. Throws if not a map. Should tolerate null input and empty values.
- * This is the path `using` routes through, so it must work uniformly on whatever shape
- * a map return happens to have.
- */
-void DisposeMap(emscripten::val map)
+void DisposeMap(emscripten::val map) noexcept
 {
     static const emscripten::val globalMap = emscripten::val::global("Map");
+    assert(map.instanceof(globalMap) && "disposeMap was passed a non-Map value");
     if (!map.instanceof(globalMap)) {
-        throw std::runtime_error("disposeMap was passed a non-Map value");
+        return;
     }
     // Array.from(map.values()) yields the values in an array, so we can reuse the array disposal machinery we already have.
     DisposeAll(emscripten::val::global("Array").call<emscripten::val>("from", map.call<emscripten::val>("values")));
@@ -102,7 +90,7 @@ void DisposeMap(emscripten::val map)
 
 EMSCRIPTEN_BINDINGS(CSPMemory)
 {
-    emscripten::function("disposeElement", &DisposeElement);
-    emscripten::function("disposeArray", &DisposeArray);
-    emscripten::function("disposeMap", &DisposeMap);
+    emscripten::function("disposeElement", &bindings::utils::DisposeElement);
+    emscripten::function("disposeArray", &bindings::utils::DisposeArray);
+    emscripten::function("disposeMap", &bindings::utils::DisposeMap);
 }
