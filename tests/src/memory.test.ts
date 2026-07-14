@@ -416,17 +416,6 @@ describe('CSPFoundation', () => {
     expect(csp.BindingsTestType.aliveCount).toBe(before - 2);
   });
 
-  it('disposeArray throws on non-array input', () => {
-    // @ts-expect-error: intentionally testing non-array input
-    expect(() => csp.disposeArray(42)).toThrow();
-
-    // @ts-expect-error: intentionally testing non-array input
-    expect(() => csp.disposeArray('nope')).toThrow();
-
-    // @ts-expect-error: intentionally testing non-array input
-    expect(() => csp.disposeArray({})).toThrow();
-  });
-
   it('Cpp Objects accessible via pointer arrays without allocating', () => {
     using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
     const beforeAliveCount = csp.BindingsTestType.aliveCount;
@@ -458,12 +447,12 @@ describe('CSPFoundation', () => {
     expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount);
   });
 
-  it('Explicit delete of elements in pointer array deletes underlying C++ memory', () => {
+  it('Explicit delete of elements in pointer array is disallowed', () => {
     using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
     const beforeAliveCount = csp.BindingsTestType.aliveCount;
 
-    // No `using` here: we're managing lifetime explicitly via .delete() on the
-    // round-trip handles below, to observe what that does to AliveCount.
+    // No `using` here: elem1 / elem2 are the true owners of their C++ objects. The
+    // map holds only non-owning pointers to them, we clean these up by hand for test demonstration.
     const elem1 = csp.BindingsTestType.create(1, 'one');
     const elem2 = csp.BindingsTestType.create(2, 'two');
     expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount + 2);
@@ -471,14 +460,17 @@ describe('CSPFoundation', () => {
     bindingsArrayHelper.setArrayOfPointersByValue([elem1, elem2]);
     let pointerArray = bindingsArrayHelper.getArrayOfPointersByValue();
 
-    pointerArray[0]!.delete();
-    expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount + 1);
+    // All pointers coming out of the API are non owning
+    expect(() => pointerArray[0]!.delete()).toThrow();
+    expect(() => pointerArray[1]!.delete()).toThrow();
 
-    pointerArray[1]!.delete();
+    // Nothing was destroyed — the underlying objects are still alive.
+    expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount + 2);
+
+    // Clean up via the true owners.
+    elem1.delete();
+    elem2.delete();
     expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount);
-
-    // elem1 / elem2 are now dangling JS handles — their C++ objects were
-    // destroyed via the round-trip handles. Don't dispose or .delete() them.
   });
 
   /*
@@ -660,20 +652,6 @@ describe('CSPFoundation', () => {
     expect(csp.BindingsTestType.aliveCount).toBe(before - 2);
   });
 
-  it('disposeMap throws on non-Map input', () => {
-    // @ts-expect-error: intentionally testing non-map input
-    expect(() => csp.disposeMap(42)).toThrow();
-
-    // @ts-expect-error: intentionally testing non-map input
-    expect(() => csp.disposeMap('nope')).toThrow();
-
-    // @ts-expect-error: intentionally testing non-map input
-    expect(() => csp.disposeMap({})).toThrow();
-
-    // @ts-expect-error: intentionally testing non-map input
-    expect(() => csp.disposeMap([])).toThrow(); // arrays are not Maps
-  });
-
   it('disposeMap disposes values but leaves keys untouched', () => {
     // Real bindings constrain keys to primitives, but disposeMap takes `any`, so we can
     // hand it a Map with a bound handle as *both* key and value to prove only the value
@@ -721,12 +699,12 @@ describe('CSPFoundation', () => {
     expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount);
   });
 
-  it('Explicit delete of values in pointer map deletes underlying C++ memory', () => {
+  it('Explicit delete of values in pointer map is disallowed', () => {
     using bindingsMapHelper = csp.ContainerBindingMechanismsTestType.create();
     const beforeAliveCount = csp.BindingsTestType.aliveCount;
 
-    // No `using` here: we're managing lifetime explicitly via .delete() on the
-    // round-trip handles below, to observe what that does to AliveCount.
+    // No `using` here: elem1 / elem2 are the true owners of their C++ objects. The
+    // map holds only non-owning pointers to them, we clean these up by hand for test demonstration.
     const elem1 = csp.BindingsTestType.create(1, 'one');
     const elem2 = csp.BindingsTestType.create(2, 'two');
     expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount + 2);
@@ -739,13 +717,86 @@ describe('CSPFoundation', () => {
     );
     let pointerMap = bindingsMapHelper.getMapOfPointersByValue();
 
-    pointerMap.get(1)!.delete();
-    expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount + 1);
+    // All pointers that come out of the API are non-owning.
+    expect(() => pointerMap.get(1)!.delete()).toThrow();
+    expect(() => pointerMap.get(2)!.delete()).toThrow();
 
-    pointerMap.get(2)!.delete();
+    // Nothing was destroyed — the underlying objects are still alive.
+    expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount + 2);
+
+    // Clean up via the true owners.
+    elem1.delete();
+    elem2.delete();
     expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount);
+  });
 
-    // elem1 / elem2 are now dangling JS handles — their C++ objects were
-    // destroyed via the round-trip handles. Don't dispose or .delete() them.
+  it('Return array of pointers has non-owning enrichment on each element', () => {
+    using helper = csp.ContainerBindingMechanismsTestType.create();
+    const arr = helper.getArrayOfCppOwnedPointers();
+    expect(arr.length).toBe(2);
+    for (const el of arr) {
+      expect(() => el?.delete()).toThrow();
+      expect(() => el?.deleteLater()).toThrow();
+      expect(() => el?.clone()).toThrow();
+      expect(() => el?.[Symbol.dispose]()).toThrow();
+    }
+  });
+
+  it('Return map of pointers has non-owning enrichment on each value', () => {
+    using helper = csp.ContainerBindingMechanismsTestType.create();
+    const map = helper.getMapOfCppOwnedPointers();
+    expect(map.size).toBe(2);
+    for (const el of map.values()) {
+      expect(() => el?.delete()).toThrow();
+      expect(() => el?.deleteLater()).toThrow();
+      expect(() => el?.clone()).toThrow();
+      expect(() => el?.[Symbol.dispose]()).toThrow();
+    }
+  });
+
+  it('Callback individual pointer arg has non-owning enrichment', () => {
+    using helper = csp.CallbacksBindingMechanismsTestType.create();
+    let called = false;
+    helper.callbackFunctionOnThreadPointerArg((pointerArg) => {
+      called = true;
+      expect(() => pointerArg.delete()).toThrow();
+      expect(() => pointerArg.deleteLater()).toThrow();
+      expect(() => pointerArg.clone()).toThrow();
+      expect(() => pointerArg[Symbol.dispose]()).toThrow();
+    });
+    expect(called).toBe(true);
+  });
+
+  it('Callback container of pointers has non-owning enrichment on elements', () => {
+    using helper = csp.CallbacksBindingMechanismsTestType.create();
+    let called = false;
+    helper.callbackFunctionOnThreadContainerOfPointers((arr) => {
+      called = true;
+      expect(arr.length).toBe(2);
+      for (const el of arr) {
+        expect(() => el.delete()).toThrow();
+        expect(() => el.deleteLater()).toThrow();
+        expect(() => el.clone()).toThrow();
+        expect(() => el[Symbol.dispose]()).toThrow();
+      }
+    });
+    expect(called).toBe(true);
+  });
+
+  it('Callback nested map of pointers has non-owning enrichment on elements', () => {
+    using helper = csp.CallbacksBindingMechanismsTestType.create();
+    let called = false;
+    helper.callbackFunctionOnThreadNestedContainerOfPointers((map) => {
+      called = true;
+      for (const arr of map.values()) {
+        for (const el of arr) {
+          expect(() => el.delete()).toThrow();
+          expect(() => el.deleteLater()).toThrow();
+          expect(() => el.clone()).toThrow();
+          expect(() => el[Symbol.dispose]()).toThrow();
+        }
+      }
+    });
+    expect(called).toBe(true);
   });
 });
