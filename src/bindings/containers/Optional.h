@@ -5,8 +5,25 @@
 #include "emscripten/bind.h"
 #include "emscripten/val.h"
 #include <optional>
-#include <string>
 #include <type_traits>
+
+/*
+ * Binding machinery for csp::common::Optional
+ * Include this file, then register bindings to functions that consume/return csp::common::Optional
+ * as normal, for example as follows.
+```
+EMSCRIPTEN_BINDINGS(MyBindingsModule)
+{
+// Note the use of register_optional instead of register_type
+emscripten::register_optional<csp::common::Optional<StorageType>>();
+
+emscripten::class_<TypeToBind>("TypeToBind")
+  .class_function("create", +[](){ return TypeToBind(); })
+  .function("functionThatReturnsOptional", &TypeToBind::FunctionThatReturnsOptional)
+  .function("functionThatTakesOptional(value)", &TypeToBind::FunctionThatTakesOptional);
+}
+```
+*/
 
 namespace emscripten::internal {
 
@@ -20,6 +37,7 @@ template <typename T> struct BindingType<csp::common::Optional<T>> {
 
     static WireType toWireType(const csp::common::Optional<T>& opt, rvp::default_tag)
     {
+        // The use of std::optional via make_optional here will result in an additional copy of the contained value
         std::optional<T> stdOpt = opt.HasValue() ? std::make_optional<T>(*opt) : std::nullopt;
 
         return OptionalBinding::toWireType(stdOpt, rvp::default_tag {});
@@ -29,6 +47,7 @@ template <typename T> struct BindingType<csp::common::Optional<T>> {
     {
         std::optional<T> opt = OptionalBinding::fromWireType(v);
 
+        // There will be an additional copy of the contained value here if the value is non-movable
         return opt.has_value() ? csp::common::Optional<T>(std::move(*opt)) : csp::common::Optional<T>();
     }
 };
