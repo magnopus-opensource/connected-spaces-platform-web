@@ -1,5 +1,5 @@
-#include "Handles.h"
 #include "Memory.h"
+#include "Handles.h"
 #include "emscripten/bind.h"
 #include "emscripten/val.h"
 #include <cassert>
@@ -84,6 +84,17 @@ void DisposeMap(emscripten::val map) noexcept
     }
     // Array.from(map.values()) yields the values in an array, so we can reuse the array disposal machinery we already have.
     DisposeAll(emscripten::val::global("Array").call<emscripten::val>("from", map.call<emscripten::val>("values")));
+}
+
+/* This is a purely internal method as in JS land we simply rely on element disposal, as undefined objects cant be disposed of anyhow */
+void DisposeOptional(emscripten::val opt) noexcept
+{
+    if (opt.isUndefined()) {
+        // Undefined is a valid state, just bail.
+        return;
+    }
+
+    DisposeAll(opt);
 }
 
 }

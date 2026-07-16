@@ -29,4 +29,12 @@ void DisposeArray(emscripten::val arr) noexcept;
  */
 void DisposeMap(emscripten::val map) noexcept;
 
+/*
+ * Dispose an optional. Will do nothing if the value is undefined, else will perform regular
+ * element disposal.
+ * This is the path `using` routes through, so it must work uniformly on whatever shape
+ * an optional return happens to have.
+ */
+void DisposeOptional(emscripten::val opt) noexcept;
+
 }

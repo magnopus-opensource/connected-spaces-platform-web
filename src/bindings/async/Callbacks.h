@@ -3,6 +3,7 @@
 #include "../containers/Array.h"
 #include "../containers/List.h"
 #include "../containers/Map.h"
+#include "../containers/Optional.h"
 #include "../containers/String.h"
 #include "../testtypes/BindingsTestType.h"
 #include "../utils/Handles.h"
@@ -10,10 +11,12 @@
 #include "../utils/RAIIVal.h"
 #include "emscripten/bind.h"
 #include "emscripten/val.h"
+#include <CSP/Common/Optional.h>
 #include <emscripten/wire.h>
 #include <functional>
 #include <iostream>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 namespace {
@@ -30,6 +33,7 @@ template <typename T> struct ContainerLeaf {
 template <typename T> struct ContainerLeaf<csp::common::List<T>> : ContainerLeaf<T> { };
 template <typename T> struct ContainerLeaf<csp::common::Array<T>> : ContainerLeaf<T> { };
 template <typename K, typename V> struct ContainerLeaf<csp::common::Map<K, V>> : ContainerLeaf<V> { };
+template <typename T> struct ContainerLeaf<csp::common::Optional<T>> : ContainerLeaf<T> { };
 template <typename T> using ContainerLeafT = typename ContainerLeaf<T>::type;
 
 template <typename> struct IsContainerTypeRepresentedAsJSArray : std::false_type { };
@@ -39,6 +43,9 @@ template <typename T> struct IsContainerTypeRepresentedAsJSArray<csp::common::Ar
 template <typename> struct IsContainerTypeRepresentedAsJSMap : std::false_type { };
 template <typename K, typename V> struct IsContainerTypeRepresentedAsJSMap<csp::common::Map<K, V>> : std::true_type { };
 
+template <typename> struct IsContainerTypeRepresentedAsJSOptional : std::false_type { };
+template <typename T> struct IsContainerTypeRepresentedAsJSOptional<csp::common::Optional<T>> : std::true_type { };
+
 /* Depending on the type of Arg, makes an RAIIVal with an appropriate disposal policy */
 template <typename Arg> inline bindings::utils::RAIIVal MakeRAIIVal(Arg&& arg)
 {
@@ -46,16 +53,22 @@ template <typename Arg> inline bindings::utils::RAIIVal MakeRAIIVal(Arg&& arg)
     using bindings::utils::RAIIVal;
     constexpr bool isArray = IsContainerTypeRepresentedAsJSArray<DecayedArgT>::value;
     constexpr bool isMap = IsContainerTypeRepresentedAsJSMap<DecayedArgT>::value;
-    if constexpr (isArray || isMap) {
+    constexpr bool isOptional = IsContainerTypeRepresentedAsJSOptional<DecayedArgT>::value;
+    if constexpr (isArray || isMap || isOptional) {
         if constexpr (std::is_pointer_v<ContainerLeafT<DecayedArgT>>) {
             /* Pointer Container (thus non owning elements), no auto disposal */
             return RAIIVal { emscripten::val(std::forward<Arg>(arg), emscripten::return_value_policy::reference { }), RAIIVal::DisposePolicy::NoDisposal };
         } else if constexpr (isArray) {
             /* Value Container that gets represented as JS [], automatically disposed as array after callback invocation */
             return RAIIVal { emscripten::val(std::forward<Arg>(arg)), RAIIVal::DisposePolicy::Array };
-        } else {
+        } else if constexpr (isMap) {
             /* Value Container that gets represented as JS Map, automatically disposed as map after callback invocation */
             return RAIIVal { emscripten::val(std::forward<Arg>(arg)), RAIIVal::DisposePolicy::Map };
+        } else if constexpr (isOptional) {
+            /* Value Optional, automatically disposed as optional after callback invocation */
+            return RAIIVal { emscripten::val(std::forward<Arg>(arg)), RAIIVal::DisposePolicy::Optional };
+        } else {
+            static_assert(false, "Container branch impossible");
         }
     } else if constexpr (std::is_pointer_v<DecayedArgT>) {
         /* Pointer (thus non owning), no auto disposal */

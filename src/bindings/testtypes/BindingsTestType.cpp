@@ -163,4 +163,22 @@ EMSCRIPTEN_BINDINGS(CSPTestTypeBindings)
     emscripten::register_type<bindings::utils::JSDisposable<csp::common::Map<int, BindingsTestType>>>("(Map<number, BindingsTestType> & Disposable)");
     emscripten::register_type<bindings::utils::JSDisposable<csp::common::Map<csp::common::String, int>>>("(Map<string, number> & Disposable)");
     emscripten::register_type<bindings::utils::JSDisposable<csp::common::Map<csp::common::String, csp::common::String>>>("(Map<string, string> & Disposable)");
+
+    // Optional
+    emscripten::register_optional<int>();
+    emscripten::register_optional<BindingsTestType>();
+    emscripten::register_optional<BindingsTestType*>();
+    emscripten::register_optional<csp::common::String>();
+    // Optional of List<BindingsTestType> (note the register_type instead of register_optional with JSDisposable to ensure the container has Disposable)
+    emscripten::register_optional<csp::common::List<BindingsTestType>>();
+    emscripten::register_type<bindings::utils::JSDisposable<csp::common::Optional<csp::common::List<BindingsTestType>>>>("(BindingsTestType[] & Disposable) | undefined");
+    // Optional of Array<BindingsTestType> (note the register_type instead of register_optional with JSDisposable to ensure the container has Disposable)
+    emscripten::register_optional<csp::common::Array<BindingsTestType>>();
+    emscripten::register_type<bindings::utils::JSDisposable<csp::common::Optional<csp::common::Array<BindingsTestType>>>>("(BindingsTestType[] & Disposable) | undefined");
+    // List of Optional<BindingsTestType>
+    emscripten::register_type<csp::common::List<csp::common::Optional<BindingsTestType>>>("(BindingsTestType | undefined)[]");
+    emscripten::register_type<bindings::utils::JSDisposable<csp::common::List<csp::common::Optional<BindingsTestType>>>>("((BindingsTestType | undefined)[] & Disposable)");
+    // Array of Optional<BindingsTestType>
+    emscripten::register_type<csp::common::Array<csp::common::Optional<BindingsTestType>>>("(BindingsTestType | undefined)[]");
+    emscripten::register_type<bindings::utils::JSDisposable<csp::common::Array<csp::common::Optional<BindingsTestType>>>>("((BindingsTestType | undefined)[] & Disposable)");
 }

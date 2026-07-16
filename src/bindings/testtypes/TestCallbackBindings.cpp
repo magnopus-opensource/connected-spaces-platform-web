@@ -17,7 +17,9 @@
 #include <CSP/Common/Array.h>
 #include <CSP/Common/Map.h>
 
+#include <CSP/Common/Optional.h>
 #include <iostream>
+#include <optional>
 
 /*
  * A class to provide some fundamental patterns as interfaces to test binding mechanisms.
@@ -48,6 +50,10 @@ typedef std::function<void(const csp::common::Map<int, csp::common::Array<Bindin
 typedef std::function<void(csp::common::Array<BindingsTestType> valueContainerArg, const csp::common::Array<BindingsTestType>& valueContainerArgByConstRef,
     csp::common::Array<BindingsTestType*> pointerContainerArg, int primitiveArg, BindingsTestType valueArg, BindingsTestType* pointerArg)>
     TestCallbackMixedArgs;
+typedef std::function<void(const csp::common::Optional<BindingsTestType>& optionalValueArg)> TestCallbackOptionalOfValue;
+typedef std::function<void(const csp::common::Optional<BindingsTestType*>& optionalPointerArg)> TestCallbackOptionalOfPointer;
+typedef std::function<void(const csp::common::Optional<csp::common::Array<BindingsTestType>>& optionalOfArrayArg)> TestCallbackOptionalOfArray;
+typedef std::function<void(const csp::common::Array<csp::common::Optional<BindingsTestType>>& arrayOfOptionalArg)> TestCallbackArrayOfOptional;
 }
 
 namespace {
@@ -73,6 +79,12 @@ csp::common::Map<int, csp::common::Array<BindingsTestType*>> pointerMap {
 };
 csp::common::Map<int, csp::common::Array<BindingsTestType>> valueMap { { 0, csp::common::Array<BindingsTestType> { BindingsTestType(1, "One"), BindingsTestType(2, "Two") } },
     { 1, csp::common::Array<BindingsTestType> { BindingsTestType(3, "Three"), BindingsTestType(4, "Four)") } } };
+
+csp::common::Optional<BindingsTestType> valueOpt { BindingsTestType(1, "One") };
+csp::common::Optional<BindingsTestType*> pointerOpt { new BindingsTestType(1, "One") };
+csp::common::Optional<csp::common::Array<BindingsTestType>> optOfArray { { BindingsTestType(1, "One"), BindingsTestType(2, "Two") } };
+csp::common::Array<csp::common::Optional<BindingsTestType>> arrayOfOpt { { BindingsTestType(1, "One") }, { BindingsTestType(2, "Two") } };
+csp::common::Array<csp::common::Optional<BindingsTestType>> arrayOfSomeNullOpt { nullptr, { BindingsTestType(2, "Two") } };
 }
 
 class CallbacksBindingMechanismsTestType {
@@ -96,7 +108,13 @@ public:
     {
         callback(valueArray, valueArrayTwo, pointerArray, 1, singleTypeOne, singleTypeOnePtr);
     }
-
+    void CallbackFunctionOnThreadValueOpt(TestCallbackNamespace::TestCallbackOptionalOfValue callback) { callback(valueOpt); }
+    void CallbackFunctionOnThreadPointerOpt(TestCallbackNamespace::TestCallbackOptionalOfPointer callback) { callback(pointerOpt); }
+    void CallbackFunctionOnThreadOptOfArray(TestCallbackNamespace::TestCallbackOptionalOfArray callback) { callback(optOfArray); }
+    void CallbackFunctionOnThreadArrayOfOpt(TestCallbackNamespace::TestCallbackArrayOfOptional callback) { callback(arrayOfOpt); }
+    void CallbackFunctionOnThreadArrayOfSomeNullOpt(TestCallbackNamespace::TestCallbackArrayOfOptional callback) { callback(arrayOfSomeNullOpt); }
+    void CallbackFunctionOnThreadNullValueOpt(TestCallbackNamespace::TestCallbackOptionalOfValue callback) { callback(nullptr); }
+    void CallbackFunctionOnThreadNullPointerOpt(TestCallbackNamespace::TestCallbackOptionalOfPointer callback) { callback(nullptr); }
     /* Off Thread : TODO*/
 
 private:
@@ -125,6 +143,11 @@ MAKE_CALLBACK(TestCallbackNamespace::TestCallbackNestedContainerOfValuesByConstR
 MAKE_CALLBACK(TestCallbackNamespace::TestCallbackMixedArgs, TestCallbackMixedArgsJSCallback,
     "(valueContainerArg: BindingsTestType[] , valueContainerArgByConstRef: BindingsTestType[] , pointerContainerArg: BindingsTestType[], primitiveArg: "
     "number, valueArg: BindingsTestType, pointerArg: BindingsTestType) => void")
+
+MAKE_CALLBACK(TestCallbackNamespace::TestCallbackOptionalOfValue, TestCallbackOptionalOfValueJSCallback, "(valueArg: BindingsTestType | undefined) => void")
+MAKE_CALLBACK(TestCallbackNamespace::TestCallbackOptionalOfPointer, TestCallbackOptionalOfPointerJSCallback, "(pointerArg: BindingsTestType | undefined) => void")
+MAKE_CALLBACK(TestCallbackNamespace::TestCallbackOptionalOfArray, TestCallbackOptionalOfArrayJSCallback, "(optionalOfArrayArg: BindingsTestType[] | undefined) => void")
+MAKE_CALLBACK(TestCallbackNamespace::TestCallbackArrayOfOptional, TestCallbackArrayOfOptionalJSCallback, "(arrayOfOptionalArg: (BindingsTestType | undefined)[]) => void")
 
 EMSCRIPTEN_BINDINGS(CSPCallbacksTestTypeBindings)
 {
@@ -183,5 +206,33 @@ EMSCRIPTEN_BINDINGS(CSPCallbacksTestTypeBindings)
             })
         .function(
             "callbackFunctionOnThreadMixedArgs(callback)",
-            +[](CallbacksBindingMechanismsTestType& self, TestCallbackMixedArgsJSCallback callback) { self.CallbackFunctionOnThreadMixedArgs(ToNativeCallback(callback)); });
+            +[](CallbacksBindingMechanismsTestType& self, TestCallbackMixedArgsJSCallback callback) { self.CallbackFunctionOnThreadMixedArgs(ToNativeCallback(callback)); })
+        .function(
+            "callbackFunctionOnThreadValueOpt(callback)",
+            +[](CallbacksBindingMechanismsTestType& self, TestCallbackOptionalOfValueJSCallback callback) { self.CallbackFunctionOnThreadValueOpt(ToNativeCallback(callback)); })
+        .function(
+            "callbackFunctionOnThreadPointerOpt(callback)",
+            +[](CallbacksBindingMechanismsTestType& self, TestCallbackOptionalOfPointerJSCallback callback) {
+                self.CallbackFunctionOnThreadPointerOpt(ToNativeCallback(callback));
+            })
+        .function(
+            "callbackFunctionOnThreadOptOfArray(callback)",
+            +[](CallbacksBindingMechanismsTestType& self, TestCallbackOptionalOfArrayJSCallback callback) { self.CallbackFunctionOnThreadOptOfArray(ToNativeCallback(callback)); })
+        .function(
+            "callbackFunctionOnThreadArrayOfOpt(callback)",
+            +[](CallbacksBindingMechanismsTestType& self, TestCallbackArrayOfOptionalJSCallback callback) { self.CallbackFunctionOnThreadArrayOfOpt(ToNativeCallback(callback)); })
+        .function(
+            "callbackFunctionOnThreadArrayOfSomeNullOpt(callback)",
+            +[](CallbacksBindingMechanismsTestType& self, TestCallbackArrayOfOptionalJSCallback callback) {
+                self.CallbackFunctionOnThreadArrayOfSomeNullOpt(ToNativeCallback(callback));
+            })
+        .function(
+            "callbackFunctionOnThreadNullValueOpt(callback)",
+            +[](CallbacksBindingMechanismsTestType& self, TestCallbackOptionalOfValueJSCallback callback) {
+                self.CallbackFunctionOnThreadNullValueOpt(ToNativeCallback(callback));
+            })
+        .function(
+            "callbackFunctionOnThreadNullPointerOpt(callback)", +[](CallbacksBindingMechanismsTestType& self, TestCallbackOptionalOfPointerJSCallback callback) {
+                self.CallbackFunctionOnThreadNullPointerOpt(ToNativeCallback(callback));
+            });
 }

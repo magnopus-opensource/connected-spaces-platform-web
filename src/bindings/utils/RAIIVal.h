@@ -16,6 +16,7 @@ public:
         NoDisposal, //Does no disposal
         Array,
         Map,
+        Optional,
         SingleElement
     };
 
@@ -28,6 +29,9 @@ public:
             break;
         case DisposePolicy::Map:
             bindings::utils::DisposeMap(Val);
+            break;
+        case DisposePolicy::Optional:
+            bindings::utils::DisposeOptional(Val);
             break;
         case DisposePolicy::SingleElement:
             bindings::utils::DisposeElement(Val);

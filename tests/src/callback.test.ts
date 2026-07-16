@@ -151,6 +151,105 @@ describe('Callbacks', () => {
     expect(callbackCalled).toBe(true);
   });
 
+  it('On Thread Callback Optional Value Arg', () => {
+    using helper = csp.CallbacksBindingMechanismsTestType.create();
+
+    let callbackCalled = false;
+    helper.callbackFunctionOnThreadValueOpt((valueArg) => {
+      callbackCalled = true;
+      expect(valueArg?.value).toBe(1);
+      expect(valueArg?.name).toBe('One');
+    });
+
+    expect(callbackCalled).toBe(true);
+  });
+
+  it('On Thread Callback Optional Pointer Arg', () => {
+    using helper = csp.CallbacksBindingMechanismsTestType.create();
+
+    let callbackCalled = false;
+    helper.callbackFunctionOnThreadPointerOpt((pointerArg) => {
+      callbackCalled = true;
+      expect(pointerArg?.value).toBe(1);
+      expect(pointerArg?.name).toBe('One');
+    });
+
+    expect(callbackCalled).toBe(true);
+  });
+
+  it('On Thread Callback Array of Optional Arg', () => {
+    using helper = csp.CallbacksBindingMechanismsTestType.create();
+
+    let callbackCalled = false;
+    helper.callbackFunctionOnThreadArrayOfOpt((arrayOfOptArg) => {
+      callbackCalled = true;
+      expect(arrayOfOptArg.length).toBe(2);
+      expect(arrayOfOptArg[0]?.value).toBe(1);
+      expect(arrayOfOptArg[0]?.name).toBe('One');
+      expect(arrayOfOptArg[1]?.value).toBe(2);
+      expect(arrayOfOptArg[1]?.name).toBe('Two');
+    });
+
+    expect(callbackCalled).toBe(true);
+  });
+
+  it('On Thread Callback Optional of Array Arg', () => {
+    using helper = csp.CallbacksBindingMechanismsTestType.create();
+
+    let callbackCalled = false;
+    helper.callbackFunctionOnThreadOptOfArray((optOfArrayArg) => {
+      callbackCalled = true;
+      expect(optOfArrayArg?.length).toBe(2);
+
+      expect(optOfArrayArg?.[0]?.value).toBe(1);
+      expect(optOfArrayArg?.[0]?.name).toBe('One');
+      expect(optOfArrayArg?.[1]?.value).toBe(2);
+      expect(optOfArrayArg?.[1]?.name).toBe('Two');
+    });
+
+    expect(callbackCalled).toBe(true);
+  });
+
+  it('On Thread Callback Array of Some Null Optional Arg', () => {
+    using helper = csp.CallbacksBindingMechanismsTestType.create();
+
+    let callbackCalled = false;
+    helper.callbackFunctionOnThreadArrayOfSomeNullOpt((arrayOfSomeNullOptArg) => {
+      callbackCalled = true;
+      expect(arrayOfSomeNullOptArg?.length).toBe(2);
+
+      expect(arrayOfSomeNullOptArg?.[0]).toBeUndefined();
+      expect(arrayOfSomeNullOptArg?.[1]?.value).toBe(2);
+      expect(arrayOfSomeNullOptArg?.[1]?.name).toBe('Two');
+    });
+
+    expect(callbackCalled).toBe(true);
+  });
+
+  it('On Thread Callback Optional Null Value Arg', () => {
+    using helper = csp.CallbacksBindingMechanismsTestType.create();
+
+    let callbackCalled = false;
+    helper.callbackFunctionOnThreadNullValueOpt((nullValueOptArg) => {
+      callbackCalled = true;
+      expect(nullValueOptArg).toBeUndefined();
+    });
+
+    expect(callbackCalled).toBe(true);
+  });
+
+  it('On Thread Callback Optional Null Pointer Arg', () => {
+    using helper = csp.CallbacksBindingMechanismsTestType.create();
+
+    let callbackCalled = false;
+    helper.callbackFunctionOnThreadNullPointerOpt((nullPointerOptArg) => {
+      callbackCalled = true;
+      expect(nullPointerOptArg).toBeUndefined();
+    });
+
+    expect(callbackCalled).toBe(true);
+  });
+
   /*
    * Tests callback argument lifetime specificities.
    * The theory here is that all owning arguments (read: value types), are COPIED into the JS runtime.
@@ -337,6 +436,36 @@ describe('Callbacks', () => {
 
     expect(callbackCalled).toBe(true);
     // Should have the same lifetimes even despite all the args
+    expect(csp.BindingsTestType.aliveCount).toBe(beforeCallbackCount);
+  });
+
+  it('On Thread Callback Optional Value Arg Disposal', () => {
+    using helper = csp.CallbacksBindingMechanismsTestType.create();
+
+    const beforeCallbackCount = csp.BindingsTestType.aliveCount;
+
+    let callbackCalled = false;
+    helper.callbackFunctionOnThreadValueOpt((valueArg) => {
+      callbackCalled = true;
+      expect(csp.BindingsTestType.aliveCount).toBe(beforeCallbackCount + 1);
+    });
+
+    expect(callbackCalled).toBe(true);
+    expect(csp.BindingsTestType.aliveCount).toBe(beforeCallbackCount);
+  });
+
+  it('On Thread Callback Optional Pointer Arg Disposal', () => {
+    using helper = csp.CallbacksBindingMechanismsTestType.create();
+
+    const beforeCallbackCount = csp.BindingsTestType.aliveCount;
+
+    let callbackCalled = false;
+    helper.callbackFunctionOnThreadPointerOpt((pointerArg) => {
+      callbackCalled = true;
+      expect(csp.BindingsTestType.aliveCount).toBe(beforeCallbackCount);
+    });
+
+    expect(callbackCalled).toBe(true);
     expect(csp.BindingsTestType.aliveCount).toBe(beforeCallbackCount);
   });
 });
