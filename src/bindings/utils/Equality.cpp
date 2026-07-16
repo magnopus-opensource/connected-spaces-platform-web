@@ -7,6 +7,7 @@ namespace {
 // Forward declarations to support recursion
 bool ArrayEquals(emscripten::val a, emscripten::val b);
 bool MapEquals(emscripten::val a, emscripten::val b);
+bool OptionalEquals(emscripten::val a, emscripten::val b);
 
 /*
  * Generic equality method that can handle both primitive JS types, and bound embind types.
@@ -159,6 +160,21 @@ bool MapEquals(emscripten::val a, emscripten::val b)
     }
     return true;
 }
+
+bool OptionalEquals(emscripten::val a, emscripten::val b) {
+      // Early out reference equality and type checks.
+      // a will equal b if both are undefined
+      if (a.strictlyEquals(b)){
+        return true;
+      }
+
+      if (a.isUndefined() != b.isUndefined()) {
+        return false;
+      }
+
+      return ElementEquals(a, b);
+}
+
 }
 
 EMSCRIPTEN_BINDINGS(CSPEquality)
@@ -166,4 +182,5 @@ EMSCRIPTEN_BINDINGS(CSPEquality)
     emscripten::function("arrayEquals", &ArrayEquals);
     emscripten::function("elementEquals", &ElementEquals);
     emscripten::function("mapEquals", &MapEquals);
+    emscripten::function("optionalEquals", &OptionalEquals);
 }
