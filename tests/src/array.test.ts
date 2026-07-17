@@ -23,20 +23,20 @@ describe('CSPFoundation', () => {
     }
   });
 
-/*
- * Test the binding of Array<T>, using internal binding test types (at least at the moment)
- *
- * Remember that [1,2] === [1,2] is a FALSE statement in JS. I know, i know, I find
- * this troubling too, but that's the way it is.
- * Native style deep equality for containers is provided via utility methods, which
- * seems to be the JS way of doing this sort of thing, you can't overload operators
- * or do any sort of fudging to make JS equality operators not perform identity equality.
- */
+  /*
+   * Test the binding of Array<T>, using internal binding test types (at least at the moment)
+   *
+   * Remember that [1,2] === [1,2] is a FALSE statement in JS. I know, i know, I find
+   * this troubling too, but that's the way it is.
+   * Native style deep equality for containers is provided via utility methods, which
+   * seems to be the JS way of doing this sort of thing, you can't overload operators
+   * or do any sort of fudging to make JS equality operators not perform identity equality.
+   */
 
   it('Array equality', () => {
-    using elem1 = csp.BindingsTestType.create(1, "one");
-    using elem2 = csp.BindingsTestType.create(2, "two");
-    using wrong = csp.BindingsTestType.create(999, "nope");
+    using elem1 = csp.BindingsTestType.create(1, 'one');
+    using elem2 = csp.BindingsTestType.create(2, 'two');
+    using wrong = csp.BindingsTestType.create(999, 'nope');
 
     // Vitest's `toEqual` would have wrongly passed here because both arrays
     // contain BindingsTestType instances without JS enumerable properties - that's the whole reason
@@ -47,7 +47,7 @@ describe('CSPFoundation', () => {
 
   it('Array round trip basic type', () => {
     using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
-    const newArr = [1,2,3];
+    const newArr = [1, 2, 3];
 
     bindingsArrayHelper.setArrayBasicTypeByValue(newArr);
     using roundTripArr = bindingsArrayHelper.getArrayBasicTypeByValue();
@@ -57,8 +57,8 @@ describe('CSPFoundation', () => {
 
   it('Array round trip class type', () => {
     using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
-    using elem1 = csp.BindingsTestType.create(1, "one");
-    using elem2 = csp.BindingsTestType.create(2, "two");
+    using elem1 = csp.BindingsTestType.create(1, 'one');
+    using elem2 = csp.BindingsTestType.create(2, 'two');
     const newArr = [elem1, elem2];
 
     bindingsArrayHelper.setArrayFullTypeByValue(newArr);
@@ -92,7 +92,7 @@ describe('CSPFoundation', () => {
 
   it('Array round trip by const ref and by value are equivalent', () => {
     using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
-    const newArr = [1,2,3];
+    const newArr = [1, 2, 3];
 
     bindingsArrayHelper.setArrayBasicTypeByValue(newArr);
     using roundTripArrByValue = bindingsArrayHelper.getArrayBasicTypeByValue();
@@ -104,97 +104,114 @@ describe('CSPFoundation', () => {
   });
 
   it('Post-Getter Mutations do not impact underlying data', () => {
+    using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
+    using elem1 = csp.BindingsTestType.create(1, 'one');
+    using elem2 = csp.BindingsTestType.create(2, 'two');
+    const newArr = [elem1, elem2];
 
-      using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
-      using elem1 = csp.BindingsTestType.create(1, "one");
-      using elem2 = csp.BindingsTestType.create(2, "two");
-      const newArr = [elem1, elem2];
+    bindingsArrayHelper.setArrayFullTypeByValue(newArr);
+    using roundTripArr = bindingsArrayHelper.getArrayFullTypeByConstRef();
+    expect(csp.arrayEquals(newArr, roundTripArr)).toBe(true);
 
-      bindingsArrayHelper.setArrayFullTypeByValue(newArr);
-      using roundTripArr = bindingsArrayHelper.getArrayFullTypeByConstRef();
-      expect(csp.arrayEquals(newArr, roundTripArr)).toBe(true);
-
-      //Mutate the array, underlying data should not have changed.
-      using replacement = csp.BindingsTestType.create(3, "three");
-      roundTripArr[0] = replacement;
-      using afterMutation = bindingsArrayHelper.getArrayFullTypeByConstRef();
-      expect(csp.arrayEquals(newArr, afterMutation)).toBe(true);
-
+    // Mutate the array, underlying data should not have changed.
+    // Put it directy into a CSP array, which takes ownership via using. (Unlike putting it elements into the JS array above)
+    roundTripArr[0] = csp.BindingsTestType.create(3, 'three');
+    using afterMutation = bindingsArrayHelper.getArrayFullTypeByConstRef();
+    expect(csp.arrayEquals(newArr, afterMutation)).toBe(true);
   });
 
   it('Post-Setter Mutations do not impact underlying data', () => {
-      using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
-      using elem1 = csp.BindingsTestType.create(1, "one");
-      using elem2 = csp.BindingsTestType.create(2, "two");
-      const newArr = [elem1, elem2];
+    using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
+    using elem1 = csp.BindingsTestType.create(1, 'one');
+    using elem2 = csp.BindingsTestType.create(2, 'two');
+    const newArr = [elem1, elem2];
 
-      bindingsArrayHelper.setArrayFullTypeByValue(newArr);
+    bindingsArrayHelper.setArrayFullTypeByValue(newArr);
 
-      //Mutate the array we just passed
-      using replacement = csp.BindingsTestType.create(3, "three");
-      newArr[0] = replacement;
+    //Mutate the array we just passed
+    using replacement = csp.BindingsTestType.create(3, 'three');
+    newArr[0] = replacement;
 
-      // Underlying data should not have changed when we fetch it
-      using cppSnapshot1 = bindingsArrayHelper.getArrayFullTypeByConstRef();
-      expect(csp.arrayEquals(newArr, cppSnapshot1)).toBe(false);
-      using cppSnapshot2 = bindingsArrayHelper.getArrayFullTypeByConstRef();
-      expect(csp.arrayEquals([elem1, elem2], cppSnapshot2)).toBe(true);
+    // Underlying data should not have changed when we fetch it
+    using cppSnapshot1 = bindingsArrayHelper.getArrayFullTypeByConstRef();
+    expect(csp.arrayEquals(newArr, cppSnapshot1)).toBe(false);
+    using cppSnapshot2 = bindingsArrayHelper.getArrayFullTypeByConstRef();
+    expect(csp.arrayEquals([elem1, elem2], cppSnapshot2)).toBe(true);
   });
 
   it('Getters return independent arrays', () => {
-      using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
-      using elem1 = csp.BindingsTestType.create(1, "one");
-      using elem2 = csp.BindingsTestType.create(2, "two");
-      const newArr = [elem1, elem2];
+    using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
+    using elem1 = csp.BindingsTestType.create(1, 'one');
+    using elem2 = csp.BindingsTestType.create(2, 'two');
+    const newArr = [elem1, elem2];
 
-      bindingsArrayHelper.setArrayFullTypeByValue(newArr);
-      using roundTripArr1 = bindingsArrayHelper.getArrayFullTypeByConstRef();
-      using roundTripArr2 = bindingsArrayHelper.getArrayFullTypeByConstRef();
+    bindingsArrayHelper.setArrayFullTypeByValue(newArr);
+    using roundTripArr1 = bindingsArrayHelper.getArrayFullTypeByConstRef();
+    using roundTripArr2 = bindingsArrayHelper.getArrayFullTypeByConstRef();
 
-      expect(csp.arrayEquals(roundTripArr1, roundTripArr2)).toBe(true);
+    expect(csp.arrayEquals(roundTripArr1, roundTripArr2)).toBe(true);
 
-      // Mutating one array should not effect the other
-      using replacement = csp.BindingsTestType.create(3, "three");
-      roundTripArr1[0] = replacement;
+    // Mutating one array should not effect the other
+    roundTripArr1[0] = csp.BindingsTestType.create(3, 'three');
 
-      expect(csp.arrayEquals(roundTripArr1, roundTripArr2)).toBe(false);
+    expect(csp.arrayEquals(roundTripArr1, roundTripArr2)).toBe(false);
   });
 
   it('Setting a sparse array throws', (ctx) => {
-    ctx.skip(!embindAssertions, 'release build: embind primitive type-conversion checks are ASSERTIONS-gated (debug only)');
+    ctx.skip(
+      !embindAssertions,
+      'release build: embind primitive type-conversion checks are ASSERTIONS-gated (debug only)'
+    );
     using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
 
     // JS arrays of primitives with holes in them
-    expect(() => bindingsArrayHelper.setArrayBasicTypeByValue(new Array(5))).toThrow("Cannot convert \"undefined\" to int");
+    expect(() => bindingsArrayHelper.setArrayBasicTypeByValue(new Array(5))).toThrow(
+      'Cannot convert "undefined" to int'
+    );
     // @ts-expect-error sparse literal types as `(BindingsTestType | undefined)[]` - Arguably typescript protects us from needing to test this case, but i'd like to be thorough.
-    expect(() => bindingsArrayHelper.setArrayBasicTypeByValue([1, , 3])).toThrow("Cannot convert \"undefined\" to int");
+    expect(() => bindingsArrayHelper.setArrayBasicTypeByValue([1, , 3])).toThrow('Cannot convert "undefined" to int');
 
     // Arrays of C++ objects with holes in them
     using elem = csp.BindingsTestType.create(1, 'one');
-    expect(() => bindingsArrayHelper.setArrayFullTypeByValue(new Array(3))).toThrow("Cannot read properties of undefined (reading '$$')");
+    expect(() => bindingsArrayHelper.setArrayFullTypeByValue(new Array(3))).toThrow(
+      "Cannot read properties of undefined (reading '$$')"
+    );
     // @ts-expect-error sparse literal types as `(BindingsTestType | undefined)[]` - Arguably typescript protects us from needing to test this case, but i'd like to be thorough.
-    expect(() => bindingsArrayHelper.setArrayFullTypeByValue([elem, , elem])).toThrow("Cannot read properties of undefined (reading '$$')");
+    expect(() => bindingsArrayHelper.setArrayFullTypeByValue([elem, , elem])).toThrow(
+      "Cannot read properties of undefined (reading '$$')"
+    );
   });
 
   it('Setting array with invalid type throws', (ctx) => {
-    ctx.skip(!embindAssertions, 'release build: embind primitive type-conversion checks are ASSERTIONS-gated (debug only)');
+    ctx.skip(
+      !embindAssertions,
+      'release build: embind primitive type-conversion checks are ASSERTIONS-gated (debug only)'
+    );
     using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
 
-     // @ts-expect-error - Typescript will not allow us to set the wrong type, but want to see what happens anyways
-     expect(() => bindingsArrayHelper.setArrayBasicTypeByValue(new Array("not a string"))).toThrow("Cannot convert \"not a string\" to int");
+    // @ts-expect-error - Typescript will not allow us to set the wrong type, but want to see what happens anyways
+    expect(() => bindingsArrayHelper.setArrayBasicTypeByValue(new Array('not a string'))).toThrow(
+      'Cannot convert "not a string" to int'
+    );
 
-     // @ts-expect-error
-     expect(() => bindingsArrayHelper.setArrayFullTypeByValue(new Array("not a string"))).toThrow("Cannot pass \"not a string\" as a BindingsTestType");
+    // @ts-expect-error
+    expect(() => bindingsArrayHelper.setArrayFullTypeByValue(new Array('not a string'))).toThrow(
+      'Cannot pass "not a string" as a BindingsTestType'
+    );
   });
 
   it('Setting null array throws', () => {
-     using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
+    using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
 
-     // @ts-expect-error - Typescript will not allow us to set null but want to see what happens anyways
-     expect(() => bindingsArrayHelper.setArrayBasicTypeByValue(null)).toThrow("Cannot read properties of null (reading 'length')");
+    // @ts-expect-error - Typescript will not allow us to set null but want to see what happens anyways
+    expect(() => bindingsArrayHelper.setArrayBasicTypeByValue(null)).toThrow(
+      "Cannot read properties of null (reading 'length')"
+    );
 
-     // @ts-expect-error
-     expect(() => bindingsArrayHelper.setArrayFullTypeByValue(null)).toThrow("Cannot read properties of null (reading 'length')");
+    // @ts-expect-error
+    expect(() => bindingsArrayHelper.setArrayFullTypeByValue(null)).toThrow(
+      "Cannot read properties of null (reading 'length')"
+    );
   });
 
   /*
@@ -207,20 +224,20 @@ describe('CSPFoundation', () => {
    * https://github.com/magnopus-opensource/connected-spaces-platform/blob/96fd3de47c96ca67ae02cc4b7057bd155ec62ddd/Library/include/CSP/Common/Array.h#L138
    */
   it.skip('Repeated sets do not grow lifetime', () => {
-     using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
-     const beforeAliveCount = csp.BindingsTestType.aliveCount;
+    using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
+    const beforeAliveCount = csp.BindingsTestType.aliveCount;
 
-     for(let i = 0; i < 10; ++i){
-        {
-          using elem = csp.BindingsTestType.create(1, 'one');
-          bindingsArrayHelper.setArrayFullTypeByValue([elem]);
-          // elem disposed here, meaning the only copy is in the C++ backend
-        }
-        expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount + 1);
-     }
+    for (let i = 0; i < 10; ++i) {
+      {
+        using elem = csp.BindingsTestType.create(1, 'one');
+        bindingsArrayHelper.setArrayFullTypeByValue([elem]);
+        // elem disposed here, meaning the only copy is in the C++ backend
+      }
+      expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount + 1);
+    }
 
-     // Should not have grown as the old data should have been destructed on each loop iteration.
-     expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount + 1);
+    // Should not have grown as the old data should have been destructed on each loop iteration.
+    expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount + 1);
   });
 
   /* Array of Pointers tests */
@@ -228,8 +245,8 @@ describe('CSPFoundation', () => {
   it('Round trip array of pointers', () => {
     using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
     const beforeAliveCount = csp.BindingsTestType.aliveCount;
-    using elem1 = csp.BindingsTestType.create(1, "one");
-    using elem2 = csp.BindingsTestType.create(2, "two");
+    using elem1 = csp.BindingsTestType.create(1, 'one');
+    using elem2 = csp.BindingsTestType.create(2, 'two');
     const newArr = [elem1, elem2];
 
     //This will have made 2 more elements, owned by the JS stack
@@ -279,8 +296,8 @@ describe('CSPFoundation', () => {
   it('Array containing nulls pointer array round trip', () => {
     using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
     const beforeAliveCount = csp.BindingsTestType.aliveCount;
-    using elem1 = csp.BindingsTestType.create(1, "one");
-    using elem2 = csp.BindingsTestType.create(2, "two");
+    using elem1 = csp.BindingsTestType.create(1, 'one');
+    using elem2 = csp.BindingsTestType.create(2, 'two');
     const newArr = [elem1, null, elem2];
 
     //This will have made 2 more elements, owned by the JS stack
@@ -301,17 +318,17 @@ describe('CSPFoundation', () => {
   });
 
   it('Mutating element via pointer array is reflected in original handle', () => {
-     using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
+    using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
 
-     let ptrList = bindingsArrayHelper.getArrayOfCppOwnedPointers();
-     expect(ptrList[0]?.name).equals("One");
+    let ptrList = bindingsArrayHelper.getArrayOfCppOwnedPointers();
+    expect(ptrList[0]?.name).equals('One');
 
-     if (ptrList[0] != null){
-      ptrList[0].name = "mutatedOne";
-     }
+    if (ptrList[0] != null) {
+      ptrList[0].name = 'mutatedOne';
+    }
 
-    expect(ptrList[0]?.name).equals("mutatedOne");
-    expect(bindingsArrayHelper.getArrayOfCppOwnedPointers()[0]?.name).equals("mutatedOne");
+    expect(ptrList[0]?.name).equals('mutatedOne');
+    expect(bindingsArrayHelper.getArrayOfCppOwnedPointers()[0]?.name).equals('mutatedOne');
     expect(csp.elementEquals(ptrList[0], bindingsArrayHelper.getArrayOfCppOwnedPointers()[0])).toBe(true);
   });
 
@@ -323,20 +340,20 @@ describe('CSPFoundation', () => {
     expect(csp.arrayEquals(ptrList1, ptrList2)).toBe(true);
 
     //Change something in one of the lists, both should change
-    if (ptrList1[0] != null){
-      ptrList1[0].name = "mutatedOne";
+    if (ptrList1[0] != null) {
+      ptrList1[0].name = 'mutatedOne';
     }
 
-    expect(ptrList1[0]?.name).equals("mutatedOne");
-    expect(ptrList2[0]?.name).equals("mutatedOne");
+    expect(ptrList1[0]?.name).equals('mutatedOne');
+    expect(ptrList2[0]?.name).equals('mutatedOne');
 
     //Add an element to one of the lists
-    using elem1 = csp.BindingsTestType.create(1, "one");
+    using elem1 = csp.BindingsTestType.create(1, 'one');
     ptrList1.push(elem1);
 
     //Only that list should have changed structurally
-    expect(ptrList1.length).equals(3)
-    expect(ptrList2.length).equals(2)
+    expect(ptrList1.length).equals(3);
+    expect(ptrList2.length).equals(2);
     expect(csp.arrayEquals(ptrList1, ptrList2)).toBe(false);
   });
 
@@ -367,6 +384,4 @@ describe('CSPFoundation', () => {
     // coming out of the bindings.
     expect(roundTripArr).toStrictEqual(newArr);
   });
-
 });
-

@@ -378,8 +378,9 @@ describe('CSPFoundation', () => {
 
     const beforeGet = csp.BindingsTestType.aliveCount;
     expect(() => {
-      using arr = bindingsArrayHelper.getArrayFullTypeByValue();
+      let arr = bindingsArrayHelper.getArrayFullTypeByValue();
       arr[0]!.delete();
+      arr[1]!.delete();
     }).not.toThrow();
     expect(csp.BindingsTestType.aliveCount).toBe(beforeGet);
 
@@ -605,8 +606,9 @@ describe('CSPFoundation', () => {
 
     const beforeGet = csp.BindingsTestType.aliveCount;
     expect(() => {
-      using map = bindingsMapHelper.getMapFullTypeByValue();
+      let map = bindingsMapHelper.getMapFullTypeByValue();
       map.get(1)!.delete();
+      map.get(2)!.delete();
     }).not.toThrow();
     expect(csp.BindingsTestType.aliveCount).toBe(beforeGet);
 
