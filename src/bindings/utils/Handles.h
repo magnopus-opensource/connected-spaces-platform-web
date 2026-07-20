@@ -24,7 +24,7 @@ inline bool IsBoundHandle(emscripten::val v)
 
 /*
  * Since emscripten dosen't really approve of non-owning handles, but our API has them nonetheless
- * we inject some safety by undefining  the owning methods (delete, deleteLater, clone)
+ * we inject some safety by undefining the owning methods (delete, deleteLater, clone)
  * are called. This overrides the actual deletion behaviour, making it formally impossible
  * to delete non-owning pointers if enriched in this manner. You'll get a typeerror if you try.
 */
