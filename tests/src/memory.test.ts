@@ -742,7 +742,7 @@ describe('CSPFoundation', () => {
     }
   });
 
-  it('Return map of pointers has non-owning enrichment on each value', () => {
+  it('Return map of pointers has non-owning enrichment on each element', () => {
     using helper = csp.ContainerBindingMechanismsTestType.create();
     const map = helper.getMapOfCppOwnedPointers();
     expect(map.size).toBe(2);
@@ -767,7 +767,7 @@ describe('CSPFoundation', () => {
     expect(called).toBe(true);
   });
 
-  it('Callback container of pointers has non-owning enrichment on elements', () => {
+  it('Callback container of pointers has non-owning enrichment on each element', () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create();
     let called = false;
     helper.callbackFunctionOnThreadContainerOfPointers((arr) => {
@@ -783,7 +783,7 @@ describe('CSPFoundation', () => {
     expect(called).toBe(true);
   });
 
-  it('Callback nested map of pointers has non-owning enrichment on elements', () => {
+  it('Callback nested map of pointers has non-owning enrichment on each element', () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create();
     let called = false;
     helper.callbackFunctionOnThreadNestedContainerOfPointers((map) => {

@@ -27,7 +27,6 @@
 #include "emscripten/bind.h"
 #include "emscripten/val.h"
 #include <iostream>
-#include <string>
 
 constexpr bool PRINT_BINDINGSTESTTYPE_OPERATOR_INSTRUMENTATION = false;
 inline int UniqueIDCounter = 0; //Mutable static counter just to give every type a unique ID.

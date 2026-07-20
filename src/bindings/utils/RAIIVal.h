@@ -12,13 +12,7 @@ namespace bindings::utils {
  */
 class RAIIVal {
 public:
-    enum class DisposePolicy {
-        NoDisposal, //Does no disposal
-        Array,
-        Map,
-        Optional,
-        SingleElement
-    };
+    enum class DisposePolicy { NoDisposal, Array, Map, Optional, SingleElement };
 
     explicit RAIIVal(emscripten::val val, DisposePolicy policy) : Val(std::move(val)), m_disposePolicy(policy) { }
     ~RAIIVal()

@@ -61,7 +61,7 @@ system.callbackFunc((arg1, arg2) => {
 
 We feel this is the common case, processing something inside the callback, so are optimizing for that.
 
-A tradeoff for this, (and to be fair, would be for the `using` approach as well) is if you wish to extract an object from a callback for later use, you must copy it out. We plan to provide extended copy operators to make this less burdensome, especially in the case of containers types.
+A tradeoff for this, (and to be fair, would be for the `using` approach as well) is if you wish to extract an object from a callback for later use, you must copy it out. We plan to provide extended copy operators to make this less burdensome, especially in the case of container types.
 
 Technically, pointer types can be referenced out of methods as they are non owning, although it is still unfortunately difficult to know which argument is a pointer and which is a value. We may just solve this in a caveman way by making sure we include the value category in variable names, as JS does not have access to that information at the source level.
 
@@ -72,7 +72,7 @@ In the future, it would be best to simplify our theory via changing the underlyi
 > In your travels, you may note the method, `NonOwningVal` which overrides the `.delete`, `.deletelater`, `.clone` and `Symbol["Dispose"]` methods on pointer objects, causing them to throw.
 > In an ideal world, we would apply this to all callback arguments, pointers or no, as they should never be interacted with in this way.
 > However, current disposal techniques require `.delete`, so we cannot convert them into a throw so casually.
-> However, I believe this is tractable, as whilst we may be overriding the handles own `.delete`, it is always still available on the prototype, we could
+> I believe this is tractable, as whilst we may be overriding the handles own `.delete`, it is always still available on the prototype, we could
 > use that instead for the internal RAII disposal, like : `emscripten::val::global("Object").call<emscripten::val>("getPrototypeOf", v)["delete"];`
 > Maybe something to think about if you want even more safety against footguns.
 

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { loadCSP } from '../loadModule';
-import createModule, { type MainModule } from 'connected-spaces-platform-bindings';
+import { type MainModule } from 'connected-spaces-platform-bindings';
 
 /*
  * Tests for the binding of callbacks into the typescript boundary.
@@ -258,7 +258,7 @@ describe('Callbacks', () => {
    * some annoyance in how you must copy variables out of callback scope, rather than naturally referencing them,
    * if you wish to use them external to the callback scope.
    *
-   * The lifetime value delta represents the amount of additiona copies the binding layer itself adds
+   * The lifetime value delta represents the amount of additional copies the binding layer itself adds
    * to the objects. The backend CSP interop container types can add a fair amount of redundant copies
    * themselves (default constructions), but we seperate that in the test infra so it's not a concern here.
    *

@@ -86,7 +86,7 @@ void DisposeMap(emscripten::val map) noexcept
     DisposeAll(emscripten::val::global("Array").call<emscripten::val>("from", map.call<emscripten::val>("values")));
 }
 
-/* This is a purely internal method as in JS land we simply rely on element disposal, as undefined objects cant be disposed of anyhow */
+/* This is a purely internal method as in JS land we simply rely on element disposal, as undefined objects can't be disposed of anyhow */
 void DisposeOptional(emscripten::val opt) noexcept
 {
     if (opt.isUndefined()) {

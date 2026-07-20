@@ -4,7 +4,6 @@
 #include "CSP/Common/List.h"
 #include "emscripten/bind.h"
 #include "emscripten/val.h"
-#include <iostream>
 #include <optional>
 #include <type_traits>
 

@@ -140,7 +140,7 @@ inline auto AdaptedRAIINativeCallback(emscripten::val cb)
  * Firstly, declare a value type, generating a typeID aware `val` type within the emscripten machinery, which is neccesary for typescript generation.
  * Then, inside a bespoke EMSCRIPTEN_BINDINGS block, register this new type to a specific typescript signiature, enriching it so it appears where it is used.
  * Finally, generate a converter function.
- * This converter function convertes from the `val` type (which is something Javascript can use and call), and the C++ callback
+ * This converter function converts from the `val` type (which is something Javascript can use and call), and the C++ callback
  * We create a closure which captures the `val` callback, and does nothing but call it with forwarded arguments
  * This adapter closure is what ends up being passed into C++, bridging the two langauges, and allowing C++ to call JS.
  *
