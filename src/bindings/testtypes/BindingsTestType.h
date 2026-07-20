@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include "emscripten/val.h"
 #include <string>
 /*
  * A nonsense, instrumentable C++ object that we can bind and test mechanisms with.
@@ -41,3 +42,6 @@ private:
     int m_uniqueID = 0; // Just for instrumentation, so we can decode lots of overlapping logs
     bool m_movedFrom = false; // So we don't decrement the alive count in the destructor of moved-from objects
 };
+
+// Allow the pointer type to have a name, as we use it as a raw val via NonOwningVal. Used in other translation units, so in the header.
+EMSCRIPTEN_DECLARE_VAL_TYPE(BindingsTestTypePointer);

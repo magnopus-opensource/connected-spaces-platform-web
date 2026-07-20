@@ -122,6 +122,9 @@ EMSCRIPTEN_BINDINGS(CSPTestTypeBindings)
         .function("equals", &BindingsTestType::operator==)
         .class_property("aliveCount", &BindingsTestType::AliveCount);
 
+    //Register the named version of the non-owning pointer type, as we use it as a raw `val` via NonOwningVal.
+    emscripten::register_type<BindingsTestTypePointer>("BindingsTestType");
+
     // Array
     emscripten::register_type<csp::common::Array<int>>("number[]");
     emscripten::register_type<csp::common::Array<BindingsTestType>>("BindingsTestType[]");

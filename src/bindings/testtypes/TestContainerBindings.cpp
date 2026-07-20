@@ -13,6 +13,7 @@
 #include "../containers/Map.h"
 #include "../containers/Optional.h"
 #include "../containers/String.h"
+#include "../utils/Handles.h"
 #include "../utils/JSDisposable.h"
 #include "BindingsTestType.h"
 
@@ -224,7 +225,8 @@ EMSCRIPTEN_BINDINGS(CSPContainerTestTypeBindings)
         .function(
             "getSingleFullTypeAsConstRef", +[](const ContainerBindingMechanismsTestType& self) { return self.GetSingleFullTypeAsConstRef(); })
         .function(
-            "getSingleFullTypeAsPointer", +[](const ContainerBindingMechanismsTestType& self) { return bindings::utils::NonOwningVal(self.GetSingleFullTypeAsPointer()); })
+            "getSingleFullTypeAsPointer",
+            +[](const ContainerBindingMechanismsTestType& self) { return bindings::utils::NonOwningVal<BindingsTestTypePointer>(self.GetSingleFullTypeAsPointer()); })
         .function(
             "getArrayBasicTypeByValue",
             +[](const ContainerBindingMechanismsTestType& self) { return bindings::utils::JSDisposable<csp::common::Array<int>> { self.GetArrayBasicTypeByValue() }; })

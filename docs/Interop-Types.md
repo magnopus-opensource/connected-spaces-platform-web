@@ -120,7 +120,7 @@ the bindings will enable standard JavaScript strings to be used:
 
 ```ts
 const str = csp.getString(); // 'Hello!'
-csp.setString('Hello back!');
+csp.setString("Hello back!");
 ```
 
 The binding for string piggy-backs on the built-in Embind implementation for `std::string`, and because of that involves an extra copy into an `std::string` that we may look to remove in future if it becomes an issue.
@@ -135,11 +135,11 @@ _For the following conceptual documentation, we tend to use `Array` as an exampl
 
 > [!Hint]
 >
-> A *Value array* is something like `csp::common::Array<MyType>`.
+> A _Value array_ is something like `csp::common::Array<MyType>`.
 >
-> A *Pointer array* would be `csp::common::Array<MyType*>`.
+> A _Pointer array_ would be `csp::common::Array<MyType*>`.
 
-A tradeoff in presenting JS array primitives is a need to copy. When accepting or returning a value array, *every element in the list* will be copied. This is true regardless of whether the signature of argument or return is `T` or `const T&`.
+A tradeoff in presenting JS array primitives is a need to copy. When accepting or returning a value array, _every element in the list_ will be copied. This is true regardless of whether the signature of argument or return is `T` or `const T&`.
 
 > [!NOTE]
 >
@@ -151,9 +151,9 @@ Pointer arrays do not invoke copies (well ... they copy _pointers_ but that's no
 The binding surface supports pointer arrays where the contained objects are owned in JS/TS, as below:
 
 ```ts
-using elem1 = csp.MyType.create(1, 'one');
-using elem2 = csp.MyType.create(2, 'two');
-csp.setPointerArray([elem1, elem2])
+using elem1 = csp.MyType.create(1, "one");
+using elem2 = csp.MyType.create(2, "two");
+csp.setPointerArray([elem1, elem2]);
 ```
 
 Keep in mind that when doing this, the JS/TS developer is responsible for maintaining ownership of `elem1` and `elem2`. Once they are disposed, the underlying C++ will have dangling pointers, potentially leading to a crash.
@@ -165,6 +165,18 @@ let array = csp.GetPointerArray();
 let elem = array[0];
 // elem is usable, but owned by the underlying C++, you don't need to worry about deleting it.
 ```
+
+### Non Owning Pointers
+
+In most (practically all) cases, we enrich pointers to be non-owning, to reflect their ownership category coming out of CSP, as CSP generally returns non-owning pointers.
+What this means practically is that we forbid use of owning functions on the javascript handle, specifically `delete`, `deleteLater`, `clone`, and `Symbol.dispose`.
+
+Pointers coming out of the api should be enriched via calling the `NonOwningVal` utility function at the bindings site.
+
+To perform the enrichment, we need to work with raw `val` objects. Thus, it is neccesary to provide these pointer types with typescript names explicitly, via the use
+of `EMSCRIPTEN_DECLARE_VAL_TYPE(MyTypePointer)` combined with `emscripten::register_type<MyTypePointer>("MyType");`.
+
+See [Handles.h](../src/bindings/utils/Handles.h).
 
 ## Binding Types
 
@@ -202,8 +214,8 @@ Secondly is why primitive types are disposable? Honestly this is a bit of a styl
 As JS does not support any sort of operator extension, this project provides free functions to bridge assumed C++ capability (in this case value equality) into JS/TS.
 
 ```ts
-const a = [csp.MyType.create(1, 'one'), csp.MyType.create(2, 'two')];
-const b = [csp.MyType.create(1, 'one'), csp.MyType.create(2, 'two')];
+const a = [csp.MyType.create(1, "one"), csp.MyType.create(2, "two")];
+const b = [csp.MyType.create(1, "one"), csp.MyType.create(2, "two")];
 expect(csp.arrayEquals(a, b)).toBe(true); //C++ style value-equality
 expect(a === b).toBe(false); //JS style identity equality
 ```

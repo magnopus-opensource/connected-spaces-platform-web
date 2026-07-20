@@ -3,6 +3,7 @@
 #include "emscripten/val.h"
 #include <cassert>
 #include <string>
+#include <utility>
 
 namespace bindings::utils {
 
@@ -46,13 +47,24 @@ inline void ForbidOwningMemoryBehaviours(emscripten::val handle)
     handle.set(emscripten::val::global("Symbol")["dispose"], disposeThrower);
 }
 
-template <typename T> inline emscripten::val NonOwningVal(T&& val)
+/*
+ * Return a `val` with non owning behaviours removed
+ * HandleT sometimes need to be provided explicitly to a type registered manually with emscripten via EMSCRIPTEN_DECLARE_VAL_TYPE.
+ * For example in the motivating example when we directly return non-owning pointers, we are returning a raw `val`, as we need
+ * to do that in order to interact with the JS side functions, but a raw `val` does not carry a TS signiature unless we explicily
+ * use the DECLARE_VAL_TYPE path to enrich it.
+ * You need to do this less than you might think, as many constructs (such as callbacks), directly encode their typescript types,
+ * so there is no need to ensure the val remains enriched. At time of writing, this is only neccesary for direct returns.
+ *
+ * Remember that all EMSCRIPTEN_DECLARE_VAL_TYPE does is extend emscripten::val but give it a name, literally that's it.
+ */
+template <typename HandleT = emscripten::val, typename T> inline HandleT NonOwningVal(T&& val)
 {
     emscripten::val handle(std::forward<T>(val), emscripten::return_value_policy::reference());
     if (IsBoundHandle(handle)) {
         ForbidOwningMemoryBehaviours(handle);
     }
-    return handle;
+    return HandleT { std::move(handle) };
 }
 
 }
