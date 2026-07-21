@@ -1,3 +1,4 @@
+import type { UserWorkspaceConfig } from 'vitest/config';
 import { defineConfig } from 'vitest/config';
 import { playwright } from '@vitest/browser-playwright';
 import { existsSync } from 'node:fs';
@@ -14,9 +15,7 @@ const installDir = resolve(repoRoot, 'CSP-WASM-Bindings');
 // https://chromewebstore.google.com/detail/cc++-devtools-support-dwa/pdcpmagijalfljmkmjngeonclgbbannb
 export function makeConfig({ debug = false } = {}) {
   if (!existsSync(installDir)) {
-    throw new Error(
-      `Bindings install directory not found: ${installDir}. Build and install the bindings first.`,
-    );
+    throw new Error(`Bindings install directory not found: ${installDir}. Build and install the bindings first.`);
   }
 
   const dwarfExt = process.env.CSP_DWARF_EXT;
@@ -36,16 +35,17 @@ export function makeConfig({ debug = false } = {}) {
                 // launchPersistentContext + headed is the only way Playwright loads extensions.
                 persistentContext: true,
                 launchOptions: {
-                  args: [
-                    `--disable-extensions-except=${dwarfExt}`,
-                    `--load-extension=${dwarfExt}`,
-                  ],
-                },
+                  args: [`--disable-extensions-except=${dwarfExt}`, `--load-extension=${dwarfExt}`]
+                }
               }
-            : {},
+            : {}
         ),
-        instances: [{ browser: 'chromium' as const }],
+        instances: [{ browser: 'chromium' as const }]
       },
+      typecheck: {
+        include: ['**/*.test-d.ts'],
+        only: true // Only run type tests when typecheck is enabled (--typecheck option)
+      }
     },
     server: {
       // Emscripten's ES6 loader resolves its sibling .wasm via import.meta.url,
@@ -55,18 +55,15 @@ export function makeConfig({ debug = false } = {}) {
       // SharedArrayBuffer (required by -pthread) needs cross-origin isolation.
       headers: {
         'Cross-Origin-Opener-Policy': 'same-origin',
-        'Cross-Origin-Embedder-Policy': 'require-corp',
-      },
+        'Cross-Origin-Embedder-Policy': 'require-corp'
+      }
     },
     resolve: {
       alias: {
-        'connected-spaces-platform-bindings': resolve(
-          installDir,
-          'connected-spaces-platform-bindings.js',
-        ),
-      },
-    },
-  };
+        'connected-spaces-platform-bindings': resolve(installDir, 'connected-spaces-platform-bindings.js')
+      }
+    }
+  } satisfies UserWorkspaceConfig;
 }
 
 export default defineConfig(() => makeConfig());
