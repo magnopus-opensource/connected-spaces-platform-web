@@ -116,19 +116,22 @@ describe('Callbacks', () => {
 
     helper.callbackFunctionOnThreadPointerArg((pointerArg) => {
       callbackCalled = true;
-      liftedPointerArg = pointerArg;
+      liftedPointerArg = pointerArg.clone();
       expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount);
-
-      /* Clone should be forbidden, it's not the thing to do for pointer args. */
-      expect(() => (liftedPointerArg = pointerArg.clone())).toThrow();
     });
 
     expect(callbackCalled).toBe(true);
     expect(liftedPointerArg?.name).toBe('One');
     expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount);
 
-    /* We still are forbidden from deleting this pointer arg, even here */
+    /* Even if we delete the clone, it doesn't effect underlying memory, and cloning to get a new handle incurs no new lifetimes */
+    let alternateHandleToPtr = liftedPointerArg?.clone();
+    expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount);
+
+    liftedPointerArg?.delete();
+    /* Accessing liftedPointerArg still throws however, you've invalidated the handle nonetheless */
     expect(() => liftedPointerArg?.delete()).toThrow();
+    expect(alternateHandleToPtr?.name).toBe('One');
 
     expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount);
   });
