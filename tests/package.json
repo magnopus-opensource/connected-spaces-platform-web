@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "npm run typecheck && npm run lint && vitest run && vitest run --typecheck",
+    "test": "npm run typecheck && npm run lint && vitest run --typecheck && vitest run",
     "test:watch": "vitest",
     "test:debug": "vitest --config vitest.debug.config.ts --no-file-parallelism",
     "test:types": "vitest run --typecheck",
