@@ -8,7 +8,7 @@ As you may expect, in order to enable C++ to call back into javascript, we must 
 At the most basic level, this looks like this.
 
 ```cpp
-void JsFunctionWithCallback(emscripten::val jsCallback)
+void JsFunctionWithCallback(emscripten::val jsCallback) {
     auto adaptedCallback = [jsCallback]() {
         jsCallback();
     }
