@@ -4,6 +4,8 @@
  * as you go without doing something like this, because much of CSP is
  * interdependent, so you can't really use many real types early on in the
  * bindings migration.
+ *
+ * This one is for testing interop/container types
  */
 
 #include "../containers/Array.h"
@@ -11,6 +13,7 @@
 #include "../containers/Map.h"
 #include "../containers/Optional.h"
 #include "../containers/String.h"
+#include "../utils/Handles.h"
 #include "../utils/JSDisposable.h"
 #include "BindingsTestType.h"
 
@@ -36,6 +39,11 @@
  */
 class ContainerBindingMechanismsTestType {
 public:
+    // Individual Elements
+    BindingsTestType GetSingleFullTypeByValue() const { return m_singleValueType; }
+    const BindingsTestType& GetSingleFullTypeAsConstRef() const { return m_singleValueType; }
+    BindingsTestType* GetSingleFullTypeAsPointer() const { return m_singlePointerType; }
+
     // Array<int>
     csp::common::Array<int> GetArrayBasicTypeByValue() const { return m_arrayBasicType; }
     const csp::common::Array<int>& GetArrayBasicTypeByConstRef() const { return m_arrayBasicType; }
@@ -156,6 +164,9 @@ public:
     void SetMapOfPointersByConstRef(const csp::common::Map<int, BindingsTestType*>& value) { m_mapOfPointers = value; }
 
 private:
+    BindingsTestType m_singleValueType = BindingsTestType(1, "One");
+    BindingsTestType* m_singlePointerType;
+
     csp::common::Array<int> m_arrayBasicType;
     csp::common::Array<BindingsTestType> m_arrayFullType;
     csp::common::Array<csp::common::String> m_arrayString;
@@ -195,6 +206,8 @@ public:
 
         m_mapOfCppOwnedPointers[1] = new BindingsTestType(1, "One");
         m_mapOfCppOwnedPointers[2] = new BindingsTestType(2, "Two");
+
+        m_singlePointerType = new BindingsTestType(1, "One");
     }
 };
 
@@ -204,6 +217,16 @@ EMSCRIPTEN_BINDINGS(CSPContainerTestTypeBindings)
     emscripten::class_<ContainerBindingMechanismsTestType>("ContainerBindingMechanismsTestType")
         .class_function(
             "create", +[]() { return ContainerBindingMechanismsTestType(); })
+        // Single objects don't need JSDisposable: a bound-class handle already carries
+        // [Symbol.dispose] (embind maps it to delete()), unlike containers which marshal
+        // to plain JS arrays/objects. Returning by value gives JS an owned, disposable handle.
+        .function(
+            "getSingleFullTypeByValue", +[](const ContainerBindingMechanismsTestType& self) { return self.GetSingleFullTypeByValue(); })
+        .function(
+            "getSingleFullTypeAsConstRef", +[](const ContainerBindingMechanismsTestType& self) { return self.GetSingleFullTypeAsConstRef(); })
+        .function(
+            "getSingleFullTypeAsPointer",
+            +[](const ContainerBindingMechanismsTestType& self) { return bindings::utils::NonOwningVal<BindingsTestTypePointer>(self.GetSingleFullTypeAsPointer()); })
         .function(
             "getArrayBasicTypeByValue",
             +[](const ContainerBindingMechanismsTestType& self) { return bindings::utils::JSDisposable<csp::common::Array<int>> { self.GetArrayBasicTypeByValue() }; })
