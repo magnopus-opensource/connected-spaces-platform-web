@@ -3,9 +3,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "npm run typecheck && npm run lint && vitest run",
+    "test": "npm run typecheck && npm run lint && vitest run && vitest run --typecheck",
     "test:watch": "vitest",
     "test:debug": "vitest --config vitest.debug.config.ts --no-file-parallelism",
+    "test:types": "vitest run --typecheck",
     "typecheck": "tsc --noEmit",
     "lint": "eslint ."
   },
