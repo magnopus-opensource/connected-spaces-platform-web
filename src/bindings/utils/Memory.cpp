@@ -80,11 +80,18 @@ void DisposeAll(emscripten::val v)
  * "No throwing in destructors" as a rule, but we still want clients to know
  * that they're double deleting (even though this is always fine, it's just a no-op).
  *
+ * We invoke delete via the prototype rather than the object, because ForbidOwningMemoryBehaviours
+ * (see Handles.h) replaces `delete` with `undefined` as an own property on non-owning handles.
+ * Going through the prototype bypasses this, allowing us to present a non-owning handle that can't
+ * delete whilst still allowing the RAII system to delete internally. This catching_delete is
+ * exclusively used in the RAII path.
+ *
+ * Technically a user could also go through the prototype, but they'd really have to be trying to break things.
  */
 EM_JS(char*, catching_delete, (emscripten::EM_VAL handleId), {
     const obj = Emval.toValue(handleId);
     try {
-        obj.delete();
+        Object.getPrototypeOf(obj).delete.call(obj);
         return stringToNewUTF8("");
     } catch (e) {
         return stringToNewUTF8(e.message);
@@ -159,7 +166,7 @@ void DisposeOptionalNoThrow(emscripten::val opt) noexcept
         return;
     }
 
-    DisposeAll(opt);
+    DisposeAllNoThrow(opt);
 }
 
 }
