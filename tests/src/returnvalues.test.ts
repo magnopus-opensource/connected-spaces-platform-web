@@ -50,15 +50,15 @@ describe('equality', () => {
     const before = csp.BindingsTestType.aliveCount;
 
     const singlePointer = helper.getSingleFullTypeAsPointer();
-    expect(singlePointer.name).toBe('One');
-    expect(singlePointer.value).toBe(1);
+    expect(singlePointer?.name).toBe('One');
+    expect(singlePointer?.value).toBe(1);
 
-    expect(() => singlePointer.delete()).toThrow();
-    expect(() => singlePointer.deleteLater()).toThrow();
-    expect(() => singlePointer.clone()).toThrow();
-    expect(() => singlePointer[Symbol.dispose]()).toThrow();
+    expect(() => singlePointer?.delete()).toThrow();
+    expect(() => singlePointer?.deleteLater()).toThrow();
+    expect(() => singlePointer?.clone()).toThrow();
+    expect(() => singlePointer?.[Symbol.dispose]()).toThrow();
 
-    expect(singlePointer.value).toBe(1);
+    expect(singlePointer?.value).toBe(1);
     expect(csp.BindingsTestType.aliveCount).toBe(before);
   });
 });

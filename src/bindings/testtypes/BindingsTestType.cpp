@@ -123,7 +123,7 @@ EMSCRIPTEN_BINDINGS(CSPTestTypeBindings)
         .class_property("aliveCount", &BindingsTestType::AliveCount);
 
     //Register the named version of the non-owning pointer type, as we use it as a raw `val` via NonOwningVal.
-    emscripten::register_type<BindingsTestTypePointer>("BindingsTestType");
+    emscripten::register_type<BindingsTestTypePointer>("BindingsTestType | null");
 
     // Array
     emscripten::register_type<csp::common::Array<int>>("number[]");

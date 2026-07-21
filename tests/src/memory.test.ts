@@ -808,17 +808,17 @@ describe('CSPFoundation', () => {
 
     expect(() => {
       let nonOwning = helper.getSingleFullTypeAsPointer();
-      nonOwning.delete();
-    }).toThrow(new TypeError('nonOwning.delete is not a function'));
+      nonOwning?.delete();
+    }).toThrow(new TypeError('nonOwning?.delete is not a function'));
 
     expect(() => {
       let nonOwning = helper.getSingleFullTypeAsPointer();
-      nonOwning.deleteLater();
-    }).toThrow(new TypeError('nonOwning.deleteLater is not a function'));
+      nonOwning?.deleteLater();
+    }).toThrow(new TypeError('nonOwning?.deleteLater is not a function'));
 
     expect(() => {
       let nonOwning = helper.getSingleFullTypeAsPointer();
-      let cloned = nonOwning.clone();
-    }).toThrow(new TypeError('nonOwning.clone is not a function'));
+      let cloned = nonOwning?.clone();
+    }).toThrow(new TypeError('nonOwning?.clone is not a function'));
   });
 });
