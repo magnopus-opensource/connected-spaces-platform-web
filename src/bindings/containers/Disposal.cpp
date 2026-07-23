@@ -1,13 +1,14 @@
-#include "Memory.h"
-#include "Handles.h"
+#include "Disposal.h"
+#include "../utils/Handles.h"
 #include "emscripten/bind.h"
 #include "emscripten/emscripten.h"
 #include "emscripten/val.h"
 #include <cassert>
+#include <stdexcept>
 #include <string>
 
 /*
- * Utils for memory management, most necessary for containers.
+ * Utils for disposal of memory, most necessary for containers.
  *
  * Arrays returned from CSP get a [Symbol.dispose] attached at the binding boundary
  * in the JSDisposable<csp::common::Array<T>> WireType adapter (return path), routing through
@@ -171,7 +172,7 @@ void DisposeOptionalNoThrow(emscripten::val opt) noexcept
 
 }
 
-EMSCRIPTEN_BINDINGS(CSPMemory)
+EMSCRIPTEN_BINDINGS(CSPDisposal)
 {
     emscripten::function("disposeElement", &bindings::utils::DisposeElement);
     emscripten::function("disposeArray", &bindings::utils::DisposeArray);

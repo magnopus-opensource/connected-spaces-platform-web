@@ -7,7 +7,7 @@
 #include "../containers/String.h"
 #include "../testtypes/BindingsTestType.h"
 #include "../utils/Handles.h"
-#include "../utils/Memory.h"
+#include "../containers/Disposal.h"
 #include "../utils/RAIIVal.h"
 #include "emscripten/bind.h"
 #include "emscripten/val.h"

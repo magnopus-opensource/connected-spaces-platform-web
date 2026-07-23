@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Memory.h"
+#include "../containers/Disposal.h"
 #include <emscripten/val.h>
 
 namespace bindings::utils {

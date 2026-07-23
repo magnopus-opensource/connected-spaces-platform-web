@@ -21,7 +21,7 @@ import type { MainModule as _GeneratedMainModule } from "../connected-spaces-pla
 // ADD NEW INTERFACES HERE
 
 import type { EqualityOverrides } from "./equality.d.ts";
-import type { MemoryOverrides } from "./memory.d.ts";
+import type { DisposalOverrides } from "./disposal.d.ts";
 import type { CloneOverrides } from "./clone.d.ts";
 
 // Union of all type overlay interfaces.
