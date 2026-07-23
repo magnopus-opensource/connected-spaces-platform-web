@@ -22,6 +22,10 @@ export function makeConfig({ debug = false } = {}) {
   const loadDwarfExt = debug && !!dwarfExt;
 
   return {
+    oxc: {
+      // Transpile to ES2022 when running on WebKit for 'using' keyword support
+      target: process.argv.includes('--browser=webkit') ? 'es2022' : undefined
+    },
     test: {
       globals: true,
       include: ['**/*.test.ts'],
@@ -40,7 +44,7 @@ export function makeConfig({ debug = false } = {}) {
               }
             : {}
         ),
-        instances: [{ browser: 'chromium' as const }]
+        instances: [{ browser: 'chromium' as const }, { browser: 'webkit' as const }]
       },
       typecheck: {
         include: ['**/*.test-d.ts'],
