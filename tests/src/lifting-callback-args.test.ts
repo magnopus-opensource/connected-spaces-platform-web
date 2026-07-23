@@ -166,11 +166,7 @@ describe('Callbacks', () => {
       let expectedLifetimes = beforeAliveCount + 2;
       expect(csp.BindingsTestType.aliveCount).toBe(expectedLifetimes);
 
-      /*
-       * TODO, we probably want to add a nice .clone() method here for CSP containers, rather than doing it manually.
-       * It would just do this behind the scenes though.
-       */
-      liftedValContainerArg = valueContainerArg.map((x) => x.clone());
+      liftedValContainerArg = csp.cloneArray(valueContainerArg);
 
       expect(csp.BindingsTestType.aliveCount).toBe(expectedLifetimes);
     });
