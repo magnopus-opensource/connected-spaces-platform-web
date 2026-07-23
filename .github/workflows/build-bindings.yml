@@ -99,15 +99,30 @@ jobs:
         working-directory: ./tests
         run: npm ci
 
+      - name: Type Check Tests
+        shell: bash
+        working-directory: ./tests
+        run: npm run typecheck
+
+      - name: Lint Tests
+        shell: bash
+        working-directory: ./tests
+        run: npm run lint
+
       - name: Install Playwright browsers
         shell: bash
         working-directory: ./tests
-        run: npx playwright install chromium
+        run: npx playwright install chromium webkit
 
-      - name: Test
+      - name: Test (Chromium)
         shell: bash
         working-directory: ./tests
-        run: npm test
+        run: npm run test:chromium
+
+      - name: Test (WebKit)
+        shell: bash
+        working-directory: ./tests
+        run: npm run test:webkit
 
       - name: Package install dir
         shell: pwsh

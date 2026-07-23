@@ -3,7 +3,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "npm run typecheck && npm run lint && vitest run --typecheck && vitest run",
+    "test": "npm run typecheck && npm run lint && npm run test:chromium",
+    "test:chromium": "vitest run --typecheck --browser=chromium && vitest run --browser=chromium",
+    "test:webkit": "vitest run --typecheck --browser=webkit && vitest run --browser=webkit",
     "test:watch": "vitest",
     "test:debug": "vitest --config vitest.debug.config.ts --no-file-parallelism",
     "test:types": "vitest run --typecheck",
@@ -11,13 +13,13 @@
     "lint": "eslint ."
   },
   "devDependencies": {
-    "@vitest/browser-playwright": "4.1.9",
+    "@vitest/browser-playwright": "4.1.10",
     "@vitest/eslint-plugin": "1.3.16",
     "eslint": "10.5.0",
     "playwright": "1.59.1",
     "typescript": "5.9.3",
     "typescript-eslint": "8.61.0",
-    "vite": "8.1.0",
-    "vitest": "4.1.9"
+    "vite": "8.1.5",
+    "vitest": "4.1.10"
   }
 }

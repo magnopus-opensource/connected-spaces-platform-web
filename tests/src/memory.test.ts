@@ -460,7 +460,7 @@ describe('CSPFoundation', () => {
     bindingsArrayHelper.setArrayOfPointersByValue([elem1, elem2]);
     let pointerArray = bindingsArrayHelper.getArrayOfPointersByValue();
 
-    // All pointers coming out of the API are non owning
+    // All pointers coming out of the API are non-owning
     expect(() => pointerArray[0]!.delete()).toThrow();
     expect(() => pointerArray[1]!.delete()).toThrow();
 
@@ -800,25 +800,36 @@ describe('CSPFoundation', () => {
     expect(called).toBe(true);
   });
 
-  it('Non owning pointer has undefined ownership behaviours', () => {
+  it('Non-owning pointer has undefined ownership behaviours', () => {
     using helper = csp.ContainerBindingMechanismsTestType.create();
+
+    let nonOwning = helper.getSingleFullTypeAsPointer();
+
+    expect(nonOwning?.[Symbol.dispose]).toBeUndefined();
+    expect(nonOwning?.delete).toBeUndefined();
+    expect(nonOwning?.deleteLater).toBeUndefined();
+    expect(nonOwning?.clone).toBeUndefined();
+
+    // This test will throw a TypeError with the message:
+    // - "Object is not disposable." when transpiled for an ES2022 target
+    // - "Symbol(Symbol.dispose) otherwise
     expect(() => {
       using nonOwning = helper.getSingleFullTypeAsPointer();
-    }).toThrow(new TypeError('Symbol(Symbol.dispose) is not a function'));
+    }).toThrow(TypeError);
 
     expect(() => {
       let nonOwning = helper.getSingleFullTypeAsPointer();
       nonOwning?.delete();
-    }).toThrow(new TypeError('nonOwning?.delete is not a function'));
+    }).toThrow('nonOwning?.delete is not a function');
 
     expect(() => {
       let nonOwning = helper.getSingleFullTypeAsPointer();
       nonOwning?.deleteLater();
-    }).toThrow(new TypeError('nonOwning?.deleteLater is not a function'));
+    }).toThrow('nonOwning?.deleteLater is not a function');
 
     expect(() => {
       let nonOwning = helper.getSingleFullTypeAsPointer();
       let cloned = nonOwning?.clone();
-    }).toThrow(new TypeError('nonOwning?.clone is not a function'));
+    }).toThrow('nonOwning?.clone is not a function');
   });
 });
