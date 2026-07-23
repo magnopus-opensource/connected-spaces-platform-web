@@ -226,7 +226,7 @@ EMSCRIPTEN_BINDINGS(CSPContainerTestTypeBindings)
             "getSingleFullTypeAsConstRef", +[](const ContainerBindingMechanismsTestType& self) { return self.GetSingleFullTypeAsConstRef(); })
         .function(
             "getSingleFullTypeAsPointer",
-            +[](const ContainerBindingMechanismsTestType& self) { return bindings::utils::NonOwningVal<BindingsTestTypePointer>(self.GetSingleFullTypeAsPointer()); })
+            +[](const ContainerBindingMechanismsTestType& self) { return bindings::utils::NonOwningValRef<BindingsTestTypePointer>(self.GetSingleFullTypeAsPointer()); })
         .function(
             "getArrayBasicTypeByValue",
             +[](const ContainerBindingMechanismsTestType& self) { return bindings::utils::JSDisposable<csp::common::Array<int>> { self.GetArrayBasicTypeByValue() }; })

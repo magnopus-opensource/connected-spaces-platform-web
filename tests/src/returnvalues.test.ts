@@ -55,7 +55,6 @@ describe('equality', () => {
 
     expect(() => singlePointer?.delete()).toThrow();
     expect(() => singlePointer?.deleteLater()).toThrow();
-    expect(() => singlePointer?.clone()).toThrow();
     expect(() => singlePointer?.[Symbol.dispose]()).toThrow();
 
     expect(singlePointer?.value).toBe(1);

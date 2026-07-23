@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Memory.h"
+#include "../containers/Disposal.h"
 #include <emscripten/val.h>
 
 namespace bindings::utils {
@@ -19,16 +19,16 @@ public:
     {
         switch (m_disposePolicy) {
         case DisposePolicy::Array:
-            bindings::utils::DisposeArray(Val);
+            bindings::containers::DisposeArrayNoThrow(Val);
             break;
         case DisposePolicy::Map:
-            bindings::utils::DisposeMap(Val);
+            bindings::containers::DisposeMapNoThrow(Val);
             break;
         case DisposePolicy::Optional:
-            bindings::utils::DisposeOptional(Val);
+            bindings::containers::DisposeOptionalNoThrow(Val);
             break;
         case DisposePolicy::SingleElement:
-            bindings::utils::DisposeElement(Val);
+            bindings::containers::DisposeElementNoThrow(Val);
             break;
         case DisposePolicy::NoDisposal:
             break;

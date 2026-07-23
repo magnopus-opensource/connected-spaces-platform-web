@@ -9,8 +9,9 @@ add_executable(connected-spaces-platform-bindings
     src/bindings/testtypes/BindingsTestType.cpp
     src/bindings/testtypes/TestContainerBindings.cpp
     src/bindings/testtypes/TestCallbackBindings.cpp
-    src/bindings/utils/Equality.cpp
-    src/bindings/utils/Memory.cpp
+    src/bindings/containers/Equality.cpp
+    src/bindings/containers/Disposal.cpp
+    src/bindings/containers/Clone.cpp
 )
 set_target_properties(connected-spaces-platform-bindings PROPERTIES SUFFIX ".js")
 

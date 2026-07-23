@@ -37,7 +37,7 @@ emscripten::class_<TypeToBind>("TypeToBind")
  *
  * For example, to register both an argument type, and a return type that is `using` enabled :
  *  emscripten::register_type<csp::common::List<MyType>>("MyType[]");
- *  emscripten::register_type<bindings::utils::CSPListDisposable<MyType>>("(MyType[] & Disposable)");
+ *  emscripten::register_type<bindings::utils::JSDisposable<csp::common::List<MyType>>>("(MyType[] & Disposable)");
  */
 namespace emscripten::internal {
 
@@ -54,7 +54,7 @@ template <typename T> struct BindingType<csp::common::List<T>> {
             if constexpr (std::is_pointer_v<T>) {
                 // Pointer element: hand JS a non-owning reference to CSP-owned memory.
                 // Deleting/disposing the handle will not destroy the C++ object.
-                newJSArray.set(i, bindings::utils::NonOwningVal(list[i]));
+                newJSArray.set(i, bindings::utils::NonOwningValRef(list[i]));
             } else {
                 // Value element: embind copies it across the boundary.
                 // Disposal is necessary (via `using` or otherwise) otherwise these copies are a big leak.
