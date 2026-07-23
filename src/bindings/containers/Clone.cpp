@@ -45,7 +45,7 @@ emscripten::val CloneAll(emscripten::val v)
 
 }
 
-namespace bindings::utils {
+namespace bindings::containers {
 
 emscripten::val CloneArray(emscripten::val arr)
 {
@@ -77,6 +77,6 @@ emscripten::val CloneMap(emscripten::val map)
 
 EMSCRIPTEN_BINDINGS(CSPContainerClone)
 {
-    emscripten::function("cloneArray", &bindings::utils::CloneArray);
-    emscripten::function("cloneMap", &bindings::utils::CloneMap);
+    emscripten::function("cloneArray", &bindings::containers::CloneArray);
+    emscripten::function("cloneMap", &bindings::containers::CloneMap);
 }

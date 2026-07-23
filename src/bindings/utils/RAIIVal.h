@@ -19,16 +19,16 @@ public:
     {
         switch (m_disposePolicy) {
         case DisposePolicy::Array:
-            bindings::utils::DisposeArrayNoThrow(Val);
+            bindings::containers::DisposeArrayNoThrow(Val);
             break;
         case DisposePolicy::Map:
-            bindings::utils::DisposeMapNoThrow(Val);
+            bindings::containers::DisposeMapNoThrow(Val);
             break;
         case DisposePolicy::Optional:
-            bindings::utils::DisposeOptionalNoThrow(Val);
+            bindings::containers::DisposeOptionalNoThrow(Val);
             break;
         case DisposePolicy::SingleElement:
-            bindings::utils::DisposeElementNoThrow(Val);
+            bindings::containers::DisposeElementNoThrow(Val);
             break;
         case DisposePolicy::NoDisposal:
             break;

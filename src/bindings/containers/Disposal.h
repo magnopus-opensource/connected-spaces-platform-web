@@ -2,7 +2,7 @@
 
 #include "emscripten/val.h"
 
-namespace bindings::utils {
+namespace bindings::containers {
 
 /*
  * Dispose a single bound handle.

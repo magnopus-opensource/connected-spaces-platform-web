@@ -52,7 +52,7 @@ void DisposeAllNoThrow(emscripten::val v) noexcept
         return;
     }
 
-    bindings::utils::DisposeElementNoThrow(v);
+    bindings::containers::DisposeElementNoThrow(v);
 }
 
 void DisposeAll(emscripten::val v)
@@ -70,7 +70,7 @@ void DisposeAll(emscripten::val v)
         return;
     }
 
-    bindings::utils::DisposeElement(v);
+    bindings::containers::DisposeElement(v);
 }
 
 }
@@ -99,7 +99,7 @@ EM_JS(char*, catching_delete, (emscripten::EM_VAL handleId), {
     }
 });
 
-namespace bindings::utils {
+namespace bindings::containers {
 
 void DisposeElementNoThrow(emscripten::val v) noexcept
 {
@@ -174,7 +174,7 @@ void DisposeOptionalNoThrow(emscripten::val opt) noexcept
 
 EMSCRIPTEN_BINDINGS(CSPDisposal)
 {
-    emscripten::function("disposeElement", &bindings::utils::DisposeElement);
-    emscripten::function("disposeArray", &bindings::utils::DisposeArray);
-    emscripten::function("disposeMap", &bindings::utils::DisposeMap);
+    emscripten::function("disposeElement", &bindings::containers::DisposeElement);
+    emscripten::function("disposeArray", &bindings::containers::DisposeArray);
+    emscripten::function("disposeMap", &bindings::containers::DisposeMap);
 }

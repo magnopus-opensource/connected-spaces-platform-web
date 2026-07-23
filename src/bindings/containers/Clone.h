@@ -2,7 +2,7 @@
 
 #include "emscripten/val.h"
 
-namespace bindings::utils {
+namespace bindings::containers {
 
 /*
  * Clone a JS array. Returns a new array in which every bound handle reachable through the array,
