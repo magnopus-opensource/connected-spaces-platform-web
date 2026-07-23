@@ -1,13 +1,13 @@
 #pragma once
 
 #include "../containers/Array.h"
+#include "../containers/Disposal.h"
 #include "../containers/List.h"
 #include "../containers/Map.h"
 #include "../containers/Optional.h"
 #include "../containers/String.h"
 #include "../testtypes/BindingsTestType.h"
 #include "../utils/Handles.h"
-#include "../containers/Disposal.h"
 #include "../utils/RAIIVal.h"
 #include "emscripten/bind.h"
 #include "emscripten/val.h"
@@ -57,7 +57,7 @@ template <typename Arg> inline bindings::utils::RAIIVal MakeRAIIVal(Arg&& arg)
     if constexpr (isArray || isMap || isOptional) {
         if constexpr (std::is_pointer_v<ContainerLeafT<DecayedArgT>>) {
             /* Pointer Container (thus non owning elements), no auto disposal */
-            return RAIIVal { bindings::utils::NonOwningVal(std::forward<Arg>(arg)), RAIIVal::DisposePolicy::NoDisposal };
+            return RAIIVal { bindings::utils::NonOwningValRef(std::forward<Arg>(arg)), RAIIVal::DisposePolicy::NoDisposal };
         } else if constexpr (isArray) {
             /* Value Container that gets represented as JS [], automatically disposed as array after callback invocation */
             return RAIIVal { bindings::utils::NonOwningVal(std::forward<Arg>(arg)), RAIIVal::DisposePolicy::Array };
@@ -72,7 +72,7 @@ template <typename Arg> inline bindings::utils::RAIIVal MakeRAIIVal(Arg&& arg)
         }
     } else if constexpr (std::is_pointer_v<DecayedArgT>) {
         /* Pointer (thus non owning), no auto disposal */
-        return RAIIVal { bindings::utils::NonOwningVal(std::forward<Arg>(arg)), RAIIVal::DisposePolicy::NoDisposal };
+        return RAIIVal { bindings::utils::NonOwningValRef(std::forward<Arg>(arg)), RAIIVal::DisposePolicy::NoDisposal };
     } else if constexpr (std::is_arithmetic_v<DecayedArgT> || std::is_same_v<DecayedArgT, csp::common::String>) {
         /* Primitive arg, no auto disposal, and no need for non-owning, would be non-sensical.*/
         return RAIIVal { emscripten::val(std::forward<Arg>(arg)), RAIIVal::DisposePolicy::NoDisposal };

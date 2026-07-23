@@ -79,7 +79,7 @@ template <typename Key, typename Value> struct BindingType<csp::common::Map<Key,
             if constexpr (std::is_pointer_v<Value>) {
                 // Pointer element: hand JS a non-owning reference to CSP-owned memory.
                 // Deleting/disposing the handle will not destroy the C++ object.
-                newJSMap.call<void>("set", key, bindings::utils::NonOwningVal(value));
+                newJSMap.call<void>("set", key, bindings::utils::NonOwningValRef(value));
             } else {
                 // Value element: embind copies it across the boundary.
                 // Disposal is necessary (via `using` or otherwise) otherwise these copies are a big leak.

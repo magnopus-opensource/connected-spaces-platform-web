@@ -53,6 +53,16 @@ inline void ForbidOwningMemoryBehaviours(emscripten::val handle)
  */
 template <typename HandleT = emscripten::val, typename T> inline HandleT NonOwningVal(T&& val)
 {
+    emscripten::val handle(std::forward<T>(val));
+    if (IsBoundHandle(handle)) {
+        ForbidOwningMemoryBehaviours(handle);
+    }
+    return HandleT { std::move(handle) };
+}
+
+/* Same as above, but with a reference return value policy. For pointer objects */
+template <typename HandleT = emscripten::val, typename T> inline HandleT NonOwningValRef(T&& val)
+{
     emscripten::val handle(std::forward<T>(val), emscripten::return_value_policy::reference());
     if (IsBoundHandle(handle)) {
         ForbidOwningMemoryBehaviours(handle);
