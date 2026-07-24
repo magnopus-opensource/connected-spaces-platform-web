@@ -23,7 +23,11 @@ export function makeConfig({ debug = false } = {}) {
 
   return {
     oxc: {
-      // Transpile to ES2022 when running on WebKit for 'using' keyword support
+      // Define the target for transpilation when running the tests (note oxc replaced esbuild in Vite 8+).
+      // If running tests on WebKit, transpile to ES2022 so the `using` keyword is supported in test
+      // code (it is not available on WebKit by default).
+      // If running on other browsers, set to undefined to use the default target (ESNext).
+      // We detect WebKit by checking the command line args for the `--browser` option.
       target: process.argv.includes('--browser=webkit') ? 'es2022' : undefined
     },
     test: {
