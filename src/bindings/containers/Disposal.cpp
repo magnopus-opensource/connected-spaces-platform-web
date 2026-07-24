@@ -105,8 +105,14 @@ void DisposeElementNoThrow(emscripten::val v) noexcept
 {
     assert(bindings::utils::IsBoundHandle(v) && "disposeElement was passed a value that is not a bound handle");
 
-    /* Because we can't throw an exception here like a regular .delete() on a handle would, at least log it */
-    std::string errorStr = std::string(catching_delete(v.as_handle()));
+    /*
+     * Because we can't throw an exception here like a regular .delete() on a handle would, at least log it
+     * We don't expect errors except in exceptional circumstances
+     */
+    char* error = catching_delete(v.as_handle());
+    std::string errorStr = std::string(error);
+    free(error); // Raw malloc'd char* on the wasm heap, gotta free it.
+
     if (!errorStr.empty()) {
         emscripten::val::global("console").call<void>("warn", std::string { errorStr });
     }
