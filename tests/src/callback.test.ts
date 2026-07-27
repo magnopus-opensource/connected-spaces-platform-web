@@ -144,7 +144,6 @@ describe('Callbacks', () => {
       callbackCalled = true;
       expect(() => pointerArg.delete()).toThrow();
       expect(() => pointerArg.deleteLater()).toThrow();
-      expect(() => pointerArg.clone()).toThrow();
       expect(() => pointerArg[Symbol.dispose]()).toThrow();
     });
 

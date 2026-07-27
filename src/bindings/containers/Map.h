@@ -30,7 +30,7 @@ emscripten::class_<TypeToBind>("TypeToBind")
 * in maps to be a primitive, to avoid needing to worry about disposing keys.
 */
 
-namespace bindings::utils {
+namespace bindings::containers {
 /*
  * Compile time allow-list of key types that can safely round-trip as JS Map keys.
  *
@@ -56,14 +56,14 @@ template <> struct IsValidMapKey<csp::common::String> : std::true_type { };
  *
  * For example, to register both an argument type, and a return type that is `using` enabled :
  *  emscripten::register_type<csp::common::Map<KeyType, ValueType>>("Map<KeyType, StorageType>");
- *  emscripten::register_type<bindings::utils::CSPMapDisposable<KeyType, ValueType>>("(Map<KeyType, StorageType> & Disposable)");
+ *  emscripten::register_type<bindings::utils::JSDisposable<csp::common::Map<KeyType, ValueType>>>("(Map<KeyType, StorageType> & Disposable)");
  */
 namespace emscripten::internal {
 
 template <typename Key, typename Value> struct BindingType<csp::common::Map<Key, Value>> {
     // Guards the parameter path. The return path (the JSDisposable specialization below) carries its own
     // copy of this assert, since binding a map return-only never instantiates this specialization.
-    static_assert(bindings::utils::IsValidMapKey<Key>::value,
+    static_assert(bindings::containers::IsValidMapKey<Key>::value,
         "csp::common::Map can only be bound with a primitive key type (an integral type, or csp::common::String). "
         "To allow a new primitive-like key, add an IsValidMapKey specialization.");
 
@@ -118,7 +118,7 @@ template <typename Key, typename Value> struct BindingType<csp::common::Map<Key,
 
 template <typename Key, typename Value> struct BindingType<bindings::utils::JSDisposable<csp::common::Map<Key, Value>>> {
     // Guards the return path; see the parameter-path specialization above.
-    static_assert(bindings::utils::IsValidMapKey<Key>::value,
+    static_assert(bindings::containers::IsValidMapKey<Key>::value,
         "csp::common::Map can only be bound with a primitive key type (an integral type, or csp::common::String). "
         "To allow a new primitive-like key, add an IsValidMapKey specialization.");
 

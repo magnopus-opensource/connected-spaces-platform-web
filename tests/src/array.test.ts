@@ -113,9 +113,9 @@ describe('CSPFoundation', () => {
     using roundTripArr = bindingsArrayHelper.getArrayFullTypeByConstRef();
     expect(csp.arrayEquals(newArr, roundTripArr)).toBe(true);
 
-    //Mutate the array, underlying data should not have changed.
-    using replacement = csp.BindingsTestType.create(3, 'three');
-    roundTripArr[0] = replacement;
+    // Mutate the array, underlying data should not have changed.
+    // Put it directy into a CSP array, which takes ownership via using. (Unlike putting it elements into the JS array above)
+    roundTripArr[0] = csp.BindingsTestType.create(3, 'three');
     using afterMutation = bindingsArrayHelper.getArrayFullTypeByConstRef();
     expect(csp.arrayEquals(newArr, afterMutation)).toBe(true);
   });
@@ -152,8 +152,7 @@ describe('CSPFoundation', () => {
     expect(csp.arrayEquals(roundTripArr1, roundTripArr2)).toBe(true);
 
     // Mutating one array should not effect the other
-    using replacement = csp.BindingsTestType.create(3, 'three');
-    roundTripArr1[0] = replacement;
+    roundTripArr1[0] = csp.BindingsTestType.create(3, 'three');
 
     expect(csp.arrayEquals(roundTripArr1, roundTripArr2)).toBe(false);
   });

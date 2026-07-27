@@ -9,8 +9,9 @@ add_executable(connected-spaces-platform-bindings
     src/bindings/testtypes/BindingsTestType.cpp
     src/bindings/testtypes/TestContainerBindings.cpp
     src/bindings/testtypes/TestCallbackBindings.cpp
-    src/bindings/utils/Equality.cpp
-    src/bindings/utils/Memory.cpp
+    src/bindings/containers/Equality.cpp
+    src/bindings/containers/Disposal.cpp
+    src/bindings/containers/Clone.cpp
 )
 set_target_properties(connected-spaces-platform-bindings PROPERTIES SUFFIX ".js")
 
@@ -52,7 +53,7 @@ target_link_options(connected-spaces-platform-bindings PRIVATE
     -sALLOW_MEMORY_GROWTH=1
     -sINITIAL_MEMORY=33554432
     -sMAXIMUM_MEMORY=1073741824
-    "-sEXPORTED_RUNTIME_METHODS=['ccall','setValue','getValue','addFunction','removeFunction','UTF8ToString','stringToUTF8','lengthBytesUTF8','HEAPU8']"
+    "-sEXPORTED_RUNTIME_METHODS=['ccall','setValue','getValue','addFunction','removeFunction','UTF8ToString','stringToUTF8', 'stringToNewUTF8', 'lengthBytesUTF8','HEAPU8']"
     "-sINCOMING_MODULE_JS_API=['buffer','fetchSettings','instantiateWasm','locateFile','mainScriptUrlOrBlob','wasmMemory']"
     --emit-tsd=connected-spaces-platform-bindings.d.ts
     --no-entry
