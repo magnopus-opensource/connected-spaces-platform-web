@@ -67,14 +67,26 @@ Technically, pointer types can be referenced out of methods as they are non owni
 
 In the future, it would be best to simplify our theory via changing the underlying API. The fact that `SpaceEntity` (and items on it, like `Component`) are uniquely expressed in the api as non-owning pointers is an unfortunate niggle preventing us from expressing a cleaner invariant. It's possible that once we manage to remove the debt of the old-wrapper generator, CSP can start expressing ownership in its own types via smart pointers, which would let us lean into what embind actually wants us to be doing.
 
-> ![NOTE]
->
-> In your travels, you may note the method, `NonOwningVal` which overrides the `.delete`, `.deletelater`, `.clone` and `Symbol["Dispose"]` methods on pointer objects, causing them to throw.
-> In an ideal world, we would apply this to all callback arguments, pointers or no, as they should never be interacted with in this way.
-> However, current disposal techniques require `.delete`, so we cannot convert them into a throw so casually.
-> I believe this is tractable, as whilst we may be overriding the handles own `.delete`, it is always still available on the prototype, we could
-> use that instead for the internal RAII disposal, like : `emscripten::val::global("Object").call<emscripten::val>("getPrototypeOf", v)["delete"];`
-> Maybe something to think about if you want even more safety against footguns.
+### Lifting out of callbacks
+
+All arguments in callbacks are `NonOwning`, meaning that they have no `.delete`, `.deleteLater`, or `Symbol.Dispose`
+
+To get an argument out of a callback, clone it.
+
+```js
+let myArg;
+system.callbackFunc((arg) => {
+  myArg = arg.clone();
+});
+```
+
+This is not a copy, it is a reference count incrementation. Normally, callback arguments are owned by our backend RAII system, which decrements the reference count (ie, calls `delete`) when
+they fall out of callback scope. This is why you do not need to worry about ownership in callbacks.
+
+However, lifted arguments, having incremented the reference count, are now owners of the memory. As such, you need to ensure they are deleted.
+You may either rebind them into `using` variables, or just manually call `delete` or `deleteLater` on them.
+
+It does not matter if the argument is a pointer of value type, you can call `clone` on it all the same, it'll do the right thing, (pointer deletes never delete underlying memory regardless). It should be rather tricky to get this wrong, as embind will error quite cleanly if you end up trying to do a double delete, or access memory after deletion, or use a deletion operation in a context where it is forbidden. The only thing you need to keep in mind is not to leak lifted arguments.
 
 ## Off Thread Callbacks
 

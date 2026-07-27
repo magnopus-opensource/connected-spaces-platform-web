@@ -222,7 +222,7 @@ expect(a === b).toBe(false); //JS style identity equality
 
 These helpers attempt to call the bound `equals` method on types that have it, which will almost always call the underlying C++ equality operator.
 
-You may find these equality helpers at the top level of the module, they are defined in [Equality.cpp.](../src/bindings/utils/Equality.cpp)
+You may find these equality helpers at the top level of the module, they are defined in [Equality.cpp.](../src/bindings/containers/Equality.cpp)
 
 ## Disposability
 
@@ -232,4 +232,4 @@ Owned C++ memory, such as in value arrays, must be deleted to avoid leaks, and i
 
 Non owned memory is not disposable, and if you are type-checking correctly, will reject being declared as `using`, as is appropriate to convey that there is no disposal going on. In an ideal world, the inverse of this check would also exist as a lint rule, to insist that you use `using` unless you explicitly declare that you don't want to, and take on manual disposal responsibility yourself.
 
-Speaking of manual disposal, the `using` mechanism calls into the free function `disposeArray`/`disposeMap` etc defined in [Memory.cpp](../src/bindings/utils/Memory.cpp). You are free to use these instead if you wish more manual control.
+Speaking of manual disposal, the `using` mechanism calls into the free function `disposeArray`/`disposeMap` etc defined in [Disposal.cpp](../src/bindings/containers/Disposal.cpp). You are free to use these instead if you wish more manual control.

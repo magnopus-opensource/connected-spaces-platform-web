@@ -378,8 +378,9 @@ describe('CSPFoundation', () => {
 
     const beforeGet = csp.BindingsTestType.aliveCount;
     expect(() => {
-      using arr = bindingsArrayHelper.getArrayFullTypeByValue();
+      let arr = bindingsArrayHelper.getArrayFullTypeByValue();
       arr[0]!.delete();
+      arr[1]!.delete();
     }).not.toThrow();
     expect(csp.BindingsTestType.aliveCount).toBe(beforeGet);
 
@@ -605,8 +606,9 @@ describe('CSPFoundation', () => {
 
     const beforeGet = csp.BindingsTestType.aliveCount;
     expect(() => {
-      using map = bindingsMapHelper.getMapFullTypeByValue();
+      let map = bindingsMapHelper.getMapFullTypeByValue();
       map.get(1)!.delete();
+      map.get(2)!.delete();
     }).not.toThrow();
     expect(csp.BindingsTestType.aliveCount).toBe(beforeGet);
 
@@ -737,7 +739,6 @@ describe('CSPFoundation', () => {
     for (const el of arr) {
       expect(() => el?.delete()).toThrow();
       expect(() => el?.deleteLater()).toThrow();
-      expect(() => el?.clone()).toThrow();
       expect(() => el?.[Symbol.dispose]()).toThrow();
     }
   });
@@ -749,7 +750,6 @@ describe('CSPFoundation', () => {
     for (const el of map.values()) {
       expect(() => el?.delete()).toThrow();
       expect(() => el?.deleteLater()).toThrow();
-      expect(() => el?.clone()).toThrow();
       expect(() => el?.[Symbol.dispose]()).toThrow();
     }
   });
@@ -761,7 +761,6 @@ describe('CSPFoundation', () => {
       called = true;
       expect(() => pointerArg.delete()).toThrow();
       expect(() => pointerArg.deleteLater()).toThrow();
-      expect(() => pointerArg.clone()).toThrow();
       expect(() => pointerArg[Symbol.dispose]()).toThrow();
     });
     expect(called).toBe(true);
@@ -776,7 +775,6 @@ describe('CSPFoundation', () => {
       for (const el of arr) {
         expect(() => el.delete()).toThrow();
         expect(() => el.deleteLater()).toThrow();
-        expect(() => el.clone()).toThrow();
         expect(() => el[Symbol.dispose]()).toThrow();
       }
     });
@@ -792,7 +790,6 @@ describe('CSPFoundation', () => {
         for (const el of arr) {
           expect(() => el.delete()).toThrow();
           expect(() => el.deleteLater()).toThrow();
-          expect(() => el.clone()).toThrow();
           expect(() => el[Symbol.dispose]()).toThrow();
         }
       }
@@ -815,10 +812,5 @@ describe('CSPFoundation', () => {
       let nonOwning = helper.getSingleFullTypeAsPointer();
       nonOwning?.deleteLater();
     }).toThrow(new TypeError('nonOwning?.deleteLater is not a function'));
-
-    expect(() => {
-      let nonOwning = helper.getSingleFullTypeAsPointer();
-      let cloned = nonOwning?.clone();
-    }).toThrow(new TypeError('nonOwning?.clone is not a function'));
   });
 });

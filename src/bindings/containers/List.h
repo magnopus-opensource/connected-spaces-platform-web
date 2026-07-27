@@ -37,7 +37,7 @@ emscripten::class_<TypeToBind>("TypeToBind")
  *
  * For example, to register both an argument type, and a return type that is `using` enabled :
  *  emscripten::register_type<csp::common::List<MyType>>("MyType[]");
- *  emscripten::register_type<bindings::utils::CSPListDisposable<MyType>>("(MyType[] & Disposable)");
+ *  emscripten::register_type<bindings::utils::JSDisposable<csp::common::List<MyType>>>("(MyType[] & Disposable)");
  */
 namespace emscripten::internal {
 
