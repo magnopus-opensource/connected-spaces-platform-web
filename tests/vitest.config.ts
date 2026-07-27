@@ -25,6 +25,7 @@ export function makeConfig({ debug = false } = {}) {
     test: {
       globals: true,
       include: ['**/*.test.ts'],
+      restoreMocks: true, // Otherwise things like spies leak between tests
       browser: {
         enabled: true,
         headless: !debug,

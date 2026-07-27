@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll, vi } from 'vitest';
 import { loadCSP } from '../loadModule';
 import createModule, { BindingsTestType, type MainModule } from 'connected-spaces-platform-bindings';
 
@@ -86,6 +86,49 @@ describe('Callbacks', () => {
 
     /* Deleting again should throw, not crash */
     expect(() => liftedValArg?.delete()).toThrow();
+  });
+
+  it('RAII disposal of an already deleted argument warns instead of throwing', () => {
+    using helper = csp.CallbacksBindingMechanismsTestType.create();
+
+    /*
+     * This isn't a behaviour we really expect to happen.
+     * But in the case that _somehow_, a RAII managed object is explicitly
+     * deleted, the error needs to be a warning, rather than a hard crash.
+     * This is because this is destruction behaviour, so throws can't happen.
+     */
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    helper.callbackFunctionOnThreadValueArg((valueArg) => {
+      /* Callback args are non owning, should not allow clients to delete in the natural way */
+      expect(valueArg.delete).toBeUndefined();
+
+      /*
+       * This is what we do internally to allow us to delete objects that we don't expose
+       * .delete() methods to the client for (ie non-owning).
+       */
+      Object.getPrototypeOf(valueArg).delete.call(valueArg);
+    });
+
+    /* On scope exit, we should have got the warning */
+    expect(warnSpy).toHaveBeenCalledTimes(1);
+    expect(warnSpy.mock.calls[0]?.[0]).toContain('already deleted');
+  });
+
+  it('RAII disposal of a regular arg does not warn', () => {
+    /* This test only exists because warns (from above test) are silent as far as automatic tests are concerned */
+
+    using helper = csp.CallbacksBindingMechanismsTestType.create();
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    let callbackCalled = false;
+    helper.callbackFunctionOnThreadValueArg((valueArg) => {
+      callbackCalled = true;
+      expect(valueArg.name).toBe('One');
+    });
+
+    expect(callbackCalled).toBe(true);
+    expect(warnSpy).not.toHaveBeenCalled();
   });
 
   it('Try to reference a pointer arg does not throw', () => {
