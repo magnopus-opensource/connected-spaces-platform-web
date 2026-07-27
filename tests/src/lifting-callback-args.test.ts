@@ -70,10 +70,10 @@ describe('Callbacks', () => {
       expect(valueArg.name).toBe('One');
 
       /* Cloning is a reference count shallow copy, should not incur lifetimes */
-      let expectedLiftimes = beforeAliveCount + 1;
-      expect(csp.BindingsTestType.aliveCount).toBe(expectedLiftimes);
+      let expectedLifetimes = beforeAliveCount + 1;
+      expect(csp.BindingsTestType.aliveCount).toBe(expectedLifetimes);
       liftedValArg = valueArg.clone();
-      expect(csp.BindingsTestType.aliveCount).toBe(expectedLiftimes);
+      expect(csp.BindingsTestType.aliveCount).toBe(expectedLifetimes);
     });
 
     expect(callbackCalled).toBe(true);
