@@ -14,15 +14,15 @@
 
 // Note: there is currently an error for the import, as this is the path for the installed version
 // of the generated bindings JS file.
-import type { MainModule as _GeneratedMainModule } from "../connected-spaces-platform-bindings.js";
+import type { MainModule as _GeneratedMainModule } from '../connected-spaces-platform-bindings.js';
 
 //==================================================================================================
 
 // ADD NEW INTERFACES HERE
 
-import type { EqualityOverrides } from "./equality.d.ts";
-import type { DisposalOverrides } from "./disposal.d.ts";
-import type { CloneOverrides } from "./clone.d.ts";
+import type { EqualityOverrides } from './equality.d.ts';
+import type { DisposalOverrides } from './disposal.d.ts';
+import type { CloneOverrides } from './clone.d.ts';
 
 // Union of all type overlay interfaces.
 type TypeOverrides = EqualityOverrides & DisposalOverrides & CloneOverrides;
@@ -30,12 +30,11 @@ type TypeOverrides = EqualityOverrides & DisposalOverrides & CloneOverrides;
 //==================================================================================================
 
 // MainModule with hand-written type overrides applied.
-export type MainModule = Omit<_GeneratedMainModule, keyof TypeOverrides> &
-  TypeOverrides;
+export type MainModule = Omit<_GeneratedMainModule, keyof TypeOverrides> & TypeOverrides;
 
 // Re-export all other generated types.
 // The generated MainModule will be skipped as the local MainModule shadows the generated one.
-export * from "../connected-spaces-platform-bindings.js";
+export * from '../connected-spaces-platform-bindings.js';
 
 // Re-export the factory function with the narrowed MainModule return type
 declare function MainModuleFactory(options?: unknown): Promise<MainModule>;

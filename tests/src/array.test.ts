@@ -26,7 +26,7 @@ describe('CSPFoundation', () => {
   /*
    * Test the binding of Array<T>, using internal binding test types (at least at the moment)
    *
-   * Remember that [1,2] === [1,2] is a FALSE statement in JS. I know, i know, I find
+   * Remember that [1,2] === [1,2] is a FALSE statement in JS. I know, I know, I find
    * this troubling too, but that's the way it is.
    * Native style deep equality for containers is provided via utility methods, which
    * seems to be the JS way of doing this sort of thing, you can't overload operators
@@ -171,15 +171,15 @@ describe('CSPFoundation', () => {
     // @ts-expect-error sparse literal types as `(BindingsTestType | undefined)[]` - Arguably typescript protects us from needing to test this case, but i'd like to be thorough.
     expect(() => bindingsArrayHelper.setArrayBasicTypeByValue([1, , 3])).toThrow('Cannot convert "undefined" to int');
 
+    // The below will throw
+    // - "Cannot read properties of undefined (reading '$$')" for Chromium-based browsers
+    // - "TypeError: undefined is not an object (evaluating 'handle.$$')" for Webkit/Safari.
+
     // Arrays of C++ objects with holes in them
     using elem = csp.BindingsTestType.create(1, 'one');
-    expect(() => bindingsArrayHelper.setArrayFullTypeByValue(new Array(3))).toThrow(
-      "Cannot read properties of undefined (reading '$$')"
-    );
+    expect(() => bindingsArrayHelper.setArrayFullTypeByValue(new Array(3))).toThrow(TypeError);
     // @ts-expect-error sparse literal types as `(BindingsTestType | undefined)[]` - Arguably typescript protects us from needing to test this case, but i'd like to be thorough.
-    expect(() => bindingsArrayHelper.setArrayFullTypeByValue([elem, , elem])).toThrow(
-      "Cannot read properties of undefined (reading '$$')"
-    );
+    expect(() => bindingsArrayHelper.setArrayFullTypeByValue([elem, , elem])).toThrow(TypeError);
   });
 
   it('Setting array with invalid type throws', (ctx) => {
@@ -203,15 +203,15 @@ describe('CSPFoundation', () => {
   it('Setting null array throws', () => {
     using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
 
+    // These will throw
+    // - "Cannot read properties of null (reading 'length')" for Chromium-based browsers
+    // - "null is not an object (evaluating 'handle[key]')" for Webkit/Safari.
+
     // @ts-expect-error - Typescript will not allow us to set null but want to see what happens anyways
-    expect(() => bindingsArrayHelper.setArrayBasicTypeByValue(null)).toThrow(
-      "Cannot read properties of null (reading 'length')"
-    );
+    expect(() => bindingsArrayHelper.setArrayBasicTypeByValue(null)).toThrow(TypeError);
 
     // @ts-expect-error
-    expect(() => bindingsArrayHelper.setArrayFullTypeByValue(null)).toThrow(
-      "Cannot read properties of null (reading 'length')"
-    );
+    expect(() => bindingsArrayHelper.setArrayFullTypeByValue(null)).toThrow(TypeError);
   });
 
   /*

@@ -22,6 +22,14 @@ export function makeConfig({ debug = false } = {}) {
   const loadDwarfExt = debug && !!dwarfExt;
 
   return {
+    oxc: {
+      // Define the target for transpilation when running the tests (note oxc replaced esbuild in Vite 8+).
+      // If running tests on WebKit, transpile to ES2022 so the `using` keyword is supported in test
+      // code (it is not available on WebKit by default).
+      // If running on other browsers, set to undefined to use the default target (ESNext).
+      // We detect WebKit by checking the command line args for the `--browser` option.
+      target: process.argv.includes('--browser=webkit') ? 'es2022' : undefined
+    },
     test: {
       globals: true,
       include: ['**/*.test.ts'],
@@ -41,7 +49,7 @@ export function makeConfig({ debug = false } = {}) {
               }
             : {}
         ),
-        instances: [{ browser: 'chromium' as const }]
+        instances: [{ browser: 'chromium' as const }, { browser: 'webkit' as const }]
       },
       typecheck: {
         include: ['**/*.test-d.ts'],
