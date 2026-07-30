@@ -26,7 +26,7 @@ describe('clone ', () => {
     let callbackCalled = false;
     let liftedValContainerArg: BindingsTestType[] = [];
     let beforeAliveCount = csp.BindingsTestType.aliveCount;
-    helper.callbackFunctionOnThreadContainerOfValuesByConstRef((arrayAry) => {
+    helper.callbackFunctionContainerOfValuesByConstRef((arrayAry) => {
       callbackCalled = true;
 
       let expectedLifetimes = beforeAliveCount + 2;
@@ -54,7 +54,7 @@ describe('clone ', () => {
     let callbackCalled = false;
     let liftedPointerContainerArg: BindingsTestType[] = [];
     let beforeAliveCount = csp.BindingsTestType.aliveCount;
-    helper.callbackFunctionOnThreadContainerOfPointers((pointerAry) => {
+    helper.callbackFunctionContainerOfPointers((pointerAry) => {
       callbackCalled = true;
 
       expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount);
@@ -77,7 +77,7 @@ describe('clone ', () => {
     let callbackCalled = false;
     let liftedValMapArg: Map<number, BindingsTestType[]> = new Map();
     let beforeAliveCount = csp.BindingsTestType.aliveCount;
-    helper.callbackFunctionOnThreadNestedContainerOfValuesByConstRef((mapArg) => {
+    helper.callbackFunctionNestedContainerOfValuesByConstRef((mapArg) => {
       callbackCalled = true;
 
       let expectedLifetimes = beforeAliveCount + 4;
@@ -105,7 +105,7 @@ describe('clone ', () => {
     let callbackCalled = false;
     let liftedPointerMapArg: Map<number, BindingsTestType[]> = new Map();
     let beforeAliveCount = csp.BindingsTestType.aliveCount;
-    helper.callbackFunctionOnThreadNestedContainerOfPointers((mapArg) => {
+    helper.callbackFunctionNestedContainerOfPointers((mapArg) => {
       callbackCalled = true;
 
       expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount);
@@ -129,7 +129,7 @@ describe('clone ', () => {
     let callbackCalled = false;
     let liftedOptOfArrayArg: BindingsTestType[] = [];
     let beforeAliveCount = csp.BindingsTestType.aliveCount;
-    helper.callbackFunctionOnThreadOptOfArray((optOfArrayArg) => {
+    helper.callbackFunctionOptOfArray((optOfArrayArg) => {
       callbackCalled = true;
 
       /* The optional is an array of two owned elements */
@@ -161,7 +161,7 @@ describe('clone ', () => {
     let callbackCalled = false;
     let liftedArrayOfOptArg: (BindingsTestType | undefined)[] = [];
     let beforeAliveCount = csp.BindingsTestType.aliveCount;
-    helper.callbackFunctionOnThreadArrayOfSomeNullOpt((arrayOfSomeNullOptArg) => {
+    helper.callbackFunctionArrayOfSomeNullOpt((arrayOfSomeNullOptArg) => {
       callbackCalled = true;
 
       /* One null optional, one present, thus only a single lifetime */

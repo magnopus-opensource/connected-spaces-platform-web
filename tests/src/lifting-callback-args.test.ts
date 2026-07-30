@@ -19,7 +19,7 @@ describe('Callbacks', () => {
 
     let callbackCalled = false;
     let liftedValContainerArg: BindingsTestType[] = [];
-    helper.callbackFunctionOnThreadContainerOfValues((valueContainerArg) => {
+    helper.callbackFunctionContainerOfValues((valueContainerArg) => {
       callbackCalled = true;
       expect(valueContainerArg[0]?.name).toBe('One');
       liftedValContainerArg = valueContainerArg;
@@ -48,7 +48,7 @@ describe('Callbacks', () => {
 
     let callbackCalled = false;
     let liftedValArg: BindingsTestType | undefined;
-    helper.callbackFunctionOnThreadValueArg((valueArg) => {
+    helper.callbackFunctionValueArg((valueArg) => {
       callbackCalled = true;
       expect(valueArg.name).toBe('One');
       liftedValArg = valueArg;
@@ -65,7 +65,7 @@ describe('Callbacks', () => {
     let callbackCalled = false;
     let liftedValArg: BindingsTestType | undefined;
     let beforeAliveCount = csp.BindingsTestType.aliveCount;
-    helper.callbackFunctionOnThreadValueArgByConstRef((valueArg) => {
+    helper.callbackFunctionValueArgByConstRef((valueArg) => {
       callbackCalled = true;
       expect(valueArg.name).toBe('One');
 
@@ -99,7 +99,7 @@ describe('Callbacks', () => {
      */
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
-    helper.callbackFunctionOnThreadValueArg((valueArg) => {
+    helper.callbackFunctionValueArg((valueArg) => {
       /* Callback args are non owning, should not allow clients to delete in the natural way */
       expect(valueArg.delete).toBeUndefined();
 
@@ -122,7 +122,7 @@ describe('Callbacks', () => {
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
     let callbackCalled = false;
-    helper.callbackFunctionOnThreadValueArg((valueArg) => {
+    helper.callbackFunctionValueArg((valueArg) => {
       callbackCalled = true;
       expect(valueArg.name).toBe('One');
     });
@@ -136,7 +136,7 @@ describe('Callbacks', () => {
 
     let callbackCalled = false;
     let liftedPointerArg: BindingsTestType | undefined;
-    helper.callbackFunctionOnThreadPointerArg((pointerArg) => {
+    helper.callbackFunctionPointerArg((pointerArg) => {
       callbackCalled = true;
       liftedPointerArg = pointerArg;
     });
@@ -157,7 +157,7 @@ describe('Callbacks', () => {
     let beforeAliveCount = csp.BindingsTestType.aliveCount; // We should never modify lifetimes dealing with pointers
     let liftedPointerArg: BindingsTestType | undefined;
 
-    helper.callbackFunctionOnThreadPointerArg((pointerArg) => {
+    helper.callbackFunctionPointerArg((pointerArg) => {
       callbackCalled = true;
       liftedPointerArg = pointerArg.clone();
       expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount);
@@ -184,7 +184,7 @@ describe('Callbacks', () => {
 
     let callbackCalled = false;
     let liftedValContainerArg: BindingsTestType[] = [];
-    helper.callbackFunctionOnThreadContainerOfValues((valueContainerArg) => {
+    helper.callbackFunctionContainerOfValues((valueContainerArg) => {
       callbackCalled = true;
       expect(valueContainerArg[0]?.name).toBe('One');
       liftedValContainerArg = valueContainerArg;
@@ -201,7 +201,7 @@ describe('Callbacks', () => {
     let callbackCalled = false;
     let liftedValContainerArg: BindingsTestType[] = [];
     let beforeAliveCount = csp.BindingsTestType.aliveCount;
-    helper.callbackFunctionOnThreadContainerOfValuesByConstRef((valueContainerArg) => {
+    helper.callbackFunctionContainerOfValuesByConstRef((valueContainerArg) => {
       callbackCalled = true;
       expect(valueContainerArg[0]?.name).toBe('One');
 

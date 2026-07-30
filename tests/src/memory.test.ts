@@ -757,7 +757,7 @@ describe('CSPFoundation', () => {
   it('Callback individual pointer arg has non-owning enrichment', () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create();
     let called = false;
-    helper.callbackFunctionOnThreadPointerArg((pointerArg) => {
+    helper.callbackFunctionPointerArg((pointerArg) => {
       called = true;
       expect(() => pointerArg.delete()).toThrow();
       expect(() => pointerArg.deleteLater()).toThrow();
@@ -769,7 +769,7 @@ describe('CSPFoundation', () => {
   it('Callback container of pointers has non-owning enrichment on each element', () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create();
     let called = false;
-    helper.callbackFunctionOnThreadContainerOfPointers((arr) => {
+    helper.callbackFunctionContainerOfPointers((arr) => {
       called = true;
       expect(arr.length).toBe(2);
       for (const el of arr) {
@@ -784,7 +784,7 @@ describe('CSPFoundation', () => {
   it('Callback nested map of pointers has non-owning enrichment on each element', () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create();
     let called = false;
-    helper.callbackFunctionOnThreadNestedContainerOfPointers((map) => {
+    helper.callbackFunctionNestedContainerOfPointers((map) => {
       called = true;
       for (const arr of map.values()) {
         for (const el of arr) {
