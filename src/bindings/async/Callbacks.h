@@ -1,20 +1,23 @@
 #pragma once
 
 #include "../containers/Array.h"
+#include "../containers/Disposal.h"
 #include "../containers/List.h"
 #include "../containers/Map.h"
 #include "../containers/Optional.h"
 #include "../containers/String.h"
 #include "../testtypes/BindingsTestType.h"
 #include "../utils/Handles.h"
-#include "../containers/Disposal.h"
 #include "../utils/RAIIVal.h"
+#include "ThreadAffineCallback.h"
 #include "emscripten/bind.h"
 #include "emscripten/val.h"
 #include <CSP/Common/Optional.h>
 #include <emscripten/wire.h>
 #include <functional>
 #include <iostream>
+#include <memory>
+#include <pthread.h>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -89,46 +92,75 @@ template <typename Arg> inline bindings::utils::RAIIVal MakeRAIIVal(Arg&& arg)
 template <typename Callback, std::size_t N, std::size_t... I>
 inline void InvokeRAIIGuardedCallback(Callback& cb, std::array<bindings::utils::RAIIVal, N>& args, std::index_sequence<I...>)
 {
-    /*
-     * Expands to cb(args[0].Val, args[1].Val, args[2].Val), etc
-     * ... I mean, _actually_ expands to cb(args[I[0]].Val, args[I[1]].Val, args[I[2]].Val), with I = index_sequence{0, 1 ,2} ... but who's counting.
-     */
     cb(args[I].Val...);
 }
 
 /* MAKE_CALLBACK calls this to produce `ToNativeCallback`, which you call at the bindings site */
-inline auto AdaptedRAIINativeCallback(emscripten::val cb)
+inline auto AdaptedRAIINativeCallback(emscripten::val& cb)
 {
-    return [cb](auto&&... args) {
-        if constexpr (sizeof...(args) == 0) {
-            cb(); // No args, this is easy!
+    /* AT THIS POINT our call stack is coming from JS. JS has called csp.setCallback(() => {}) */
+
+    /*
+     * We must construct this here, before we capture into a callback, because we need to build this object on the invoking thread
+     * We also must avoid copying, hence, the shared pointer, which extends the lifetime of this object throughout the capture scope.
+     */
+    auto callback = std::make_shared<bindings::async::ThreadAffineCallback>(cb);
+
+    return [callback](auto&&... args) {
+        /* AT THIS POINT our call stack is coming from C++. The callback has been invoked in response to an event inside the library. */
+
+        /*
+         * I know ... I know, another adapter.
+         * The reason for this one is so we can either call it directly, or proxySync it depending on what thread we happen to be
+         * getting called back from, as CSP may call us either on or off-thread.
+         */
+        auto proxySyncAdapterBody = [&]() {
+            // Borrow the callback so we can get a `val`, but not interfere with increfs and decrefs. The callback lifetime is managed by the shared ptr, ThreadAffineCallback capture into the outer callback.
+            bindings::async::ThreadAffineCallback::BorrowedCallback borrowedCallback = callback->Borrow();
+            // IMPORTANT that this is a ref, we're borrowing, don't insert additional increfs and decrefs!
+            emscripten::val& cb = borrowedCallback.Callback;
+
+            if constexpr (sizeof...(args) == 0) {
+                cb(); // No args, this is easy!
+            } else {
+                /*
+                 * A variadic expandable array of RAIIVal types. These vals are the args, and this array goes out of scope after the callback invocation
+                 * MakeRAIIVal()... expands to a comma separated list of RAIIVal constructors, by wrapping in {}, we get the std::array initializer
+                 * list constructor syntax.
+                 *
+                 * The mental model to have with variadics is the "..." takes the pattern immediately to the left, find the parameter pack(s) inside it,
+                 * and repeats the ENTIRE PATTERN once per element of the pack(s), replacing the pack itself with the indexed element of the pack(s).
+                 * The pattern here is 'MakeRAIIVal(std::forward<decltype(args)>(args))', with 'args' being the parameter pack.
+                 * Therefore, this might expand to something that looks like :
+                 *
+                 * std::array<utils::RAIIVal, 3> raiiArgs = { MakeRAIIVal(std::forward<decltype(args[0])>(args[0])),
+                 *                                            MakeRAIIVal(std::forward<decltype(args[1])>(args[1])),
+                 *                                            MakeRAIIVal(std::forward<decltype(args[2])>(args[2])) };
+                 *
+                 * Whilst the index operator there is a tad misleading (as there's no actual syntax for directly indexing into pack elements),
+                 * this is still merely a regular std::array declaration.
+                 *
+                 * P.S: Don't be confused by sizeof...(args), this is actually an operator applied to a pack, not a parameter pack expansion itself.
+                 * I'm not a fan of this choice by the comittee to reuse the syntax, gets in the way of mental model formation imo.
+                 * What's wrong with declaring a new keyword `sizeofpack` eh? Feels quite aesthetically motivated, especially when you consider fold expressions.
+                 * https://en.cppreference.com/cpp/language/sizeof...
+                 */
+                std::array<bindings::utils::RAIIVal, sizeof...(args)> raiiArgs = { MakeRAIIVal(std::forward<decltype(args)>(args))... };
+
+                /* Call the JS callback with the argument objects. We provide an index sequence {0,1,2,3} so we can index into the raiiArgs std::array variadically */
+                InvokeRAIIGuardedCallback(cb, raiiArgs, std::make_index_sequence<sizeof...(args)> { });
+                /* Args falls out of scope, disposal occurs according to disposal policy */
+            }
+        };
+
+        /*
+         * Comes down to this, if we're on the correct thread (probably main), call immediately, otherwise, proxy.
+         * We're still in the C++ call stack here, being called from inside the library, potentially off-thread.
+         */
+        if (callback->OnAffineThread()) {
+            proxySyncAdapterBody();
         } else {
-            /*
-             * A variadic expandable array of RAIIVal types. These vals are the args, and this array goes out of scope after the callback invocation
-             * MakeRAIIVal()... expands to a comma seperated list of RAIIVal constructors, by wrapping in {}, we get the std::array initializer
-             * list constructor syntax.
-             *
-             * The mental model to have with variadics is the "..." takes the pattern immediately to the left, find the parameter pack(s) inside it,
-             * and repeats the ENTIRE PATTERN once per element of the pack(s), replacing the pack itself with the indexed element of the pack(s).
-             * The pattern here is 'MakeRAIIVal(std::forward<decltype(args)>(args))', with 'args' being the parameter pack.
-             * Therefore, this might expand to something that looks like :
-             *
-             * std::array<utils::RAIIVal, 3> raiiArgs = { MakeRAIIVal(std::forward<decltype(args[0])>(args[0])),
-             *                                            MakeRAIIVal(std::forward<decltype(args[1])>(args[1])),
-             *                                            MakeRAIIVal(std::forward<decltype(args[2])>(args[2])) };
-             *
-             * Whilst the index operator there is a tad misleading (as there's no actual syntax for directly indexing into pack elements),
-             * this is still merely a regular std::array declaration.
-             *
-             * P.S: Don't be confused by sizeof...(args), this is actually an operator applied to a pack, not a parameter pack expansion itself.
-             * I'm not a fan of this choice by the comittee to reuse the syntax, gets in the way of mental model formation imo.
-             * What's wrong with declaring a new keyword `sizeofpack` eh? Feels quite aesthetically motivated, especially when you consider fold expressions.
-             * https://en.cppreference.com/cpp/language/sizeof...
-             */
-            std::array<bindings::utils::RAIIVal, sizeof...(args)> raiiArgs = { MakeRAIIVal(std::forward<decltype(args)>(args))... };
-            /* Call the JS callback with the argument objects. We provide an index sequence {0,1,2,3} so we can index into the raiiArgs std::array variadically */
-            InvokeRAIIGuardedCallback(cb, raiiArgs, std::make_index_sequence<sizeof...(args)> { });
-            /* Args falls out of scope, disposal occurs according to disposal policy */
+            bindings::async::CallbackProxyQueue().proxySync(callback->AffineThreadId(), proxySyncAdapterBody);
         }
     };
 }
