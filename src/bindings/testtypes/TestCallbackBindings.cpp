@@ -21,6 +21,7 @@
 #include <iostream>
 #include <optional>
 #include <thread>
+#include <tuple>
 #include <utility>
 
 /*
@@ -93,14 +94,18 @@ namespace {
 template <typename Callable, typename... Args> void CallOnThread(Callable&& callable, Args&&... args) { callable(std::forward<Args>(args)...); }
 template <typename Callable, typename... Args> void CallOffThread(Callable&& callable, Args&&... args)
 {
-    std::thread aThread { std::forward<Callable>(callable), std::forward<Args>(args)... };
+    /*
+     * By forwarding into a tuple, we get to copy anything that should be copied (rvals), and reference anything that should be referenced (lvalues)
+     * Trying to avoid incurring redundant lifetimes when invoking a thread. I doubt the underlying library will be so careful...
+     */
+    std::thread aThread { [callable = std::forward<Callable>(callable), args = std::tuple<Args...>(std::forward<Args>(args)...)]() { std::apply(callable, args); } };
     aThread.detach();
 }
 }
 
 class CallbacksBindingMechanismsTestType {
 public:
-    CallbacksBindingMechanismsTestType(bool offThread = false) : m_offThread(offThread) { std::cout << m_offThread; }
+    CallbacksBindingMechanismsTestType(bool offThread = false) : m_offThread(offThread) { }
 
     /* Dispatched on the calling thread, or on a detached thread, depending on m_offThread. */
     void CallbackFunctionNoArgs(TestCallbackNamespace::TestCallbackNoArgs callback) { m_offThread ? CallOffThread(callback) : CallOnThread(callback); }
