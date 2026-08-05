@@ -310,6 +310,22 @@ for (const { mode, offThread } of CALLBACK_THREADING_MODE) {
       expect(callbackCalled).toBe(true);
     });
 
+    it('Callback called multiple times', async () => {
+      using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
+
+      let callbackCalledCount = 0;
+      helper.setStoredCallback(() => {
+        callbackCalledCount++;
+      });
+
+      helper.invokeStoredCallback();
+      helper.invokeStoredCallback();
+      helper.invokeStoredCallback();
+
+      await until(() => callbackCalledCount === 3);
+      expect(callbackCalledCount).toBe(3);
+    });
+
     /*
      * Tests callback argument lifetime specificities.
      * The theory here is that all owning arguments (read: value types), are COPIED into the JS runtime.

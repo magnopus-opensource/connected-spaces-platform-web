@@ -181,8 +181,12 @@ public:
         m_offThread ? CallOffThread(callback, nullptr) : CallOnThread(callback, nullptr);
     }
 
+    void SetStoredCallback(TestCallbackNamespace::TestCallbackNoArgs callback) { m_storedCallback = std::move(callback); }
+    void InvokeStoredCallback() { m_offThread ? CallOffThread(m_storedCallback) : CallOnThread(m_storedCallback); }
+
 private:
     bool m_offThread = false; //If true, we'll call callbacks on a detached thread.
+    TestCallbackNamespace::TestCallbackNoArgs m_storedCallback = nullptr; //For multi-invoke tests
 };
 
 /*
@@ -292,5 +296,9 @@ EMSCRIPTEN_BINDINGS(CSPCallbacksTestTypeBindings)
             +[](CallbacksBindingMechanismsTestType& self, TestCallbackOptionalOfValueJSCallback callback) { self.CallbackFunctionNullValueOpt(ToNativeCallback(callback)); })
         .function(
             "callbackFunctionNullPointerOpt(callback)",
-            +[](CallbacksBindingMechanismsTestType& self, TestCallbackOptionalOfPointerJSCallback callback) { self.CallbackFunctionNullPointerOpt(ToNativeCallback(callback)); });
+            +[](CallbacksBindingMechanismsTestType& self, TestCallbackOptionalOfPointerJSCallback callback) { self.CallbackFunctionNullPointerOpt(ToNativeCallback(callback)); })
+        .function(
+            "setStoredCallback(callback)",
+            +[](CallbacksBindingMechanismsTestType& self, TestCallbackNoArgsJSCallback callback) { self.SetStoredCallback(ToNativeCallback(callback)); })
+        .function("invokeStoredCallback", +[](CallbacksBindingMechanismsTestType& self) { self.InvokeStoredCallback(); });
 }
