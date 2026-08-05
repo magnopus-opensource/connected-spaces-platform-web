@@ -9,6 +9,7 @@
 #include "../testtypes/BindingsTestType.h"
 #include "../utils/Handles.h"
 #include "../utils/RAIIVal.h"
+#include "CatchingCallback.h"
 #include "ThreadAffineCallback.h"
 #include "emscripten/bind.h"
 #include "emscripten/val.h"
@@ -113,12 +114,17 @@ inline auto AdaptedRAIINativeCallback(emscripten::val& cb)
          * I know ... I know, another adapter.
          * The reason for this one is so we can either call it directly, or proxySync it depending on what thread we happen to be
          * getting called back from, as CSP may call us either on or off-thread.
+         * We tell the callback if it's been called on a proxy queue so we can branch the exception behaviour.
          */
-        auto proxySyncAdapterBody = [&]() {
+        auto proxySyncAdapterBody = [&](bool calledOnProxyQueue) {
             // Borrow the callback so we can get a `val`, but not interfere with increfs and decrefs. The callback lifetime is managed by the shared ptr, ThreadAffineCallback capture into the outer callback.
             bindings::async::ThreadAffineCallback::BorrowedCallback borrowedCallback = callback->Borrow();
-            // IMPORTANT that this is a ref, we're borrowing, don't insert additional increfs and decrefs!
-            emscripten::val& cb = borrowedCallback.Callback;
+
+            // We could not do an incref/decref here in the on-thread case if we really wanted to, it's technically redundant, but tbh this is simpler and fine.
+            emscripten::val cb = calledOnProxyQueue ? emscripten::val::take_ownership(catching_callback(borrowedCallback.Callback.as_handle())) : borrowedCallback.Callback;
+
+            /* `catching_callback` logs any error, which is all we can do off-thread, as unwinding that stack is nonsensical
+             * On-thread, we will unwind, and catch in JS as normal */
 
             if constexpr (sizeof...(args) == 0) {
                 cb(); // No args, this is easy!
@@ -156,11 +162,15 @@ inline auto AdaptedRAIINativeCallback(emscripten::val& cb)
         /*
          * Comes down to this, if we're on the correct thread (probably main), call immediately, otherwise, proxy.
          * We're still in the C++ call stack here, being called from inside the library, potentially off-thread.
+         * The boolean tells the callback itself if it's on or off thread.
+         * Note no return. Everything returns void currently. Here's where you'd do it if you wanted callbacks to use
+         * returns as a cross-language communication channel.
          */
         if (callback->OnAffineThread()) {
-            proxySyncAdapterBody();
+            proxySyncAdapterBody(false);
         } else {
-            bindings::async::CallbackProxyQueue().proxySync(callback->AffineThreadId(), proxySyncAdapterBody);
+            // A lot of the reasoning around reference capture in this file depends on the blocking behaviour of proxy sync. Just FYI.
+            bindings::async::CallbackProxyQueue().proxySync(callback->AffineThreadId(), [&]() { proxySyncAdapterBody(true); });
         }
     };
 }

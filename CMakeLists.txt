@@ -12,6 +12,7 @@ add_executable(connected-spaces-platform-bindings
     src/bindings/containers/Equality.cpp
     src/bindings/containers/Disposal.cpp
     src/bindings/containers/Clone.cpp
+    src/bindings/async/CatchingCallback.cpp
 )
 set_target_properties(connected-spaces-platform-bindings PROPERTIES SUFFIX ".js")
 

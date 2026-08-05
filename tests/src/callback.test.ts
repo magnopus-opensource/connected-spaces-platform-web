@@ -147,9 +147,6 @@ for (const { mode, offThread } of CALLBACK_THREADING_MODE) {
       expect(callbackCalled).toBe(true);
     });
 
-    /*
-     * Skipping off thread for now, but will address this soon
-     */
     it.skipIf(offThread)('Callback That Throws On Thread', () => {
       using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
@@ -169,6 +166,36 @@ for (const { mode, offThread } of CALLBACK_THREADING_MODE) {
       helper.callbackFunctionNoArgs(() => {
         secondCallbackCalled = true;
       });
+      expect(secondCallbackCalled).toBe(true);
+    });
+
+    it.skipIf(!offThread)('Callback That Throws Off Thread', async () => {
+      using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
+
+      // Off thread callbacks do not throw, they convert to errors
+      let callbackCalled = false;
+
+      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      helper.callbackFunctionNoArgs(() => {
+        callbackCalled = true;
+        throw new Error('test error');
+      });
+
+      await until(() => callbackCalled);
+      expect(callbackCalled).toBe(true);
+
+      expect(errorSpy).toHaveBeenCalledWith(
+        'Unhandled exception in off-thread callback:',
+        expect.objectContaining({ message: 'test error' })
+      );
+
+      // The module must remain usable after an exception has happened.
+      let secondCallbackCalled = false;
+      helper.callbackFunctionNoArgs(() => {
+        secondCallbackCalled = true;
+      });
+      await until(() => secondCallbackCalled);
       expect(secondCallbackCalled).toBe(true);
     });
 
