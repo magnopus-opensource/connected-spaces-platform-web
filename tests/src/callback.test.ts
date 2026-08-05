@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { loadCSP } from '../loadModule';
-import { until } from '../testUtils';
-import { type MainModule } from 'connected-spaces-platform-bindings';
+import { until, forceHeapGrowth } from './testUtils';
+import createModule, { type MainModule } from 'connected-spaces-platform-bindings';
 
 /*
  * Tests for the binding of callbacks into the typescript boundary.
@@ -314,16 +314,73 @@ for (const { mode, offThread } of CALLBACK_THREADING_MODE) {
       using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
       let callbackCalledCount = 0;
-      helper.setStoredCallback(() => {
+      helper.setStoredCallbackNoArgs(() => {
         callbackCalledCount++;
       });
 
-      helper.invokeStoredCallback();
-      helper.invokeStoredCallback();
-      helper.invokeStoredCallback();
+      helper.invokeStoredCallbackNoArgs();
+      helper.invokeStoredCallbackNoArgs();
+      helper.invokeStoredCallbackNoArgs();
 
       await until(() => callbackCalledCount === 3);
       expect(callbackCalledCount).toBe(3);
+    });
+
+    it('Re-register callback', async () => {
+      using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
+
+      let callbackCalledOne = false;
+      helper.setStoredCallbackNoArgs(() => {
+        callbackCalledOne = true;
+      });
+
+      helper.invokeStoredCallbackNoArgs();
+
+      let callbackCalledTwo = false;
+      helper.setStoredCallbackNoArgs(() => {
+        callbackCalledTwo = true;
+      });
+
+      helper.invokeStoredCallbackNoArgs();
+
+      await until(() => callbackCalledOne);
+      await until(() => callbackCalledTwo);
+      expect(callbackCalledOne).toBe(true);
+      expect(callbackCalledTwo).toBe(true);
+    });
+
+    it('Callback registration does not leak', async () => {
+      const freshCsp = await createModule();
+      forceHeapGrowth(freshCsp);
+
+      using helper = freshCsp.CallbacksBindingMechanismsTestType.create(offThread);
+
+      const heapBefore = (freshCsp as unknown as { HEAPU8: Uint8Array }).HEAPU8.byteLength;
+      let callbackInvocationCount = 0;
+      // Spawning + joining 50k threads would probably take literal minutes.
+      const targetIterations = offThread ? 250 : 50000;
+
+      for (let i = 0; i < targetIterations; ++i) {
+        // Handles are probably only 8 bytes ... it's difficult to imagine even this many iterations causing any heap growth we could detect.
+        // I did run this specific registration with _a lot_ more iterations manually, overriding the test timeout, and there was no heap growth.
+        helper.setStoredCallbackWithArgs((valueContainer) => {
+          callbackInvocationCount++;
+        });
+
+        using one = freshCsp.BindingsTestType.create(1, 'One');
+        using two = freshCsp.BindingsTestType.create(2, 'Two');
+        using three = freshCsp.BindingsTestType.create(3, 'Three');
+        using four = freshCsp.BindingsTestType.create(4, 'Four');
+        using five = freshCsp.BindingsTestType.create(5, 'Five');
+
+        // Over all the iterations, this would allocate about 17MB if it was leaking.
+        helper.invokeStoredCallbackWithArgs([one, two, three, four, five]);
+        await until(() => callbackInvocationCount === i + 1);
+      }
+
+      const heapAfter = (freshCsp as unknown as { HEAPU8: Uint8Array }).HEAPU8.byteLength;
+      expect(heapAfter).toBe(heapBefore);
+      expect(callbackInvocationCount).toBe(targetIterations);
     });
 
     /*

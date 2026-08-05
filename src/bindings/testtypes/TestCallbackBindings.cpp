@@ -181,12 +181,21 @@ public:
         m_offThread ? CallOffThread(callback, nullptr) : CallOnThread(callback, nullptr);
     }
 
-    void SetStoredCallback(TestCallbackNamespace::TestCallbackNoArgs callback) { m_storedCallback = std::move(callback); }
-    void InvokeStoredCallback() { m_offThread ? CallOffThread(m_storedCallback) : CallOnThread(m_storedCallback); }
+    void SetStoredCallbackNoArgs(TestCallbackNamespace::TestCallbackNoArgs callback) { m_storedCallbackNoArgs = std::move(callback); }
+    void InvokeStoredCallbackNoArgs() { m_offThread ? CallOffThread(m_storedCallbackNoArgs) : CallOnThread(m_storedCallbackNoArgs); }
+
+    void SetStoredCallbackWithArgs(TestCallbackNamespace::TestCallbackContainerOfValues callback) { m_storedCallbackwithArgs = std::move(callback); }
+    void InvokeStoredCallbackWithArgs(csp::common::Array<BindingsTestType> valueContainerArg)
+    {
+        /* Moving is actually important here, as otherwise we'd reference a temporary. The normal case (const ref) would also be fine */
+        m_offThread ? CallOffThread(m_storedCallbackwithArgs, std::move(valueContainerArg)) : CallOnThread(m_storedCallbackwithArgs, std::move(valueContainerArg));
+    }
 
 private:
     bool m_offThread = false; //If true, we'll call callbacks on a detached thread.
-    TestCallbackNamespace::TestCallbackNoArgs m_storedCallback = nullptr; //For multi-invoke tests
+    //For multi-invoke tests
+    TestCallbackNamespace::TestCallbackNoArgs m_storedCallbackNoArgs = nullptr;
+    TestCallbackNamespace::TestCallbackContainerOfValues m_storedCallbackwithArgs = nullptr;
 };
 
 /*
@@ -298,7 +307,15 @@ EMSCRIPTEN_BINDINGS(CSPCallbacksTestTypeBindings)
             "callbackFunctionNullPointerOpt(callback)",
             +[](CallbacksBindingMechanismsTestType& self, TestCallbackOptionalOfPointerJSCallback callback) { self.CallbackFunctionNullPointerOpt(ToNativeCallback(callback)); })
         .function(
-            "setStoredCallback(callback)",
-            +[](CallbacksBindingMechanismsTestType& self, TestCallbackNoArgsJSCallback callback) { self.SetStoredCallback(ToNativeCallback(callback)); })
-        .function("invokeStoredCallback", +[](CallbacksBindingMechanismsTestType& self) { self.InvokeStoredCallback(); });
+            "setStoredCallbackNoArgs(callback)",
+            +[](CallbacksBindingMechanismsTestType& self, TestCallbackNoArgsJSCallback callback) { self.SetStoredCallbackNoArgs(ToNativeCallback(callback)); })
+        .function(
+            "invokeStoredCallbackNoArgs", +[](CallbacksBindingMechanismsTestType& self) { self.InvokeStoredCallbackNoArgs(); })
+        .function(
+            "setStoredCallbackWithArgs(callback)",
+            +[](CallbacksBindingMechanismsTestType& self, TestCallbackContainerOfValuesJSCallback callback) { self.SetStoredCallbackWithArgs(ToNativeCallback(callback)); })
+        .function(
+            "invokeStoredCallbackWithArgs(args)", +[](CallbacksBindingMechanismsTestType& self, csp::common::Array<BindingsTestType> valueContainerArg) {
+                self.InvokeStoredCallbackWithArgs(std::move(valueContainerArg));
+            });
 }
