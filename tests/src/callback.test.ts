@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { loadCSP } from '../loadModule';
+import { until } from '../testUtils';
 import { type MainModule } from 'connected-spaces-platform-bindings';
 
 /*
@@ -26,17 +27,6 @@ const CALLBACK_THREADING_MODE = [
   { mode: 'On Thread', offThread: false },
   { mode: 'Off Thread', offThread: true }
 ];
-
-/* Timer to let us busy-wait on callbacks finishing. */
-async function until(predicate: () => boolean, timeoutMs = 2000): Promise<void> {
-  const deadline = performance.now() + timeoutMs;
-  while (!predicate()) {
-    if (performance.now() >= deadline) {
-      throw new Error(`Until timed out after ${timeoutMs}ms`);
-    }
-    await new Promise((resolve) => setTimeout(resolve, 0));
-  }
-}
 
 for (const { mode, offThread } of CALLBACK_THREADING_MODE) {
   describe(`Callbacks (${mode})`, () => {
