@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, vi } from 'vitest';
 import { loadCSP } from '../loadModule';
-import { until } from '../testUtils';
+import { until } from './testUtils';
 import { BindingsTestType, type MainModule } from 'connected-spaces-platform-bindings';
 
 /*
