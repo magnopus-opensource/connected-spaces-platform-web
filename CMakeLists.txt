@@ -9,6 +9,7 @@ add_executable(connected-spaces-platform-bindings
     src/bindings/testtypes/BindingsTestType.cpp
     src/bindings/testtypes/TestContainerBindings.cpp
     src/bindings/testtypes/TestCallbackBindings.cpp
+    src/bindings/testtypes/TestAwaitableCallbackBindings.cpp
     src/bindings/containers/Equality.cpp
     src/bindings/containers/Disposal.cpp
     src/bindings/containers/Clone.cpp

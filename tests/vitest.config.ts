@@ -36,7 +36,7 @@ export function makeConfig({ debug = false } = {}) {
       restoreMocks: true, // Otherwise things like spies leak between tests
       browser: {
         enabled: true,
-        headless: !debug,
+        headless: !loadDwarfExt,
         screenshotFailures: false,
         provider: playwright(
           loadDwarfExt
