@@ -90,7 +90,34 @@ It does not matter if the argument is a pointer of value type, you can call `clo
 
 ## Off Thread Callbacks
 
-TODO
+From a user perspective, off-thread callbacks behave in exactly the same way as on-thread callbacks, in fact, you won't even be able to tell they're off thread, as they end up being executed back on the same thread that you registered them on.
+
+This behavioural symmetry has only one exception ... exceptions!
+
+When a callback is given back to the user off-thread, and it happens to throw, exceptions will not be propagated, instead, the exception will be caught and logged to `error` before it escapes the internal callback machinery.
+
+This should not normally be a problem, as it would be rather unwise to an underlying library to rely on exceptions in an off-thread context anyway, they only bring heartache.
+
+### How it all works
+
+To quote the [embind](https://emscripten.org/docs/api_reference/val.h.html) docs directly.
+
+> [!WARNING]
+>
+> JavaScript values can’t be shared across threads, so neither can val instances that bind them.
+
+This is our core problem. Building such a highly threaded library to support a platform with this sort of constraint was certainly an interesting choice. At time of writing, CSP is actively working to dissolve this problem entirely by queueing network-sourced callback commands such that they can be dispatched on the main thread.
+
+Luckily for us, Emscripten provides a way for us to do this same sort of proxy queue behaviour ourselves, [the proxying API.](https://emscripten.org/docs/api_reference/proxying.h.html)
+
+What the bindings do is, when registering a callback, save its `pthread_id`. Then, when dispatching a callback, we do a check to see if we're on the _Affine thread_ (ie, are we dispatching the callback on the same thread we registered it on). If not, we put the callback into the proxy queue, which asks the browser event loop to execute it on the desired thread, thus bypassing the problem.
+
+Implementationally, this gets rather complex, for two specific reasons :
+
+- The `Val` api we're using does not encourage multithreading _at all_, we have to do some fancy tricks to make sure we remain memory safe even as execution dances between threads.
+- Even destructors need to be run on the affine thread.
+
+I won't get any more into specifics, you can view the implementation yourself [here.](../src/bindings/async/ThreadAffineCallback.h)
 
 ## Async
 
