@@ -12,9 +12,13 @@ namespace bindings::async {
 /*
  * Weird type that "claims" ownership of a val based callback, and provides mechanisms to retrieve
  * it if you are on the affine thread, as that is the only place that a callback may be invoked
- * in emscripten-land. That's not to say callbacks can't be "called" off-thread in C++, they can
+ * in emscripten-land.
+ * That's not to say callbacks can't be "called" off-thread in C++, they can
  * and are, it's just when they get into emscripten, they need to actually be executed on the
  * thread they were created on, which is what this allows.
+ *
+ * In this context, to be executing on an "affine thread" means that the callback is executing
+ * on the same thread it was instantiated on. We use pthread id's to ensure this.
  *
  * It's not just execution, pretty much anything to do with a `val` has the same restrictions,
  * including destruction. We use the same ownership claiming mechanism to ensure that when
