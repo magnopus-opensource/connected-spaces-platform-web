@@ -85,45 +85,10 @@ public:
     bool OnAffineThread() const { return pthread_equal(m_affineThread, pthread_self()); }
     pthread_t AffineThreadId() const { return m_affineThread; }
 
-    /*
-     * So, to call a callback, we need a `val`, and we don't have a `val`, we have a handle such that we can manually
-     * extend lifetime beyond the lifetime of the on-thread `val`.
-     * To get one, we "borrow" it, taking the ownership, and then disarming the destructor when we're done, effectively
-     * no-opping in terms of ownership.
-     *
-     * It's sort of virtuous that `val` is designed that you have to do this, but it's not helpful here, we're not really
-     * claiming ownership as we _really_ don't want to run any `val` destructor off-thread, we're just trying to use it.
-     * However, the embind api will not let you do that unless you take responsibility, hence, the borrow.
-     *
-     * The naming of these methods isn't great, it's quite unclear when increfs are happening or when they are being
-     * skipped, even something like `claim_ownership` or even `force_ownership` might be clearer here. To be clear,
-     * when you take ownership, there is no incref, you just say to embind "Look, trust me, i'm the captain now."
-     *
-     * Callback is public, you get it out of this type and just call it.
-     */
-    class BorrowedCallback {
-    public:
-        explicit BorrowedCallback(emscripten::EM_VAL callbackHandle) : Callback(emscripten::val::take_ownership(callbackHandle)) { }
-        ~BorrowedCallback() { Callback.release_ownership(); }
-
-        BorrowedCallback(const BorrowedCallback&) = delete;
-        BorrowedCallback& operator=(const BorrowedCallback&) = delete;
-        BorrowedCallback(BorrowedCallback&&) = delete;
-        BorrowedCallback& operator=(BorrowedCallback&&) = delete;
-
-        emscripten::val Callback;
-    };
-
-    /*
-     * If we call this, we intend to call the callback, which means we must be on the affine thread.
-     * We borrow this in the final callable, ie, the one that has been pushed through the proxy queue
-     * and is now being called by the JS event loop on the correct thread. Hence, we should be on the
-     * affine thread.
-     */
-    BorrowedCallback Borrow() const
+    emscripten::EM_VAL GetCallbackHandle() const
     {
-        assert(OnAffineThread() && "ThreadAffineCallback::Borrow() called from incorrect thread.");
-        return BorrowedCallback { m_callbackHandle };
+        assert(OnAffineThread() && "ThreadAffineCallback::GetCallbackHandle() called from incorrect thread.");
+        return m_callbackHandle;
     }
 
 private:

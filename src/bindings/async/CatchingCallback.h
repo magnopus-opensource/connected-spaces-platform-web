@@ -17,5 +17,9 @@
  * a clear error about this. Arguably, we could have defined this in the same translation unit
  * as it was used ... but that would require making a Callbacks.cpp TU, and that file is almost
  * entirely templates. Maybe I'm just being lazy, ... sue me.
+ *
+ * So we can have a uniform story between on-thread and off-thread callbacks, we actually just
+ * shunt everything through here, with a bool to decide if we'll catch the exception or let
+ * it bubble out. (Pass true if off-thread, false if on-thread).
  */
-extern "C" emscripten::EM_VAL catching_callback(emscripten::EM_VAL cb_handle);
+extern "C" emscripten::EM_VAL catching_callback(emscripten::EM_VAL cb_handle, bool catchAndPrintExceptions);

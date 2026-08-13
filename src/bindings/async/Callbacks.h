@@ -117,11 +117,11 @@ inline auto AdaptedRAIINativeCallback(emscripten::val& cb)
          * We tell the callback if it's been called on a proxy queue so we can branch the exception behaviour.
          */
         auto proxySyncAdapterBody = [&](bool calledOnProxyQueue) {
-            // Borrow the callback so we can get a `val`, but not interfere with increfs and decrefs. The callback lifetime is managed by the shared ptr, ThreadAffineCallback capture into the outer callback.
-            bindings::async::ThreadAffineCallback::BorrowedCallback borrowedCallback = callback->Borrow();
-
-            // We could not do an incref/decref here in the on-thread case if we really wanted to, it's technically redundant, but tbh this is simpler and fine.
-            emscripten::val cb = calledOnProxyQueue ? emscripten::val::take_ownership(catching_callback(borrowedCallback.Callback.as_handle())) : borrowedCallback.Callback;
+            /*
+             * In order to do off-thread catching, we shunt to JS so we can catch there, as we can't allow exceptiosn to bubble up the off-thread event-queue.
+             * To keep it uniform, shunt to JS in both cases, use a bool to decide if we're going to allow exceptions out, depending on whether we're affine or not.
+             */
+            emscripten::val cb = emscripten::val::take_ownership(catching_callback(callback->GetCallbackHandle(), calledOnProxyQueue));
 
             /* `catching_callback` logs any error, which is all we can do off-thread, as unwinding that stack is nonsensical
              * On-thread, we will unwind, and catch in JS as normal */
