@@ -20,6 +20,9 @@
 #include <CSP/Common/Optional.h>
 #include <iostream>
 #include <optional>
+#include <thread>
+#include <tuple>
+#include <utility>
 
 /*
  * A class to provide some fundamental patterns as interfaces to test binding mechanisms.
@@ -87,37 +90,112 @@ csp::common::Array<csp::common::Optional<BindingsTestType>> arrayOfOpt { { Bindi
 csp::common::Array<csp::common::Optional<BindingsTestType>> arrayOfSomeNullOpt { nullptr, { BindingsTestType(2, "Two") } };
 }
 
+namespace {
+template <typename Callable, typename... Args> void CallOnThread(Callable&& callable, Args&&... args) { callable(std::forward<Args>(args)...); }
+template <typename Callable, typename... Args> void CallOffThread(Callable&& callable, Args&&... args)
+{
+    /*
+     * By forwarding into a tuple, we get to copy anything that should be copied (rvals), and reference anything that should be referenced (lvalues)
+     * Trying to avoid incurring redundant lifetimes when invoking a thread. I doubt the underlying library will be so careful...
+     */
+    std::thread aThread { [callable = std::forward<Callable>(callable), args = std::tuple<Args...>(std::forward<Args>(args)...)]() { std::apply(callable, args); } };
+    aThread.detach();
+}
+}
+
 class CallbacksBindingMechanismsTestType {
 public:
-    CallbacksBindingMechanismsTestType() { }
+    CallbacksBindingMechanismsTestType(bool offThread = false) : m_offThread(offThread) { }
 
-    /* On Thread */
-    void CallbackFunctionOnThreadNoArgs(TestCallbackNamespace::TestCallbackNoArgs callback) { callback(); }
-    void CallbackFunctionOnThreadPrimitiveArg(TestCallbackNamespace::TestCallbackPrimitiveArg callback) { callback(10); }
-    void CallbackFunctionOnThreadPointerArg(TestCallbackNamespace::TestCallbackPointerArg callback) { callback(singleTypeOnePtr); }
-    void CallbackFunctionOnThreadValueArg(TestCallbackNamespace::TestCallbackValueArg callback) { callback(singleTypeOne); }
-    void CallbackFunctionOnThreadValueArgByConstRef(TestCallbackNamespace::TestCallbackValueArgByConstRef callback) { callback(singleTypeOne); }
-    void CallbackFunctionOnThreadContainerOfPointers(TestCallbackNamespace::TestCallbackContainerOfPointers callback) { callback(pointerArray); }
-    void CallbackFunctionOnThreadContainerOfValues(TestCallbackNamespace::TestCallbackContainerOfValues callback) { callback(valueArray); }
-    void CallbackFunctionOnThreadContainerOfValuesByConstRef(TestCallbackNamespace::TestCallbackContainerOfValuesByConstRef callback) { callback(valueArray); }
-    void CallbackFunctionOnThreadMultipleArgs(TestCallbackNamespace::TestCallbackMultipleArgs callback) { callback(1, 2); }
-    void CallbackFunctionOnThreadNestedContainerOfPointers(TestCallbackNamespace::TestCallbackNestedContainerOfPointers callback) { callback(pointerMap); }
-    void CallbackFunctionOnThreadNestedContainerOfValues(TestCallbackNamespace::TestCallbackNestedContainerOfValues callback) { callback(valueMap); }
-    void CallbackFunctionOnThreadNestedContainerOfValuesByConstRef(TestCallbackNamespace::TestCallbackNestedContainerOfValuesByConstRef callback) { callback(valueMap); }
-    void CallbackFunctionOnThreadMixedArgs(TestCallbackNamespace::TestCallbackMixedArgs callback)
+    /* Dispatched on the calling thread, or on a detached thread, depending on m_offThread. */
+    void CallbackFunctionNoArgs(TestCallbackNamespace::TestCallbackNoArgs callback) { m_offThread ? CallOffThread(callback) : CallOnThread(callback); }
+    void CallbackFunctionPrimitiveArg(TestCallbackNamespace::TestCallbackPrimitiveArg callback) { m_offThread ? CallOffThread(callback, 10) : CallOnThread(callback, 10); }
+    void CallbackFunctionPointerArg(TestCallbackNamespace::TestCallbackPointerArg callback)
     {
-        callback(valueArray, valueArrayTwo, pointerArray, 1, singleTypeOne, singleTypeOnePtr);
+        m_offThread ? CallOffThread(callback, singleTypeOnePtr) : CallOnThread(callback, singleTypeOnePtr);
     }
-    void CallbackFunctionOnThreadValueOpt(TestCallbackNamespace::TestCallbackOptionalOfValue callback) { callback(valueOpt); }
-    void CallbackFunctionOnThreadPointerOpt(TestCallbackNamespace::TestCallbackOptionalOfPointer callback) { callback(pointerOpt); }
-    void CallbackFunctionOnThreadOptOfArray(TestCallbackNamespace::TestCallbackOptionalOfArray callback) { callback(optOfArray); }
-    void CallbackFunctionOnThreadArrayOfOpt(TestCallbackNamespace::TestCallbackArrayOfOptional callback) { callback(arrayOfOpt); }
-    void CallbackFunctionOnThreadArrayOfSomeNullOpt(TestCallbackNamespace::TestCallbackArrayOfOptional callback) { callback(arrayOfSomeNullOpt); }
-    void CallbackFunctionOnThreadNullValueOpt(TestCallbackNamespace::TestCallbackOptionalOfValue callback) { callback(nullptr); }
-    void CallbackFunctionOnThreadNullPointerOpt(TestCallbackNamespace::TestCallbackOptionalOfPointer callback) { callback(nullptr); }
-    /* Off Thread : TODO*/
+    void CallbackFunctionValueArg(TestCallbackNamespace::TestCallbackValueArg callback)
+    {
+        m_offThread ? CallOffThread(callback, singleTypeOne) : CallOnThread(callback, singleTypeOne);
+    }
+    void CallbackFunctionValueArgByConstRef(TestCallbackNamespace::TestCallbackValueArgByConstRef callback)
+    {
+        m_offThread ? CallOffThread(callback, singleTypeOne) : CallOnThread(callback, singleTypeOne);
+    }
+    void CallbackFunctionContainerOfPointers(TestCallbackNamespace::TestCallbackContainerOfPointers callback)
+    {
+        m_offThread ? CallOffThread(callback, pointerArray) : CallOnThread(callback, pointerArray);
+    }
+    void CallbackFunctionContainerOfValues(TestCallbackNamespace::TestCallbackContainerOfValues callback)
+    {
+        m_offThread ? CallOffThread(callback, valueArray) : CallOnThread(callback, valueArray);
+    }
+    void CallbackFunctionContainerOfValuesByConstRef(TestCallbackNamespace::TestCallbackContainerOfValuesByConstRef callback)
+    {
+        m_offThread ? CallOffThread(callback, valueArray) : CallOnThread(callback, valueArray);
+    }
+    void CallbackFunctionMultipleArgs(TestCallbackNamespace::TestCallbackMultipleArgs callback) { m_offThread ? CallOffThread(callback, 1, 2) : CallOnThread(callback, 1, 2); }
+    void CallbackFunctionNestedContainerOfPointers(TestCallbackNamespace::TestCallbackNestedContainerOfPointers callback)
+    {
+        m_offThread ? CallOffThread(callback, pointerMap) : CallOnThread(callback, pointerMap);
+    }
+    void CallbackFunctionNestedContainerOfValues(TestCallbackNamespace::TestCallbackNestedContainerOfValues callback)
+    {
+        m_offThread ? CallOffThread(callback, valueMap) : CallOnThread(callback, valueMap);
+    }
+    void CallbackFunctionNestedContainerOfValuesByConstRef(TestCallbackNamespace::TestCallbackNestedContainerOfValuesByConstRef callback)
+    {
+        m_offThread ? CallOffThread(callback, valueMap) : CallOnThread(callback, valueMap);
+    }
+    void CallbackFunctionMixedArgs(TestCallbackNamespace::TestCallbackMixedArgs callback)
+    {
+        m_offThread ? CallOffThread(callback, valueArray, valueArrayTwo, pointerArray, 1, singleTypeOne, singleTypeOnePtr)
+                    : CallOnThread(callback, valueArray, valueArrayTwo, pointerArray, 1, singleTypeOne, singleTypeOnePtr);
+    }
+    void CallbackFunctionValueOpt(TestCallbackNamespace::TestCallbackOptionalOfValue callback)
+    {
+        m_offThread ? CallOffThread(callback, valueOpt) : CallOnThread(callback, valueOpt);
+    }
+    void CallbackFunctionPointerOpt(TestCallbackNamespace::TestCallbackOptionalOfPointer callback)
+    {
+        m_offThread ? CallOffThread(callback, pointerOpt) : CallOnThread(callback, pointerOpt);
+    }
+    void CallbackFunctionOptOfArray(TestCallbackNamespace::TestCallbackOptionalOfArray callback)
+    {
+        m_offThread ? CallOffThread(callback, optOfArray) : CallOnThread(callback, optOfArray);
+    }
+    void CallbackFunctionArrayOfOpt(TestCallbackNamespace::TestCallbackArrayOfOptional callback)
+    {
+        m_offThread ? CallOffThread(callback, arrayOfOpt) : CallOnThread(callback, arrayOfOpt);
+    }
+    void CallbackFunctionArrayOfSomeNullOpt(TestCallbackNamespace::TestCallbackArrayOfOptional callback)
+    {
+        m_offThread ? CallOffThread(callback, arrayOfSomeNullOpt) : CallOnThread(callback, arrayOfSomeNullOpt);
+    }
+    void CallbackFunctionNullValueOpt(TestCallbackNamespace::TestCallbackOptionalOfValue callback)
+    {
+        m_offThread ? CallOffThread(callback, nullptr) : CallOnThread(callback, nullptr);
+    }
+    void CallbackFunctionNullPointerOpt(TestCallbackNamespace::TestCallbackOptionalOfPointer callback)
+    {
+        m_offThread ? CallOffThread(callback, nullptr) : CallOnThread(callback, nullptr);
+    }
+
+    void SetStoredCallbackNoArgs(TestCallbackNamespace::TestCallbackNoArgs callback) { m_storedCallbackNoArgs = std::move(callback); }
+    void InvokeStoredCallbackNoArgs() { m_offThread ? CallOffThread(m_storedCallbackNoArgs) : CallOnThread(m_storedCallbackNoArgs); }
+
+    void SetStoredCallbackWithArgs(TestCallbackNamespace::TestCallbackContainerOfValues callback) { m_storedCallbackwithArgs = std::move(callback); }
+    void InvokeStoredCallbackWithArgs(csp::common::Array<BindingsTestType> valueContainerArg)
+    {
+        /* Moving is actually important here, as otherwise we'd reference a temporary. The normal case (const ref) would also be fine */
+        m_offThread ? CallOffThread(m_storedCallbackwithArgs, std::move(valueContainerArg)) : CallOnThread(m_storedCallbackwithArgs, std::move(valueContainerArg));
+    }
 
 private:
+    bool m_offThread = false; //If true, we'll call callbacks on a detached thread.
+    //For multi-invoke tests
+    TestCallbackNamespace::TestCallbackNoArgs m_storedCallbackNoArgs = nullptr;
+    TestCallbackNamespace::TestCallbackContainerOfValues m_storedCallbackwithArgs = nullptr;
 };
 
 /*
@@ -153,86 +231,91 @@ EMSCRIPTEN_BINDINGS(CSPCallbacksTestTypeBindings)
 {
     emscripten::class_<CallbacksBindingMechanismsTestType>("CallbacksBindingMechanismsTestType")
         .class_function(
-            "create", +[]() { return CallbacksBindingMechanismsTestType(); })
+            "create", +[] { return CallbacksBindingMechanismsTestType(false); })
+        .class_function(
+            "create(offThread)", +[](bool offThread) { return CallbacksBindingMechanismsTestType(offThread); })
         .function(
-            "callbackFunctionOnThreadNoArgs(callback)",
-            +[](CallbacksBindingMechanismsTestType& self, TestCallbackNoArgsJSCallback callback) { self.CallbackFunctionOnThreadNoArgs(ToNativeCallback(callback)); })
+            "callbackFunctionNoArgs(callback)",
+            +[](CallbacksBindingMechanismsTestType& self, TestCallbackNoArgsJSCallback callback) { self.CallbackFunctionNoArgs(ToNativeCallback(callback)); })
         .function(
-            "callbackFunctionOnThreadPrimitiveArg(callback)",
-            +[](CallbacksBindingMechanismsTestType& self, TestCallbackPrimitiveArgJSCallback callback) { self.CallbackFunctionOnThreadPrimitiveArg(ToNativeCallback(callback)); })
+            "callbackFunctionPrimitiveArg(callback)",
+            +[](CallbacksBindingMechanismsTestType& self, TestCallbackPrimitiveArgJSCallback callback) { self.CallbackFunctionPrimitiveArg(ToNativeCallback(callback)); })
         .function(
-            "callbackFunctionOnThreadPointerArg(callback)",
-            +[](CallbacksBindingMechanismsTestType& self, TestCallbackPointerArgJSCallback callback) { self.CallbackFunctionOnThreadPointerArg(ToNativeCallback(callback)); })
+            "callbackFunctionPointerArg(callback)",
+            +[](CallbacksBindingMechanismsTestType& self, TestCallbackPointerArgJSCallback callback) { self.CallbackFunctionPointerArg(ToNativeCallback(callback)); })
         .function(
-            "callbackFunctionOnThreadValueArg(callback)",
-            +[](CallbacksBindingMechanismsTestType& self, TestCallbackValueArgJSCallback callback) { self.CallbackFunctionOnThreadValueArg(ToNativeCallback(callback)); })
+            "callbackFunctionValueArg(callback)",
+            +[](CallbacksBindingMechanismsTestType& self, TestCallbackValueArgJSCallback callback) { self.CallbackFunctionValueArg(ToNativeCallback(callback)); })
         .function(
-            "callbackFunctionOnThreadValueArgByConstRef(callback)",
+            "callbackFunctionValueArgByConstRef(callback)",
             +[](CallbacksBindingMechanismsTestType& self, TestCallbackValueArgByConstRefJSCallback callback) {
-                self.CallbackFunctionOnThreadValueArgByConstRef(ToNativeCallback(callback));
+                self.CallbackFunctionValueArgByConstRef(ToNativeCallback(callback));
             })
         .function(
-            "callbackFunctionOnThreadContainerOfPointers(callback)",
+            "callbackFunctionContainerOfPointers(callback)",
             +[](CallbacksBindingMechanismsTestType& self, TestCallbackContainerOfPointersJSCallback callback) {
-                self.CallbackFunctionOnThreadContainerOfPointers(ToNativeCallback(callback));
+                self.CallbackFunctionContainerOfPointers(ToNativeCallback(callback));
             })
         .function(
-            "callbackFunctionOnThreadContainerOfValues(callback)",
-            +[](CallbacksBindingMechanismsTestType& self, TestCallbackContainerOfValuesJSCallback callback) {
-                self.CallbackFunctionOnThreadContainerOfValues(ToNativeCallback(callback));
-            })
+            "callbackFunctionContainerOfValues(callback)",
+            +[](CallbacksBindingMechanismsTestType& self, TestCallbackContainerOfValuesJSCallback callback) { self.CallbackFunctionContainerOfValues(ToNativeCallback(callback)); })
         .function(
-            "callbackFunctionOnThreadContainerOfValuesByConstRef(callback)",
+            "callbackFunctionContainerOfValuesByConstRef(callback)",
             +[](CallbacksBindingMechanismsTestType& self, TestCallbackContainerOfValuesByConstRefJSCallback callback) {
-                self.CallbackFunctionOnThreadContainerOfValuesByConstRef(ToNativeCallback(callback));
+                self.CallbackFunctionContainerOfValuesByConstRef(ToNativeCallback(callback));
             })
         .function(
-            "callbackFunctionOnThreadMultipleArgs(callback)",
-            +[](CallbacksBindingMechanismsTestType& self, TestCallbackMultipleArgsJSCallback callback) { self.CallbackFunctionOnThreadMultipleArgs(ToNativeCallback(callback)); })
+            "callbackFunctionMultipleArgs(callback)",
+            +[](CallbacksBindingMechanismsTestType& self, TestCallbackMultipleArgsJSCallback callback) { self.CallbackFunctionMultipleArgs(ToNativeCallback(callback)); })
         .function(
-            "callbackFunctionOnThreadNestedContainerOfPointers(callback)",
+            "callbackFunctionNestedContainerOfPointers(callback)",
             +[](CallbacksBindingMechanismsTestType& self, TestCallbackNestedContainerOfPointersJSCallback callback) {
-                self.CallbackFunctionOnThreadNestedContainerOfPointers(ToNativeCallback(callback));
+                self.CallbackFunctionNestedContainerOfPointers(ToNativeCallback(callback));
             })
         .function(
-            "callbackFunctionOnThreadNestedContainerOfValues(callback)",
+            "callbackFunctionNestedContainerOfValues(callback)",
             +[](CallbacksBindingMechanismsTestType& self, TestCallbackNestedContainerOfValuesJSCallback callback) {
-                self.CallbackFunctionOnThreadNestedContainerOfValues(ToNativeCallback(callback));
+                self.CallbackFunctionNestedContainerOfValues(ToNativeCallback(callback));
             })
         .function(
-            "callbackFunctionOnThreadNestedContainerOfValuesByConstRef(callback)",
+            "callbackFunctionNestedContainerOfValuesByConstRef(callback)",
             +[](CallbacksBindingMechanismsTestType& self, TestCallbackNestedContainerOfValuesByConstRefJSCallback callback) {
-                self.CallbackFunctionOnThreadNestedContainerOfValuesByConstRef(ToNativeCallback(callback));
+                self.CallbackFunctionNestedContainerOfValuesByConstRef(ToNativeCallback(callback));
             })
         .function(
-            "callbackFunctionOnThreadMixedArgs(callback)",
-            +[](CallbacksBindingMechanismsTestType& self, TestCallbackMixedArgsJSCallback callback) { self.CallbackFunctionOnThreadMixedArgs(ToNativeCallback(callback)); })
+            "callbackFunctionMixedArgs(callback)",
+            +[](CallbacksBindingMechanismsTestType& self, TestCallbackMixedArgsJSCallback callback) { self.CallbackFunctionMixedArgs(ToNativeCallback(callback)); })
         .function(
-            "callbackFunctionOnThreadValueOpt(callback)",
-            +[](CallbacksBindingMechanismsTestType& self, TestCallbackOptionalOfValueJSCallback callback) { self.CallbackFunctionOnThreadValueOpt(ToNativeCallback(callback)); })
+            "callbackFunctionValueOpt(callback)",
+            +[](CallbacksBindingMechanismsTestType& self, TestCallbackOptionalOfValueJSCallback callback) { self.CallbackFunctionValueOpt(ToNativeCallback(callback)); })
         .function(
-            "callbackFunctionOnThreadPointerOpt(callback)",
-            +[](CallbacksBindingMechanismsTestType& self, TestCallbackOptionalOfPointerJSCallback callback) {
-                self.CallbackFunctionOnThreadPointerOpt(ToNativeCallback(callback));
-            })
+            "callbackFunctionPointerOpt(callback)",
+            +[](CallbacksBindingMechanismsTestType& self, TestCallbackOptionalOfPointerJSCallback callback) { self.CallbackFunctionPointerOpt(ToNativeCallback(callback)); })
         .function(
-            "callbackFunctionOnThreadOptOfArray(callback)",
-            +[](CallbacksBindingMechanismsTestType& self, TestCallbackOptionalOfArrayJSCallback callback) { self.CallbackFunctionOnThreadOptOfArray(ToNativeCallback(callback)); })
+            "callbackFunctionOptOfArray(callback)",
+            +[](CallbacksBindingMechanismsTestType& self, TestCallbackOptionalOfArrayJSCallback callback) { self.CallbackFunctionOptOfArray(ToNativeCallback(callback)); })
         .function(
-            "callbackFunctionOnThreadArrayOfOpt(callback)",
-            +[](CallbacksBindingMechanismsTestType& self, TestCallbackArrayOfOptionalJSCallback callback) { self.CallbackFunctionOnThreadArrayOfOpt(ToNativeCallback(callback)); })
+            "callbackFunctionArrayOfOpt(callback)",
+            +[](CallbacksBindingMechanismsTestType& self, TestCallbackArrayOfOptionalJSCallback callback) { self.CallbackFunctionArrayOfOpt(ToNativeCallback(callback)); })
         .function(
-            "callbackFunctionOnThreadArrayOfSomeNullOpt(callback)",
-            +[](CallbacksBindingMechanismsTestType& self, TestCallbackArrayOfOptionalJSCallback callback) {
-                self.CallbackFunctionOnThreadArrayOfSomeNullOpt(ToNativeCallback(callback));
-            })
+            "callbackFunctionArrayOfSomeNullOpt(callback)",
+            +[](CallbacksBindingMechanismsTestType& self, TestCallbackArrayOfOptionalJSCallback callback) { self.CallbackFunctionArrayOfSomeNullOpt(ToNativeCallback(callback)); })
         .function(
-            "callbackFunctionOnThreadNullValueOpt(callback)",
-            +[](CallbacksBindingMechanismsTestType& self, TestCallbackOptionalOfValueJSCallback callback) {
-                self.CallbackFunctionOnThreadNullValueOpt(ToNativeCallback(callback));
-            })
+            "callbackFunctionNullValueOpt(callback)",
+            +[](CallbacksBindingMechanismsTestType& self, TestCallbackOptionalOfValueJSCallback callback) { self.CallbackFunctionNullValueOpt(ToNativeCallback(callback)); })
         .function(
-            "callbackFunctionOnThreadNullPointerOpt(callback)", +[](CallbacksBindingMechanismsTestType& self, TestCallbackOptionalOfPointerJSCallback callback) {
-                self.CallbackFunctionOnThreadNullPointerOpt(ToNativeCallback(callback));
+            "callbackFunctionNullPointerOpt(callback)",
+            +[](CallbacksBindingMechanismsTestType& self, TestCallbackOptionalOfPointerJSCallback callback) { self.CallbackFunctionNullPointerOpt(ToNativeCallback(callback)); })
+        .function(
+            "setStoredCallbackNoArgs(callback)",
+            +[](CallbacksBindingMechanismsTestType& self, TestCallbackNoArgsJSCallback callback) { self.SetStoredCallbackNoArgs(ToNativeCallback(callback)); })
+        .function(
+            "invokeStoredCallbackNoArgs", +[](CallbacksBindingMechanismsTestType& self) { self.InvokeStoredCallbackNoArgs(); })
+        .function(
+            "setStoredCallbackWithArgs(callback)",
+            +[](CallbacksBindingMechanismsTestType& self, TestCallbackContainerOfValuesJSCallback callback) { self.SetStoredCallbackWithArgs(ToNativeCallback(callback)); })
+        .function(
+            "invokeStoredCallbackWithArgs(args)", +[](CallbacksBindingMechanismsTestType& self, csp::common::Array<BindingsTestType> valueContainerArg) {
+                self.InvokeStoredCallbackWithArgs(std::move(valueContainerArg));
             });
 }

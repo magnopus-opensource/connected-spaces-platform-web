@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { loadCSP } from '../loadModule';
 import createModule, { type MainModule } from 'connected-spaces-platform-bindings';
+import { forceHeapGrowth } from './testUtils';
 
 describe('CSPFoundation', () => {
   let csp: MainModule;
@@ -171,35 +172,9 @@ describe('CSPFoundation', () => {
     // This guarantees the sensitivity analysis below holds regardless of what other
     // tests have already allocated in the shared csp instance.
     const freshCsp = await createModule();
+    forceHeapGrowth(freshCsp);
 
     using bindingsArrayHelper = freshCsp.ContainerBindingMechanismsTestType.create();
-    using anchor = freshCsp.BindingsTestType.create(1, 'one');
-    bindingsArrayHelper.setArrayOfPointersByValue([anchor]);
-
-    // Leak large value-copied allocations until the heap is forced to grow, then take the
-    // baseline. This bounds how much free space the pointer loop has to absorb in order to detect
-    // any leaks.
-    //
-    // Using an initial memory size of 32MB and a geometric growth step of 0.20, the first growth
-    // event will expand the heap by 32MB * 0.20 = 6.4MB, rounded up to the next 64KB WASM page
-    // boundary so ~6.44MB.
-    // With 500k iterations we can detect leaks of ~6.44MB / 500k = ~13.5 bytes per call.
-    // dlmalloc's (Emscripten's default malloc) minimum chunk size is ~24 bytes, so this catches any
-    // non-trivial WASM heap allocation that isn't freed - including the transient Array<T*> backing
-    // buffer (~20 bytes) if embind ever failed to destroy it.
-
-    // 512 KB string
-    const bigString = 'x'.repeat(512 * 1024);
-    using filler = freshCsp.BindingsTestType.create(0, bigString);
-    bindingsArrayHelper.setArrayFullTypeByValue([filler]);
-
-    // Leak memory until the heap grows
-    let sentinel = (freshCsp as unknown as { HEAPU8: Uint8Array }).HEAPU8.byteLength;
-    while ((freshCsp as unknown as { HEAPU8: Uint8Array }).HEAPU8.byteLength === sentinel) {
-      const arr = bindingsArrayHelper.getArrayFullTypeByValue();
-      void arr[0]?.value;
-      // Intentional leak - we want these to accumulate and force a heap growth.
-    }
 
     // Heap has just grown - take the baseline measurement.
     const heapBefore = (freshCsp as unknown as { HEAPU8: Uint8Array }).HEAPU8.byteLength;
@@ -757,7 +732,7 @@ describe('CSPFoundation', () => {
   it('Callback individual pointer arg has non-owning enrichment', () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create();
     let called = false;
-    helper.callbackFunctionOnThreadPointerArg((pointerArg) => {
+    helper.callbackFunctionPointerArg((pointerArg) => {
       called = true;
       expect(() => pointerArg.delete()).toThrow();
       expect(() => pointerArg.deleteLater()).toThrow();
@@ -769,7 +744,7 @@ describe('CSPFoundation', () => {
   it('Callback container of pointers has non-owning enrichment on each element', () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create();
     let called = false;
-    helper.callbackFunctionOnThreadContainerOfPointers((arr) => {
+    helper.callbackFunctionContainerOfPointers((arr) => {
       called = true;
       expect(arr.length).toBe(2);
       for (const el of arr) {
@@ -784,7 +759,7 @@ describe('CSPFoundation', () => {
   it('Callback nested map of pointers has non-owning enrichment on each element', () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create();
     let called = false;
-    helper.callbackFunctionOnThreadNestedContainerOfPointers((map) => {
+    helper.callbackFunctionNestedContainerOfPointers((map) => {
       called = true;
       for (const arr of map.values()) {
         for (const el of arr) {

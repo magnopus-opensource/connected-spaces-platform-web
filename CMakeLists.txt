@@ -12,6 +12,7 @@ add_executable(connected-spaces-platform-bindings
     src/bindings/containers/Equality.cpp
     src/bindings/containers/Disposal.cpp
     src/bindings/containers/Clone.cpp
+    src/bindings/async/CatchingCallback.cpp
 )
 set_target_properties(connected-spaces-platform-bindings PROPERTIES SUFFIX ".js")
 
@@ -54,7 +55,7 @@ target_link_options(connected-spaces-platform-bindings PRIVATE
     -sINITIAL_MEMORY=33554432
     -sMAXIMUM_MEMORY=1073741824
     "-sEXPORTED_RUNTIME_METHODS=['ccall','setValue','getValue','addFunction','removeFunction','UTF8ToString','stringToUTF8', 'stringToNewUTF8', 'lengthBytesUTF8','HEAPU8']"
-    "-sINCOMING_MODULE_JS_API=['buffer','fetchSettings','instantiateWasm','locateFile','mainScriptUrlOrBlob','wasmMemory']"
+    "-sINCOMING_MODULE_JS_API=['buffer','fetchSettings','instantiateWasm','locateFile','mainScriptUrlOrBlob','wasmMemory', 'noExitRuntime']"
     --emit-tsd=connected-spaces-platform-bindings.d.ts
     --no-entry
     --extern-pre-js=${CMAKE_SOURCE_DIR}/src/polyfills/polyfills.js
