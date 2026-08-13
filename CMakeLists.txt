@@ -33,6 +33,7 @@ target_compile_options(connected-spaces-platform-bindings PRIVATE
   -Werror
   $<$<PLATFORM_ID:Emscripten>:-pthread>
   $<$<PLATFORM_ID:Emscripten>:-fwasm-exceptions>
+  $<$<CONFIG:Debug>:-fstandalone-debug> # By default, clang limits debug info to keep binary size down, normally fine, but WASM is a special case. Turn that off.
 )
 
 target_link_options(connected-spaces-platform-bindings PRIVATE
