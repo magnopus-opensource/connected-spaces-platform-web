@@ -118,7 +118,7 @@ inline auto AdaptedRAIINativeCallback(emscripten::val& cb)
          */
         auto proxySyncAdapterBody = [&](bool calledOnProxyQueue) {
             /*
-             * In order to do off-thread catching, we shunt to JS so we can catch there, as we can't allow exceptiosn to bubble up the off-thread event-queue.
+             * In order to do off-thread catching, we shunt to JS so we can catch there, as we can't allow exceptions to bubble up the off-thread event-queue.
              * To keep it uniform, shunt to JS in both cases, use a bool to decide if we're going to allow exceptions out, depending on whether we're affine or not.
              */
             emscripten::val cb = emscripten::val::take_ownership(catching_callback(callback->GetCallbackHandle(), calledOnProxyQueue));
