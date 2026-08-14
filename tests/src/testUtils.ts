@@ -1,3 +1,5 @@
+import { MainModule } from 'connected-spaces-platform-bindings';
+
 /* Timer to let us busy-wait on callbacks finishing. */
 export async function until(predicate: () => boolean, timeoutMs = 2000): Promise<void> {
   const deadline = performance.now() + timeoutMs;
@@ -8,6 +10,21 @@ export async function until(predicate: () => boolean, timeoutMs = 2000): Promise
     await new Promise((resolve) => setTimeout(resolve, 0));
   }
 }
+
+/*
+ * We want to wait until all the callbacks are finished fully (including teardown) before we do
+ * any lifetime assertions.
+ * There is an internal atomic counter in the test backend that counts the number of off-thread
+ * callbacks in flight. We combine this with a manually managed "callbackFired" boolean, to
+ * get the two state questions we need, "Has the callback started" followed by "Has the callback finished".
+ * It does not matter where `callbackFired` is set in the callback itself, so long as it's set somewhere.
+ */
+export async function untilCallbacksSettled(csp: MainModule, callbackFired: () => boolean): Promise<void> {
+  await until(callbackFired);
+  await until(() => csp.CallbacksBindingMechanismsTestType.offThreadCallbacksInFlight() === 0);
+}
+
+export async function untilOffThreadCallbacksFinished(): Promise<void> {}
 
 /* Forces the heap to grow, which lets us be sure we've escaped the pre-allocated
  * memory and are now into standard geometric growth. Used for testing heap sizes

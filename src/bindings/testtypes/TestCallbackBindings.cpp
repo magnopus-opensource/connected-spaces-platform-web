@@ -19,6 +19,7 @@
 
 #include <CSP/Common/Optional.h>
 #include <iostream>
+#include <memory>
 #include <optional>
 #include <thread>
 #include <tuple>
@@ -91,14 +92,36 @@ csp::common::Array<csp::common::Optional<BindingsTestType>> arrayOfSomeNullOpt {
 }
 
 namespace {
+
+std::atomic<int> OffThreadInvocationsInFlight { 0 };
+struct RAIICounterLatch {
+    RAIICounterLatch() { OffThreadInvocationsInFlight++; }
+    ~RAIICounterLatch() { OffThreadInvocationsInFlight--; }
+    RAIICounterLatch(const RAIICounterLatch&) = delete;
+    RAIICounterLatch(RAIICounterLatch&&) = delete;
+    RAIICounterLatch& operator=(const RAIICounterLatch&) = delete;
+    RAIICounterLatch& operator=(RAIICounterLatch&&) = delete;
+};
+
 template <typename Callable, typename... Args> void CallOnThread(Callable&& callable, Args&&... args) { callable(std::forward<Args>(args)...); }
 template <typename Callable, typename... Args> void CallOffThread(Callable&& callable, Args&&... args)
 {
     /*
      * By forwarding into a tuple, we get to copy anything that should be copied (rvals), and reference anything that should be referenced (lvalues)
      * Trying to avoid incurring redundant lifetimes when invoking a thread. I doubt the underlying library will be so careful...
+     *
+     * The unique pointer is so we can explicitly reset at the end of the callback. This is more a test thing than anything else.
+     * Destructor order in lambda capture is unspecified, and by doing this, we can make sure our latch holds until after the args are
+     * destructed, such that we can await in tests and know what lifetime counts to expect.
+     * This won't really matter in real-code, as no-one is going to be building logic based around the micro-timing of when memory is freed,
+     * but our tests check lifetime counts so we need it to be more specified than it otherwise would be.
      */
-    std::thread aThread { [callable = std::forward<Callable>(callable), args = std::tuple<Args...>(std::forward<Args>(args)...)]() { std::apply(callable, args); } };
+    auto resettableArgs = std::make_unique<std::tuple<Args...>>(std::tuple<Args...>(std::forward<Args>(args)...));
+    std::thread aThread { [callable = std::forward<Callable>(callable), args = std::move(resettableArgs)]() mutable {
+        RAIICounterLatch latch;
+        std::apply(callable, *args);
+        args.reset(); // This ensures arg destructors run prior to latch decrement, and is also what implies `mutable` on the lambda.
+    } };
     aThread.detach();
 }
 }
@@ -234,6 +257,8 @@ EMSCRIPTEN_BINDINGS(CSPCallbacksTestTypeBindings)
             "create", +[] { return CallbacksBindingMechanismsTestType(false); })
         .class_function(
             "create(offThread)", +[](bool offThread) { return CallbacksBindingMechanismsTestType(offThread); })
+        .class_function(
+            "offThreadCallbacksInFlight", +[]() { return OffThreadInvocationsInFlight.load(); })
         .function(
             "callbackFunctionNoArgs(callback)",
             +[](CallbacksBindingMechanismsTestType& self, TestCallbackNoArgsJSCallback callback) { self.CallbackFunctionNoArgs(ToNativeCallback(callback)); })

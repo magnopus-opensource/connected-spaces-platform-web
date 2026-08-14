@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, vi } from 'vitest';
 import { loadCSP } from '../loadModule';
-import { until } from './testUtils';
+import { untilCallbacksSettled } from './testUtils';
 import { BindingsTestType, type MainModule } from 'connected-spaces-platform-bindings';
 
 /*
@@ -32,7 +32,7 @@ for (const { mode, offThread } of CALLBACK_THREADING_MODE) {
         liftedValContainerArg = valueContainerArg;
       });
 
-      await until(() => callbackCalled);
+      await untilCallbacksSettled(csp, () => callbackCalled);
       expect(callbackCalled).toBe(true);
       let caughtDeletedAccess = false;
       try {
@@ -62,7 +62,7 @@ for (const { mode, offThread } of CALLBACK_THREADING_MODE) {
         liftedValArg = valueArg;
       });
 
-      await until(() => callbackCalled);
+      await untilCallbacksSettled(csp, () => callbackCalled);
       expect(callbackCalled).toBe(true);
       /* We reference the value arg out, which should throw an emscripten error as it's already been deleted */
       expect(() => liftedValArg?.name).toThrow();
@@ -85,7 +85,7 @@ for (const { mode, offThread } of CALLBACK_THREADING_MODE) {
         expect(csp.BindingsTestType.aliveCount()).toBe(expectedLifetimes);
       });
 
-      await until(() => callbackCalled);
+      await untilCallbacksSettled(csp, () => callbackCalled);
       expect(callbackCalled).toBe(true);
       expect(liftedValArg?.name).toBe('One');
 
@@ -122,7 +122,7 @@ for (const { mode, offThread } of CALLBACK_THREADING_MODE) {
         callbackCalled = true;
       });
 
-      await until(() => callbackCalled);
+      await untilCallbacksSettled(csp, () => callbackCalled);
 
       /* On scope exit, we should have got the warning */
       expect(warnSpy).toHaveBeenCalledTimes(1);
@@ -141,7 +141,7 @@ for (const { mode, offThread } of CALLBACK_THREADING_MODE) {
         expect(valueArg.name).toBe('One');
       });
 
-      await until(() => callbackCalled);
+      await untilCallbacksSettled(csp, () => callbackCalled);
       expect(callbackCalled).toBe(true);
       expect(warnSpy).not.toHaveBeenCalled();
     });
@@ -156,7 +156,7 @@ for (const { mode, offThread } of CALLBACK_THREADING_MODE) {
         liftedPointerArg = pointerArg;
       });
 
-      await until(() => callbackCalled);
+      await untilCallbacksSettled(csp, () => callbackCalled);
       expect(callbackCalled).toBe(true);
 
       /*
@@ -179,7 +179,7 @@ for (const { mode, offThread } of CALLBACK_THREADING_MODE) {
         expect(csp.BindingsTestType.aliveCount()).toBe(beforeAliveCount);
       });
 
-      await until(() => callbackCalled);
+      await untilCallbacksSettled(csp, () => callbackCalled);
       expect(callbackCalled).toBe(true);
       expect(liftedPointerArg?.name).toBe('One');
       expect(csp.BindingsTestType.aliveCount()).toBe(beforeAliveCount);
@@ -207,7 +207,7 @@ for (const { mode, offThread } of CALLBACK_THREADING_MODE) {
         liftedValContainerArg = valueContainerArg;
       });
 
-      await until(() => callbackCalled);
+      await untilCallbacksSettled(csp, () => callbackCalled);
       expect(callbackCalled).toBe(true);
       /* We reference the value arg out, which should throw an emscripten error as it's already been deleted */
       expect(() => liftedValContainerArg[0]?.name).toThrow();
@@ -232,7 +232,7 @@ for (const { mode, offThread } of CALLBACK_THREADING_MODE) {
         expect(csp.BindingsTestType.aliveCount()).toBe(expectedLifetimes);
       });
 
-      await until(() => callbackCalled);
+      await untilCallbacksSettled(csp, () => callbackCalled);
       expect(callbackCalled).toBe(true);
       expect(liftedValContainerArg?.[0]?.name).toBe('One');
 
