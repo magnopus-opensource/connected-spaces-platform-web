@@ -399,128 +399,128 @@ for (const { mode, offThread } of CALLBACK_THREADING_MODE) {
       using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
       let callbackCalled = false;
-      const beforeCallbackCount = csp.BindingsTestType.aliveCount;
+      const beforeCallbackCount = csp.BindingsTestType.aliveCount();
 
       helper.callbackFunctionValueArgByConstRef((byRefArg) => {
         callbackCalled = true;
-        expect(csp.BindingsTestType.aliveCount).toBe(beforeCallbackCount + 1);
+        expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount + 1);
       });
 
       await until(() => callbackCalled);
       expect(callbackCalled).toBe(true);
-      expect(csp.BindingsTestType.aliveCount).toBe(beforeCallbackCount);
+      expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount);
     });
 
     it('Callback value arg disposes at end of scope automatically', async () => {
       using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
       let callbackCalled = false;
-      const beforeCallbackCount = csp.BindingsTestType.aliveCount;
+      const beforeCallbackCount = csp.BindingsTestType.aliveCount();
 
       helper.callbackFunctionValueArg((valueArg) => {
         callbackCalled = true;
-        expect(csp.BindingsTestType.aliveCount).toBe(beforeCallbackCount + 2);
+        expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount + 2);
       });
 
       await until(() => callbackCalled);
       expect(callbackCalled).toBe(true);
-      expect(csp.BindingsTestType.aliveCount).toBe(beforeCallbackCount);
+      expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount);
     });
 
     it('Callback non-owning pointer arg does nothing at end of scope automatically', async () => {
       using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
       let callbackCalled = false;
-      const beforeCallbackCount = csp.BindingsTestType.aliveCount;
+      const beforeCallbackCount = csp.BindingsTestType.aliveCount();
 
       helper.callbackFunctionPointerArg((pointerArg) => {
         callbackCalled = true;
         // Pointers should not incur additional lifetimes
-        expect(csp.BindingsTestType.aliveCount).toBe(beforeCallbackCount);
+        expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount);
       });
 
       await until(() => callbackCalled);
       expect(callbackCalled).toBe(true);
-      expect(csp.BindingsTestType.aliveCount).toBe(beforeCallbackCount);
+      expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount);
     });
 
     it('Callback value container by const ref disposes contents at end of scope automatically', async () => {
       using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
       let callbackCalled = false;
-      const beforeCallbackCount = csp.BindingsTestType.aliveCount;
+      const beforeCallbackCount = csp.BindingsTestType.aliveCount();
 
       helper.callbackFunctionContainerOfValuesByConstRef((valueContainerArg) => {
         callbackCalled = true;
         expect(valueContainerArg.length).toBe(2);
-        expect(csp.BindingsTestType.aliveCount).toBe(beforeCallbackCount + 2);
+        expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount + 2);
       });
 
       await until(() => callbackCalled);
       expect(callbackCalled).toBe(true);
-      expect(csp.BindingsTestType.aliveCount).toBe(beforeCallbackCount);
+      expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount);
     });
 
     it('Callback value container disposes contents at end of scope automatically', async () => {
       using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
       let callbackCalled = false;
-      const beforeCallbackCount = csp.BindingsTestType.aliveCount;
+      const beforeCallbackCount = csp.BindingsTestType.aliveCount();
 
       helper.callbackFunctionContainerOfValues((valueContainerArg) => {
         callbackCalled = true;
         expect(valueContainerArg.length).toBe(2);
         // We incur an additional copy due to not being const ref
-        expect(csp.BindingsTestType.aliveCount).toBe(beforeCallbackCount + 4);
+        expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount + 4);
       });
 
       await until(() => callbackCalled);
       expect(callbackCalled).toBe(true);
-      expect(csp.BindingsTestType.aliveCount).toBe(beforeCallbackCount);
+      expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount);
     });
 
     it('Callback non-owning pointer container does nothing with contents at end of scope automatically', async () => {
       using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
       let callbackCalled = false;
-      const beforeCallbackCount = csp.BindingsTestType.aliveCount;
+      const beforeCallbackCount = csp.BindingsTestType.aliveCount();
 
       helper.callbackFunctionContainerOfPointers((pointerContainerArg) => {
         callbackCalled = true;
         expect(pointerContainerArg.length).toBe(2);
         // Pointers should not incur any new lifetimes
-        expect(csp.BindingsTestType.aliveCount).toBe(beforeCallbackCount);
+        expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount);
       });
 
       await until(() => callbackCalled);
       expect(callbackCalled).toBe(true);
-      expect(csp.BindingsTestType.aliveCount).toBe(beforeCallbackCount);
+      expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount);
     });
 
     it('Callback nested value container by const ref disposes contents at end of scope automatically', async () => {
       using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
       let callbackCalled = false;
-      const beforeCallbackCount = csp.BindingsTestType.aliveCount;
+      const beforeCallbackCount = csp.BindingsTestType.aliveCount();
 
       helper.callbackFunctionNestedContainerOfValuesByConstRef((nestedValueContainerArg) => {
         callbackCalled = true;
         expect(nestedValueContainerArg.size).toBe(2);
         expect(nestedValueContainerArg.get(0)?.length).toBe(2);
         expect(nestedValueContainerArg.get(1)?.length).toBe(2);
-        expect(csp.BindingsTestType.aliveCount).toBe(beforeCallbackCount + 4);
+        expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount + 4);
       });
 
       await until(() => callbackCalled);
       expect(callbackCalled).toBe(true);
-      expect(csp.BindingsTestType.aliveCount).toBe(beforeCallbackCount);
+      expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount);
     });
 
     it('Callback nested value container disposes contents at end of scope automatically', async () => {
       using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
       let callbackCalled = false;
-      const beforeCallbackCount = csp.BindingsTestType.aliveCount;
+      const beforeCallbackCount = csp.BindingsTestType.aliveCount();
 
       helper.callbackFunctionNestedContainerOfValues((nestedValueContainerArg) => {
         callbackCalled = true;
@@ -528,19 +528,19 @@ for (const { mode, offThread } of CALLBACK_THREADING_MODE) {
         expect(nestedValueContainerArg.get(0)?.length).toBe(2);
         expect(nestedValueContainerArg.get(1)?.length).toBe(2);
         // We incur an additional copy per element due to not using const ref
-        expect(csp.BindingsTestType.aliveCount).toBe(beforeCallbackCount + 8);
+        expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount + 8);
       });
 
       await until(() => callbackCalled);
       expect(callbackCalled).toBe(true);
-      expect(csp.BindingsTestType.aliveCount).toBe(beforeCallbackCount);
+      expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount);
     });
 
     it('Callback nested pointer container does nothing with contents at end of scope automatically', async () => {
       using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
       let callbackCalled = false;
-      const beforeCallbackCount = csp.BindingsTestType.aliveCount;
+      const beforeCallbackCount = csp.BindingsTestType.aliveCount();
 
       helper.callbackFunctionNestedContainerOfPointers((nestedPointerContainerArg) => {
         callbackCalled = true;
@@ -548,19 +548,19 @@ for (const { mode, offThread } of CALLBACK_THREADING_MODE) {
         expect(nestedPointerContainerArg.get(0)?.length).toBe(2);
         expect(nestedPointerContainerArg.get(1)?.length).toBe(2);
         // Pointers should not incur additional lifetimes
-        expect(csp.BindingsTestType.aliveCount).toBe(beforeCallbackCount);
+        expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount);
       });
 
       await until(() => callbackCalled);
       expect(callbackCalled).toBe(true);
-      expect(csp.BindingsTestType.aliveCount).toBe(beforeCallbackCount);
+      expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount);
     });
 
     it('Callback with many mixed argument types', async () => {
       using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
       let callbackCalled = false;
-      const beforeCallbackCount = csp.BindingsTestType.aliveCount;
+      const beforeCallbackCount = csp.BindingsTestType.aliveCount();
 
       helper.callbackFunctionMixedArgs(
         (valueContainerArg, constRefContainerArg, pointerContainerArg, primitiveArg, valueArg, pointerArg) => {
@@ -578,39 +578,39 @@ for (const { mode, offThread } of CALLBACK_THREADING_MODE) {
       expect(callbackCalled).toBe(true);
 
       // Should have the same lifetimes even despite all the args
-      expect(csp.BindingsTestType.aliveCount).toBe(beforeCallbackCount);
+      expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount);
     });
 
     it('Callback Optional Value Arg Disposal', async () => {
       using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
-      const beforeCallbackCount = csp.BindingsTestType.aliveCount;
+      const beforeCallbackCount = csp.BindingsTestType.aliveCount();
 
       let callbackCalled = false;
       helper.callbackFunctionValueOpt((valueArg) => {
         callbackCalled = true;
-        expect(csp.BindingsTestType.aliveCount).toBe(beforeCallbackCount + 1);
+        expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount + 1);
       });
 
       await until(() => callbackCalled);
       expect(callbackCalled).toBe(true);
-      expect(csp.BindingsTestType.aliveCount).toBe(beforeCallbackCount);
+      expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount);
     });
 
     it('Callback Optional Pointer Arg Disposal', async () => {
       using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
-      const beforeCallbackCount = csp.BindingsTestType.aliveCount;
+      const beforeCallbackCount = csp.BindingsTestType.aliveCount();
 
       let callbackCalled = false;
       helper.callbackFunctionPointerOpt((pointerArg) => {
         callbackCalled = true;
-        expect(csp.BindingsTestType.aliveCount).toBe(beforeCallbackCount);
+        expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount);
       });
 
       await until(() => callbackCalled);
       expect(callbackCalled).toBe(true);
-      expect(csp.BindingsTestType.aliveCount).toBe(beforeCallbackCount);
+      expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount);
     });
   });
 }

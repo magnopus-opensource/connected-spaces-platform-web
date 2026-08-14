@@ -25,14 +25,14 @@ describe('clone ', () => {
 
     let callbackCalled = false;
     let liftedValContainerArg: BindingsTestType[] = [];
-    let beforeAliveCount = csp.BindingsTestType.aliveCount;
+    let beforeAliveCount = csp.BindingsTestType.aliveCount();
     helper.callbackFunctionContainerOfValuesByConstRef((arrayAry) => {
       callbackCalled = true;
 
       let expectedLifetimes = beforeAliveCount + 2;
-      expect(csp.BindingsTestType.aliveCount).toBe(expectedLifetimes);
+      expect(csp.BindingsTestType.aliveCount()).toBe(expectedLifetimes);
       liftedValContainerArg = csp.cloneArray(arrayAry);
-      expect(csp.BindingsTestType.aliveCount).toBe(expectedLifetimes);
+      expect(csp.BindingsTestType.aliveCount()).toBe(expectedLifetimes);
     });
 
     expect(callbackCalled).toBe(true);
@@ -40,9 +40,9 @@ describe('clone ', () => {
     expect(liftedValContainerArg?.[1]?.name).toBe('Two');
 
     /* Doing the delete now should actually delete C++ memory, as the reference count will hit zero */
-    expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount + 2);
+    expect(csp.BindingsTestType.aliveCount()).toBe(beforeAliveCount + 2);
     csp.disposeArray(liftedValContainerArg);
-    expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount);
+    expect(csp.BindingsTestType.aliveCount()).toBe(beforeAliveCount);
 
     /* Deleting again will throw */
     expect(() => csp.disposeArray(liftedValContainerArg)).toThrow();
@@ -53,13 +53,13 @@ describe('clone ', () => {
 
     let callbackCalled = false;
     let liftedPointerContainerArg: BindingsTestType[] = [];
-    let beforeAliveCount = csp.BindingsTestType.aliveCount;
+    let beforeAliveCount = csp.BindingsTestType.aliveCount();
     helper.callbackFunctionContainerOfPointers((pointerAry) => {
       callbackCalled = true;
 
-      expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount);
+      expect(csp.BindingsTestType.aliveCount()).toBe(beforeAliveCount);
       liftedPointerContainerArg = csp.cloneArray(pointerAry);
-      expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount);
+      expect(csp.BindingsTestType.aliveCount()).toBe(beforeAliveCount);
     });
 
     expect(callbackCalled).toBe(true);
@@ -68,7 +68,7 @@ describe('clone ', () => {
     expect(liftedPointerContainerArg?.[1]?.name).toBe('Two');
 
     /* Nothing was owned, so there is nothing to dispose.*/
-    expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount);
+    expect(csp.BindingsTestType.aliveCount()).toBe(beforeAliveCount);
   });
 
   it('Clone Map', () => {
@@ -76,14 +76,14 @@ describe('clone ', () => {
 
     let callbackCalled = false;
     let liftedValMapArg: Map<number, BindingsTestType[]> = new Map();
-    let beforeAliveCount = csp.BindingsTestType.aliveCount;
+    let beforeAliveCount = csp.BindingsTestType.aliveCount();
     helper.callbackFunctionNestedContainerOfValuesByConstRef((mapArg) => {
       callbackCalled = true;
 
       let expectedLifetimes = beforeAliveCount + 4;
-      expect(csp.BindingsTestType.aliveCount).toBe(expectedLifetimes);
+      expect(csp.BindingsTestType.aliveCount()).toBe(expectedLifetimes);
       liftedValMapArg = csp.cloneMap(mapArg);
-      expect(csp.BindingsTestType.aliveCount).toBe(expectedLifetimes);
+      expect(csp.BindingsTestType.aliveCount()).toBe(expectedLifetimes);
     });
 
     expect(callbackCalled).toBe(true);
@@ -91,9 +91,9 @@ describe('clone ', () => {
     expect(liftedValMapArg.get(0)?.[1]?.name).toBe('Two');
     expect(liftedValMapArg.get(1)?.[0]?.name).toBe('Three');
 
-    expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount + 4);
+    expect(csp.BindingsTestType.aliveCount()).toBe(beforeAliveCount + 4);
     csp.disposeMap(liftedValMapArg);
-    expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount);
+    expect(csp.BindingsTestType.aliveCount()).toBe(beforeAliveCount);
 
     /* Deleting again will throw */
     expect(() => csp.disposeMap(liftedValMapArg)).toThrow();
@@ -104,13 +104,13 @@ describe('clone ', () => {
 
     let callbackCalled = false;
     let liftedPointerMapArg: Map<number, BindingsTestType[]> = new Map();
-    let beforeAliveCount = csp.BindingsTestType.aliveCount;
+    let beforeAliveCount = csp.BindingsTestType.aliveCount();
     helper.callbackFunctionNestedContainerOfPointers((mapArg) => {
       callbackCalled = true;
 
-      expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount);
+      expect(csp.BindingsTestType.aliveCount()).toBe(beforeAliveCount);
       liftedPointerMapArg = csp.cloneMap(mapArg);
-      expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount);
+      expect(csp.BindingsTestType.aliveCount()).toBe(beforeAliveCount);
     });
 
     expect(callbackCalled).toBe(true);
@@ -120,7 +120,7 @@ describe('clone ', () => {
     expect(liftedPointerMapArg.get(1)?.[0]?.name).toBe('Three');
 
     /* Nothing was owned, so there is nothing to dispose. */
-    expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount);
+    expect(csp.BindingsTestType.aliveCount()).toBe(beforeAliveCount);
   });
 
   it('Clone Optional of Array', () => {
@@ -128,18 +128,18 @@ describe('clone ', () => {
 
     let callbackCalled = false;
     let liftedOptOfArrayArg: BindingsTestType[] = [];
-    let beforeAliveCount = csp.BindingsTestType.aliveCount;
+    let beforeAliveCount = csp.BindingsTestType.aliveCount();
     helper.callbackFunctionOptOfArray((optOfArrayArg) => {
       callbackCalled = true;
 
       /* The optional is an array of two owned elements */
       expect(optOfArrayArg).toBeDefined();
       let expectedLifetimes = beforeAliveCount + 2;
-      expect(csp.BindingsTestType.aliveCount).toBe(expectedLifetimes);
+      expect(csp.BindingsTestType.aliveCount()).toBe(expectedLifetimes);
 
       /* An optional is just `T[] | undefined` on the JS side, so it clones as a plain array */
       liftedOptOfArrayArg = csp.cloneArray(optOfArrayArg!);
-      expect(csp.BindingsTestType.aliveCount).toBe(expectedLifetimes);
+      expect(csp.BindingsTestType.aliveCount()).toBe(expectedLifetimes);
     });
 
     expect(callbackCalled).toBe(true);
@@ -147,9 +147,9 @@ describe('clone ', () => {
     expect(liftedOptOfArrayArg?.[1]?.name).toBe('Two');
 
     /* The clones keep both elements alive until we dispose them */
-    expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount + 2);
+    expect(csp.BindingsTestType.aliveCount()).toBe(beforeAliveCount + 2);
     csp.disposeArray(liftedOptOfArrayArg);
-    expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount);
+    expect(csp.BindingsTestType.aliveCount()).toBe(beforeAliveCount);
 
     /* Deleting again will throw */
     expect(() => csp.disposeArray(liftedOptOfArrayArg)).toThrow();
@@ -160,25 +160,25 @@ describe('clone ', () => {
 
     let callbackCalled = false;
     let liftedArrayOfOptArg: (BindingsTestType | undefined)[] = [];
-    let beforeAliveCount = csp.BindingsTestType.aliveCount;
+    let beforeAliveCount = csp.BindingsTestType.aliveCount();
     helper.callbackFunctionArrayOfSomeNullOpt((arrayOfSomeNullOptArg) => {
       callbackCalled = true;
 
       /* One null optional, one present, thus only a single lifetime */
       let expectedLifetimes = beforeAliveCount + 1;
-      expect(csp.BindingsTestType.aliveCount).toBe(expectedLifetimes);
+      expect(csp.BindingsTestType.aliveCount()).toBe(expectedLifetimes);
       /* cloneArray walk should be lenient to undefined, and allow the clone */
       liftedArrayOfOptArg = csp.cloneArray(arrayOfSomeNullOptArg);
-      expect(csp.BindingsTestType.aliveCount).toBe(expectedLifetimes);
+      expect(csp.BindingsTestType.aliveCount()).toBe(expectedLifetimes);
     });
 
     expect(callbackCalled).toBe(true);
     expect(liftedArrayOfOptArg?.[0]).toBeUndefined();
     expect(liftedArrayOfOptArg?.[1]?.name).toBe('Two');
 
-    expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount + 1);
+    expect(csp.BindingsTestType.aliveCount()).toBe(beforeAliveCount + 1);
     csp.disposeArray(liftedArrayOfOptArg);
-    expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount);
+    expect(csp.BindingsTestType.aliveCount()).toBe(beforeAliveCount);
 
     /* Deleting again will throw */
     expect(() => csp.disposeArray(liftedArrayOfOptArg)).toThrow();
@@ -186,7 +186,7 @@ describe('clone ', () => {
 
   /* Not really a necessary part of the interface, but ensure that we don't explode when doing a grab-bag array */
   it('Clone a mixed array of handles and plain JS values', () => {
-    let beforeAliveCount = csp.BindingsTestType.aliveCount;
+    let beforeAliveCount = csp.BindingsTestType.aliveCount();
 
     let handleA = csp.BindingsTestType.create(1, 'One');
     let handleB = csp.BindingsTestType.create(2, 'Two');
@@ -195,15 +195,15 @@ describe('clone ', () => {
     let mixed: any[] = [handleA, 42, 'a string', { key: 'val' }, null, [handleB, { boolkey: true }]];
 
     /* Only the two handles incur lifetimes; the plain values do not */
-    expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount + 2);
+    expect(csp.BindingsTestType.aliveCount()).toBe(beforeAliveCount + 2);
 
     let cloned = csp.cloneArray(mixed);
     /* Get rid of the original handles, reference count will be held */
     csp.disposeArray(mixed);
-    expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount + 2);
+    expect(csp.BindingsTestType.aliveCount()).toBe(beforeAliveCount + 2);
 
     /* Cloning is a reference count shallow copy, should not incur lifetimes */
-    expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount + 2);
+    expect(csp.BindingsTestType.aliveCount()).toBe(beforeAliveCount + 2);
 
     expect(cloned).not.toBe(mixed);
     expect(cloned[0]).not.toBe(handleA);
@@ -221,7 +221,7 @@ describe('clone ', () => {
     expect(cloned[5][1]).toBe(mixed[5][1]);
 
     csp.disposeArray(cloned);
-    expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount);
+    expect(csp.BindingsTestType.aliveCount()).toBe(beforeAliveCount);
 
     /* Deleting again will throw */
     expect(() => csp.disposeArray(cloned)).toThrow();

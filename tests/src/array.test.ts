@@ -225,7 +225,7 @@ describe('CSPFoundation', () => {
    */
   it.skip('Repeated sets do not grow lifetime', () => {
     using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
-    const beforeAliveCount = csp.BindingsTestType.aliveCount;
+    const beforeAliveCount = csp.BindingsTestType.aliveCount();
 
     for (let i = 0; i < 10; ++i) {
       {
@@ -233,24 +233,24 @@ describe('CSPFoundation', () => {
         bindingsArrayHelper.setArrayFullTypeByValue([elem]);
         // elem disposed here, meaning the only copy is in the C++ backend
       }
-      expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount + 1);
+      expect(csp.BindingsTestType.aliveCount()).toBe(beforeAliveCount + 1);
     }
 
     // Should not have grown as the old data should have been destructed on each loop iteration.
-    expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount + 1);
+    expect(csp.BindingsTestType.aliveCount()).toBe(beforeAliveCount + 1);
   });
 
   /* Array of Pointers tests */
 
   it('Round trip array of pointers', () => {
     using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
-    const beforeAliveCount = csp.BindingsTestType.aliveCount;
+    const beforeAliveCount = csp.BindingsTestType.aliveCount();
     using elem1 = csp.BindingsTestType.create(1, 'one');
     using elem2 = csp.BindingsTestType.create(2, 'two');
     const newArr = [elem1, elem2];
 
     //This will have made 2 more elements, owned by the JS stack
-    const afterAllocationAliveCount = csp.BindingsTestType.aliveCount;
+    const afterAllocationAliveCount = csp.BindingsTestType.aliveCount();
     expect(afterAllocationAliveCount).equal(beforeAliveCount + 2);
 
     bindingsArrayHelper.setArrayOfPointersByValue(newArr);
@@ -262,12 +262,12 @@ describe('CSPFoundation', () => {
     expect(csp.arrayEquals(newArr, roundTripArr)).toBe(true);
 
     // There should have been no additional allocations caused by the round trip
-    expect(csp.BindingsTestType.aliveCount).equals(afterAllocationAliveCount);
+    expect(csp.BindingsTestType.aliveCount()).equals(afterAllocationAliveCount);
   });
 
   it('Empty pointer array round trip', () => {
     using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
-    const beforeAliveCount = csp.BindingsTestType.aliveCount;
+    const beforeAliveCount = csp.BindingsTestType.aliveCount();
 
     bindingsArrayHelper.setArrayOfPointersByValue([]);
     let roundTripArr = bindingsArrayHelper.getArrayOfPointersByValue();
@@ -276,12 +276,12 @@ describe('CSPFoundation', () => {
     expect(csp.arrayEquals([], roundTripArr)).toBe(true);
 
     // There should have been no allocations caused by the round trip
-    expect(csp.BindingsTestType.aliveCount).equals(beforeAliveCount);
+    expect(csp.BindingsTestType.aliveCount()).equals(beforeAliveCount);
   });
 
   it('Only nulls pointer array round trip', () => {
     using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
-    const beforeAliveCount = csp.BindingsTestType.aliveCount;
+    const beforeAliveCount = csp.BindingsTestType.aliveCount();
 
     bindingsArrayHelper.setArrayOfPointersByValue([null, null, null]);
     let roundTripArr = bindingsArrayHelper.getArrayOfPointersByValue();
@@ -290,18 +290,18 @@ describe('CSPFoundation', () => {
     expect(csp.arrayEquals([null, null, null], roundTripArr)).toBe(true);
 
     // There should have been no allocations caused by the round trip
-    expect(csp.BindingsTestType.aliveCount).equals(beforeAliveCount);
+    expect(csp.BindingsTestType.aliveCount()).equals(beforeAliveCount);
   });
 
   it('Array containing nulls pointer array round trip', () => {
     using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
-    const beforeAliveCount = csp.BindingsTestType.aliveCount;
+    const beforeAliveCount = csp.BindingsTestType.aliveCount();
     using elem1 = csp.BindingsTestType.create(1, 'one');
     using elem2 = csp.BindingsTestType.create(2, 'two');
     const newArr = [elem1, null, elem2];
 
     //This will have made 2 more elements, owned by the JS stack
-    const afterAllocationAliveCount = csp.BindingsTestType.aliveCount;
+    const afterAllocationAliveCount = csp.BindingsTestType.aliveCount();
     expect(afterAllocationAliveCount).equal(beforeAliveCount + 2);
 
     bindingsArrayHelper.setArrayOfPointersByValue(newArr);
@@ -314,7 +314,7 @@ describe('CSPFoundation', () => {
     expect(csp.arrayEquals(newArr, roundTripArr)).toBe(true);
 
     // There should have been no additional allocations caused by the round trip
-    expect(csp.BindingsTestType.aliveCount).equals(afterAllocationAliveCount);
+    expect(csp.BindingsTestType.aliveCount()).equals(afterAllocationAliveCount);
   });
 
   it('Mutating element via pointer array is reflected in original handle', () => {

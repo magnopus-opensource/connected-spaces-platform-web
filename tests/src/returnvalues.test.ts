@@ -17,37 +17,37 @@ describe('equality', () => {
 
   it('Value returns are disposable', () => {
     using helper = csp.ContainerBindingMechanismsTestType.create();
-    const before = csp.BindingsTestType.aliveCount;
+    const before = csp.BindingsTestType.aliveCount();
 
     {
       using singleValue = helper.getSingleFullTypeByValue();
       expect(singleValue.name).toBe('One');
       expect(singleValue.value).toBe(1);
-      expect(csp.BindingsTestType.aliveCount).toBe(before + 1);
+      expect(csp.BindingsTestType.aliveCount()).toBe(before + 1);
       expect(singleValue.value).toBe(1);
     }
 
-    expect(csp.BindingsTestType.aliveCount).toBe(before);
+    expect(csp.BindingsTestType.aliveCount()).toBe(before);
   });
 
   it('Const ref returns are disposable', () => {
     using helper = csp.ContainerBindingMechanismsTestType.create();
-    const before = csp.BindingsTestType.aliveCount;
+    const before = csp.BindingsTestType.aliveCount();
 
     {
       using singleValueConstRef = helper.getSingleFullTypeAsConstRef();
       expect(singleValueConstRef.name).toBe('One');
       expect(singleValueConstRef.value).toBe(1);
-      expect(csp.BindingsTestType.aliveCount).toBe(before + 1);
+      expect(csp.BindingsTestType.aliveCount()).toBe(before + 1);
       expect(singleValueConstRef.value).toBe(1);
     }
 
-    expect(csp.BindingsTestType.aliveCount).toBe(before);
+    expect(csp.BindingsTestType.aliveCount()).toBe(before);
   });
 
   it('Pointer returns are non owning', () => {
     using helper = csp.ContainerBindingMechanismsTestType.create();
-    const before = csp.BindingsTestType.aliveCount;
+    const before = csp.BindingsTestType.aliveCount();
 
     const singlePointer = helper.getSingleFullTypeAsPointer();
     expect(singlePointer?.name).toBe('One');
@@ -58,6 +58,6 @@ describe('equality', () => {
     expect(() => singlePointer?.[Symbol.dispose]()).toThrow();
 
     expect(singlePointer?.value).toBe(1);
-    expect(csp.BindingsTestType.aliveCount).toBe(before);
+    expect(csp.BindingsTestType.aliveCount()).toBe(before);
   });
 });

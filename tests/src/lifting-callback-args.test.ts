@@ -73,16 +73,16 @@ for (const { mode, offThread } of CALLBACK_THREADING_MODE) {
 
       let callbackCalled = false;
       let liftedValArg: BindingsTestType | undefined;
-      let beforeAliveCount = csp.BindingsTestType.aliveCount;
+      let beforeAliveCount = csp.BindingsTestType.aliveCount();
       helper.callbackFunctionValueArgByConstRef((valueArg) => {
         callbackCalled = true;
         expect(valueArg.name).toBe('One');
 
         /* Cloning is a reference count shallow copy, should not incur lifetimes */
         let expectedLifetimes = beforeAliveCount + 1;
-        expect(csp.BindingsTestType.aliveCount).toBe(expectedLifetimes);
+        expect(csp.BindingsTestType.aliveCount()).toBe(expectedLifetimes);
         liftedValArg = valueArg.clone();
-        expect(csp.BindingsTestType.aliveCount).toBe(expectedLifetimes);
+        expect(csp.BindingsTestType.aliveCount()).toBe(expectedLifetimes);
       });
 
       await until(() => callbackCalled);
@@ -90,9 +90,9 @@ for (const { mode, offThread } of CALLBACK_THREADING_MODE) {
       expect(liftedValArg?.name).toBe('One');
 
       /* Doing the delete now should actually delete C++ memory, as the reference count will hit zero */
-      expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount + 1);
+      expect(csp.BindingsTestType.aliveCount()).toBe(beforeAliveCount + 1);
       liftedValArg?.delete();
-      expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount);
+      expect(csp.BindingsTestType.aliveCount()).toBe(beforeAliveCount);
 
       /* Deleting again should throw, not crash */
       expect(() => liftedValArg?.delete()).toThrow();
@@ -170,30 +170,30 @@ for (const { mode, offThread } of CALLBACK_THREADING_MODE) {
       using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
       let callbackCalled = false;
-      let beforeAliveCount = csp.BindingsTestType.aliveCount; // We should never modify lifetimes dealing with pointers
+      let beforeAliveCount = csp.BindingsTestType.aliveCount(); // We should never modify lifetimes dealing with pointers
       let liftedPointerArg: BindingsTestType | undefined;
 
       helper.callbackFunctionPointerArg((pointerArg) => {
         callbackCalled = true;
         liftedPointerArg = pointerArg.clone();
-        expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount);
+        expect(csp.BindingsTestType.aliveCount()).toBe(beforeAliveCount);
       });
 
       await until(() => callbackCalled);
       expect(callbackCalled).toBe(true);
       expect(liftedPointerArg?.name).toBe('One');
-      expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount);
+      expect(csp.BindingsTestType.aliveCount()).toBe(beforeAliveCount);
 
       /* Even if we delete the clone, it doesn't effect underlying memory, and cloning to get a new handle incurs no new lifetimes */
       let alternateHandleToPtr = liftedPointerArg?.clone();
-      expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount);
+      expect(csp.BindingsTestType.aliveCount()).toBe(beforeAliveCount);
 
       liftedPointerArg?.delete();
       /* Accessing liftedPointerArg still throws however, you've invalidated the handle nonetheless */
       expect(() => liftedPointerArg?.delete()).toThrow();
       expect(alternateHandleToPtr?.name).toBe('One');
 
-      expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount);
+      expect(csp.BindingsTestType.aliveCount()).toBe(beforeAliveCount);
     });
 
     it('Try to reference a container value arg throws', async () => {
@@ -218,18 +218,18 @@ for (const { mode, offThread } of CALLBACK_THREADING_MODE) {
 
       let callbackCalled = false;
       let liftedValContainerArg: BindingsTestType[] = [];
-      let beforeAliveCount = csp.BindingsTestType.aliveCount;
+      let beforeAliveCount = csp.BindingsTestType.aliveCount();
       helper.callbackFunctionContainerOfValuesByConstRef((valueContainerArg) => {
         callbackCalled = true;
         expect(valueContainerArg[0]?.name).toBe('One');
 
         /* Cloning is a reference count shallow copy, should not incur lifetimes */
         let expectedLifetimes = beforeAliveCount + 2;
-        expect(csp.BindingsTestType.aliveCount).toBe(expectedLifetimes);
+        expect(csp.BindingsTestType.aliveCount()).toBe(expectedLifetimes);
 
         liftedValContainerArg = csp.cloneArray(valueContainerArg);
 
-        expect(csp.BindingsTestType.aliveCount).toBe(expectedLifetimes);
+        expect(csp.BindingsTestType.aliveCount()).toBe(expectedLifetimes);
       });
 
       await until(() => callbackCalled);
@@ -237,9 +237,9 @@ for (const { mode, offThread } of CALLBACK_THREADING_MODE) {
       expect(liftedValContainerArg?.[0]?.name).toBe('One');
 
       /* Doing the delete now should actually delete C++ memory, as the reference count will hit zero */
-      expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount + 2);
+      expect(csp.BindingsTestType.aliveCount()).toBe(beforeAliveCount + 2);
       csp.disposeArray(liftedValContainerArg);
-      expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount);
+      expect(csp.BindingsTestType.aliveCount()).toBe(beforeAliveCount);
 
       /* Deleting again will throw */
       expect(() => csp.disposeArray(liftedValContainerArg)).toThrow();
