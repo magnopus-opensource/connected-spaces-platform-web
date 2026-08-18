@@ -17,6 +17,11 @@ import createModule, { type MainModule } from 'connected-spaces-platform-binding
  * `await untilCallbacksSettled` everywhere.
  * There is an internal latch that keeps track of how many off-thread callbacks are in flight, so doing this keeps
  * us synchronized.
+ *
+ * Note that if your test does not interact with lifetimes, in that is does not create ANY csp objects,
+ * (this effectively means that it only uses zero-arg or primitive callbacks), then you don't need to use
+ * `untilCallbacksSettled`, a regular `await` is fine. `untilCallbacksSettled` is only a thing that matters
+ * for lifetime inspection of dying objects, which isn't a normal thing to be doing outside of tests.
  */
 
 /* "mode" is just used to print the test name nicely. */
@@ -169,7 +174,7 @@ for (const { mode, offThread } of CALLBACK_THREADING_MODE) {
         throw new Error('test error');
       });
 
-      await untilCallbacksSettled(csp, () => callbackCalled);
+      await until(() => callbackCalled);
       expect(callbackCalled).toBe(true);
 
       expect(errorSpy).toHaveBeenCalledWith(
