@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { loadCSP } from '../loadModule';
-import { until, forceHeapGrowth } from './testUtils';
+import { until, untilCallbacksSettled, forceHeapGrowth } from './testUtils';
 import createModule, { type MainModule } from 'connected-spaces-platform-bindings';
 
 /*
@@ -14,12 +14,14 @@ import createModule, { type MainModule } from 'connected-spaces-platform-binding
  * bridging to c++, and any "magic" might get in the way of understanding that.
  *
  * Every test runs twice, once on-thread, once off-thread. That's why we're doing
- * `await until(() => callbackCalled);` everywhere. We're leaning on the fact that JS
- * is inherently single-threaded here, as we tend to wait on a bool. Normally (ie, in C++),
- * that wouldn't be good enough as the main function pointer could resume before the callback
- * has torn down (and thus before our RAII handler has run).
- * However, due to the single threaded nature of things, the `until` timer can only run between
- * turns anyway, so it's always going to finish the callback.
+ * `await untilCallbacksSettled` everywhere.
+ * There is an internal latch that keeps track of how many off-thread callbacks are in flight, so doing this keeps
+ * us synchronized.
+ *
+ * Note that if your test does not interact with lifetimes, in that is does not create ANY csp objects,
+ * (this effectively means that it only uses zero-arg or primitive callbacks), then you don't need to use
+ * `untilCallbacksSettled`, a regular `await` is fine. `untilCallbacksSettled` is only a thing that matters
+ * for lifetime inspection of dying objects, which isn't a normal thing to be doing outside of tests.
  */
 
 /* "mode" is just used to print the test name nicely. */
@@ -44,7 +46,7 @@ for (const { mode, offThread } of CALLBACK_THREADING_MODE) {
         callbackCalled = true;
       });
 
-      await until(() => callbackCalled);
+      await untilCallbacksSettled(csp, () => callbackCalled);
       expect(callbackCalled).toBe(true);
     });
 
@@ -57,7 +59,7 @@ for (const { mode, offThread } of CALLBACK_THREADING_MODE) {
         expect(primitiveArg).toBe(10);
       });
 
-      await until(() => callbackCalled);
+      await untilCallbacksSettled(csp, () => callbackCalled);
       expect(callbackCalled).toBe(true);
     });
 
@@ -71,7 +73,7 @@ for (const { mode, offThread } of CALLBACK_THREADING_MODE) {
         expect(pointerArg.name).toBe('One');
       });
 
-      await until(() => callbackCalled);
+      await untilCallbacksSettled(csp, () => callbackCalled);
       expect(callbackCalled).toBe(true);
     });
 
@@ -85,7 +87,7 @@ for (const { mode, offThread } of CALLBACK_THREADING_MODE) {
         expect(valueArg.name).toBe('One');
       });
 
-      await until(() => callbackCalled);
+      await untilCallbacksSettled(csp, () => callbackCalled);
       expect(callbackCalled).toBe(true);
     });
 
@@ -102,7 +104,7 @@ for (const { mode, offThread } of CALLBACK_THREADING_MODE) {
         expect(pointerContainerArg[1]?.name).toBe('Two');
       });
 
-      await until(() => callbackCalled);
+      await untilCallbacksSettled(csp, () => callbackCalled);
       expect(callbackCalled).toBe(true);
     });
 
@@ -119,7 +121,7 @@ for (const { mode, offThread } of CALLBACK_THREADING_MODE) {
         expect(valueContainerArg[1]?.name).toBe('Two');
       });
 
-      await until(() => callbackCalled);
+      await untilCallbacksSettled(csp, () => callbackCalled);
       expect(callbackCalled).toBe(true);
     });
 
@@ -133,7 +135,7 @@ for (const { mode, offThread } of CALLBACK_THREADING_MODE) {
         expect(primitiveArg2).toBe(2);
       });
 
-      await until(() => callbackCalled);
+      await untilCallbacksSettled(csp, () => callbackCalled);
       expect(callbackCalled).toBe(true);
     });
 
@@ -200,7 +202,7 @@ for (const { mode, offThread } of CALLBACK_THREADING_MODE) {
         expect(() => pointerArg[Symbol.dispose]()).toThrow();
       });
 
-      await until(() => callbackCalled);
+      await untilCallbacksSettled(csp, () => callbackCalled);
       expect(callbackCalled).toBe(true);
     });
 
@@ -214,7 +216,7 @@ for (const { mode, offThread } of CALLBACK_THREADING_MODE) {
         expect(valueArg?.name).toBe('One');
       });
 
-      await until(() => callbackCalled);
+      await untilCallbacksSettled(csp, () => callbackCalled);
       expect(callbackCalled).toBe(true);
     });
 
@@ -228,7 +230,7 @@ for (const { mode, offThread } of CALLBACK_THREADING_MODE) {
         expect(pointerArg?.name).toBe('One');
       });
 
-      await until(() => callbackCalled);
+      await untilCallbacksSettled(csp, () => callbackCalled);
       expect(callbackCalled).toBe(true);
     });
 
@@ -245,7 +247,7 @@ for (const { mode, offThread } of CALLBACK_THREADING_MODE) {
         expect(arrayOfOptArg[1]?.name).toBe('Two');
       });
 
-      await until(() => callbackCalled);
+      await untilCallbacksSettled(csp, () => callbackCalled);
       expect(callbackCalled).toBe(true);
     });
 
@@ -263,7 +265,7 @@ for (const { mode, offThread } of CALLBACK_THREADING_MODE) {
         expect(optOfArrayArg?.[1]?.name).toBe('Two');
       });
 
-      await until(() => callbackCalled);
+      await untilCallbacksSettled(csp, () => callbackCalled);
       expect(callbackCalled).toBe(true);
     });
 
@@ -280,7 +282,7 @@ for (const { mode, offThread } of CALLBACK_THREADING_MODE) {
         expect(arrayOfSomeNullOptArg?.[1]?.name).toBe('Two');
       });
 
-      await until(() => callbackCalled);
+      await untilCallbacksSettled(csp, () => callbackCalled);
       expect(callbackCalled).toBe(true);
     });
 
@@ -293,7 +295,7 @@ for (const { mode, offThread } of CALLBACK_THREADING_MODE) {
         expect(nullValueOptArg).toBeUndefined();
       });
 
-      await until(() => callbackCalled);
+      await untilCallbacksSettled(csp, () => callbackCalled);
       expect(callbackCalled).toBe(true);
     });
 
@@ -306,7 +308,7 @@ for (const { mode, offThread } of CALLBACK_THREADING_MODE) {
         expect(nullPointerOptArg).toBeUndefined();
       });
 
-      await until(() => callbackCalled);
+      await untilCallbacksSettled(csp, () => callbackCalled);
       expect(callbackCalled).toBe(true);
     });
 
@@ -399,128 +401,128 @@ for (const { mode, offThread } of CALLBACK_THREADING_MODE) {
       using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
       let callbackCalled = false;
-      const beforeCallbackCount = csp.BindingsTestType.aliveCount;
+      const beforeCallbackCount = csp.BindingsTestType.aliveCount();
 
       helper.callbackFunctionValueArgByConstRef((byRefArg) => {
         callbackCalled = true;
-        expect(csp.BindingsTestType.aliveCount).toBe(beforeCallbackCount + 1);
+        expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount + 1);
       });
 
-      await until(() => callbackCalled);
+      await untilCallbacksSettled(csp, () => callbackCalled);
       expect(callbackCalled).toBe(true);
-      expect(csp.BindingsTestType.aliveCount).toBe(beforeCallbackCount);
+      expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount);
     });
 
     it('Callback value arg disposes at end of scope automatically', async () => {
       using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
       let callbackCalled = false;
-      const beforeCallbackCount = csp.BindingsTestType.aliveCount;
+      const beforeCallbackCount = csp.BindingsTestType.aliveCount();
 
       helper.callbackFunctionValueArg((valueArg) => {
         callbackCalled = true;
-        expect(csp.BindingsTestType.aliveCount).toBe(beforeCallbackCount + 2);
+        expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount + 2);
       });
 
-      await until(() => callbackCalled);
+      await untilCallbacksSettled(csp, () => callbackCalled);
       expect(callbackCalled).toBe(true);
-      expect(csp.BindingsTestType.aliveCount).toBe(beforeCallbackCount);
+      expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount);
     });
 
     it('Callback non-owning pointer arg does nothing at end of scope automatically', async () => {
       using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
       let callbackCalled = false;
-      const beforeCallbackCount = csp.BindingsTestType.aliveCount;
+      const beforeCallbackCount = csp.BindingsTestType.aliveCount();
 
       helper.callbackFunctionPointerArg((pointerArg) => {
         callbackCalled = true;
         // Pointers should not incur additional lifetimes
-        expect(csp.BindingsTestType.aliveCount).toBe(beforeCallbackCount);
+        expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount);
       });
 
-      await until(() => callbackCalled);
+      await untilCallbacksSettled(csp, () => callbackCalled);
       expect(callbackCalled).toBe(true);
-      expect(csp.BindingsTestType.aliveCount).toBe(beforeCallbackCount);
+      expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount);
     });
 
     it('Callback value container by const ref disposes contents at end of scope automatically', async () => {
       using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
       let callbackCalled = false;
-      const beforeCallbackCount = csp.BindingsTestType.aliveCount;
+      const beforeCallbackCount = csp.BindingsTestType.aliveCount();
 
       helper.callbackFunctionContainerOfValuesByConstRef((valueContainerArg) => {
         callbackCalled = true;
         expect(valueContainerArg.length).toBe(2);
-        expect(csp.BindingsTestType.aliveCount).toBe(beforeCallbackCount + 2);
+        expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount + 2);
       });
 
-      await until(() => callbackCalled);
+      await untilCallbacksSettled(csp, () => callbackCalled);
       expect(callbackCalled).toBe(true);
-      expect(csp.BindingsTestType.aliveCount).toBe(beforeCallbackCount);
+      expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount);
     });
 
     it('Callback value container disposes contents at end of scope automatically', async () => {
       using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
       let callbackCalled = false;
-      const beforeCallbackCount = csp.BindingsTestType.aliveCount;
+      const beforeCallbackCount = csp.BindingsTestType.aliveCount();
 
       helper.callbackFunctionContainerOfValues((valueContainerArg) => {
         callbackCalled = true;
         expect(valueContainerArg.length).toBe(2);
         // We incur an additional copy due to not being const ref
-        expect(csp.BindingsTestType.aliveCount).toBe(beforeCallbackCount + 4);
+        expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount + 4);
       });
 
-      await until(() => callbackCalled);
+      await untilCallbacksSettled(csp, () => callbackCalled);
       expect(callbackCalled).toBe(true);
-      expect(csp.BindingsTestType.aliveCount).toBe(beforeCallbackCount);
+      expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount);
     });
 
     it('Callback non-owning pointer container does nothing with contents at end of scope automatically', async () => {
       using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
       let callbackCalled = false;
-      const beforeCallbackCount = csp.BindingsTestType.aliveCount;
+      const beforeCallbackCount = csp.BindingsTestType.aliveCount();
 
       helper.callbackFunctionContainerOfPointers((pointerContainerArg) => {
         callbackCalled = true;
         expect(pointerContainerArg.length).toBe(2);
         // Pointers should not incur any new lifetimes
-        expect(csp.BindingsTestType.aliveCount).toBe(beforeCallbackCount);
+        expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount);
       });
 
-      await until(() => callbackCalled);
+      await untilCallbacksSettled(csp, () => callbackCalled);
       expect(callbackCalled).toBe(true);
-      expect(csp.BindingsTestType.aliveCount).toBe(beforeCallbackCount);
+      expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount);
     });
 
     it('Callback nested value container by const ref disposes contents at end of scope automatically', async () => {
       using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
       let callbackCalled = false;
-      const beforeCallbackCount = csp.BindingsTestType.aliveCount;
+      const beforeCallbackCount = csp.BindingsTestType.aliveCount();
 
       helper.callbackFunctionNestedContainerOfValuesByConstRef((nestedValueContainerArg) => {
         callbackCalled = true;
         expect(nestedValueContainerArg.size).toBe(2);
         expect(nestedValueContainerArg.get(0)?.length).toBe(2);
         expect(nestedValueContainerArg.get(1)?.length).toBe(2);
-        expect(csp.BindingsTestType.aliveCount).toBe(beforeCallbackCount + 4);
+        expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount + 4);
       });
 
-      await until(() => callbackCalled);
+      await untilCallbacksSettled(csp, () => callbackCalled);
       expect(callbackCalled).toBe(true);
-      expect(csp.BindingsTestType.aliveCount).toBe(beforeCallbackCount);
+      expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount);
     });
 
     it('Callback nested value container disposes contents at end of scope automatically', async () => {
       using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
       let callbackCalled = false;
-      const beforeCallbackCount = csp.BindingsTestType.aliveCount;
+      const beforeCallbackCount = csp.BindingsTestType.aliveCount();
 
       helper.callbackFunctionNestedContainerOfValues((nestedValueContainerArg) => {
         callbackCalled = true;
@@ -528,19 +530,19 @@ for (const { mode, offThread } of CALLBACK_THREADING_MODE) {
         expect(nestedValueContainerArg.get(0)?.length).toBe(2);
         expect(nestedValueContainerArg.get(1)?.length).toBe(2);
         // We incur an additional copy per element due to not using const ref
-        expect(csp.BindingsTestType.aliveCount).toBe(beforeCallbackCount + 8);
+        expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount + 8);
       });
 
-      await until(() => callbackCalled);
+      await untilCallbacksSettled(csp, () => callbackCalled);
       expect(callbackCalled).toBe(true);
-      expect(csp.BindingsTestType.aliveCount).toBe(beforeCallbackCount);
+      expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount);
     });
 
     it('Callback nested pointer container does nothing with contents at end of scope automatically', async () => {
       using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
       let callbackCalled = false;
-      const beforeCallbackCount = csp.BindingsTestType.aliveCount;
+      const beforeCallbackCount = csp.BindingsTestType.aliveCount();
 
       helper.callbackFunctionNestedContainerOfPointers((nestedPointerContainerArg) => {
         callbackCalled = true;
@@ -548,19 +550,19 @@ for (const { mode, offThread } of CALLBACK_THREADING_MODE) {
         expect(nestedPointerContainerArg.get(0)?.length).toBe(2);
         expect(nestedPointerContainerArg.get(1)?.length).toBe(2);
         // Pointers should not incur additional lifetimes
-        expect(csp.BindingsTestType.aliveCount).toBe(beforeCallbackCount);
+        expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount);
       });
 
-      await until(() => callbackCalled);
+      await untilCallbacksSettled(csp, () => callbackCalled);
       expect(callbackCalled).toBe(true);
-      expect(csp.BindingsTestType.aliveCount).toBe(beforeCallbackCount);
+      expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount);
     });
 
     it('Callback with many mixed argument types', async () => {
       using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
       let callbackCalled = false;
-      const beforeCallbackCount = csp.BindingsTestType.aliveCount;
+      const beforeCallbackCount = csp.BindingsTestType.aliveCount();
 
       helper.callbackFunctionMixedArgs(
         (valueContainerArg, constRefContainerArg, pointerContainerArg, primitiveArg, valueArg, pointerArg) => {
@@ -574,43 +576,43 @@ for (const { mode, offThread } of CALLBACK_THREADING_MODE) {
         }
       );
 
-      await until(() => callbackCalled);
+      await untilCallbacksSettled(csp, () => callbackCalled);
       expect(callbackCalled).toBe(true);
 
       // Should have the same lifetimes even despite all the args
-      expect(csp.BindingsTestType.aliveCount).toBe(beforeCallbackCount);
+      expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount);
     });
 
     it('Callback Optional Value Arg Disposal', async () => {
       using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
-      const beforeCallbackCount = csp.BindingsTestType.aliveCount;
+      const beforeCallbackCount = csp.BindingsTestType.aliveCount();
 
       let callbackCalled = false;
       helper.callbackFunctionValueOpt((valueArg) => {
         callbackCalled = true;
-        expect(csp.BindingsTestType.aliveCount).toBe(beforeCallbackCount + 1);
+        expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount + 1);
       });
 
-      await until(() => callbackCalled);
+      await untilCallbacksSettled(csp, () => callbackCalled);
       expect(callbackCalled).toBe(true);
-      expect(csp.BindingsTestType.aliveCount).toBe(beforeCallbackCount);
+      expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount);
     });
 
     it('Callback Optional Pointer Arg Disposal', async () => {
       using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
-      const beforeCallbackCount = csp.BindingsTestType.aliveCount;
+      const beforeCallbackCount = csp.BindingsTestType.aliveCount();
 
       let callbackCalled = false;
       helper.callbackFunctionPointerOpt((pointerArg) => {
         callbackCalled = true;
-        expect(csp.BindingsTestType.aliveCount).toBe(beforeCallbackCount);
+        expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount);
       });
 
-      await until(() => callbackCalled);
+      await untilCallbacksSettled(csp, () => callbackCalled);
       expect(callbackCalled).toBe(true);
-      expect(csp.BindingsTestType.aliveCount).toBe(beforeCallbackCount);
+      expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount);
     });
   });
 }

@@ -10,6 +10,7 @@
 #pragma once
 
 #include "emscripten/val.h"
+#include <atomic>
 #include <string>
 /*
  * A nonsense, instrumentable C++ object that we can bind and test mechanisms with.
@@ -33,7 +34,7 @@ public:
     bool operator==(const BindingsTestType& other) const;
 
     // Test instrumentation, keep track of how many instances of this object exist
-    static inline int AliveCount = 0;
+    static inline std::atomic<int> AliveCount { 0 };
 
 private:
     int m_value = 0;

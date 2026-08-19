@@ -26,10 +26,11 @@
 #include "CSP/Common/String.h"
 #include "emscripten/bind.h"
 #include "emscripten/val.h"
+#include <atomic>
 #include <iostream>
 
 constexpr bool PRINT_BINDINGSTESTTYPE_OPERATOR_INSTRUMENTATION = false;
-inline int UniqueIDCounter = 0; //Mutable static counter just to give every type a unique ID.
+inline std::atomic<int> UniqueIDCounter { 0 }; //Mutable static counter just to give every type a unique ID.
 
 BindingsTestType::BindingsTestType() : m_uniqueID(++UniqueIDCounter)
 {
@@ -120,7 +121,8 @@ EMSCRIPTEN_BINDINGS(CSPTestTypeBindings)
         .property("value", &BindingsTestType::GetValue, &BindingsTestType::SetValue)
         .property("name", &BindingsTestType::GetName, &BindingsTestType::SetName)
         .function("equals", &BindingsTestType::operator==)
-        .class_property("aliveCount", &BindingsTestType::AliveCount);
+        .class_function(
+            "aliveCount", +[] { return BindingsTestType::AliveCount.load(); });
 
     //Register the named version of the non-owning pointer type, as we use it as a raw `val` via NonOwningVal.
     emscripten::register_type<BindingsTestTypePointer>("BindingsTestType | null");

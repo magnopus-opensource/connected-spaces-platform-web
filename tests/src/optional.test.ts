@@ -123,16 +123,16 @@ describe('Optional bindings', () => {
     using elem = csp.BindingsTestType.create(1, 'one');
 
     helper.setOptionalFullTypeByValue(elem);
-    const beforeAliveCount = csp.BindingsTestType.aliveCount;
+    const beforeAliveCount = csp.BindingsTestType.aliveCount();
 
     {
       using _roundTrip = helper.getOptionalFullTypeByValue();
 
-      const countDuringAlive = csp.BindingsTestType.aliveCount;
+      const countDuringAlive = csp.BindingsTestType.aliveCount();
       expect(countDuringAlive).toBe(beforeAliveCount + 1);
     }
 
-    const afterAliveCount = csp.BindingsTestType.aliveCount;
+    const afterAliveCount = csp.BindingsTestType.aliveCount();
     expect(afterAliveCount).toBe(beforeAliveCount);
   });
 
@@ -141,16 +141,16 @@ describe('Optional bindings', () => {
     using elem = csp.BindingsTestType.create(1, 'one');
 
     helper.setOptionalFullTypeByConstRef(elem);
-    const beforeAliveCount = csp.BindingsTestType.aliveCount;
+    const beforeAliveCount = csp.BindingsTestType.aliveCount();
 
     {
       using _roundTrip = helper.getOptionalFullTypeByConstRef();
 
-      const countDuringAlive = csp.BindingsTestType.aliveCount;
+      const countDuringAlive = csp.BindingsTestType.aliveCount();
       expect(countDuringAlive).toBe(beforeAliveCount + 1);
     }
 
-    const afterAliveCount = csp.BindingsTestType.aliveCount;
+    const afterAliveCount = csp.BindingsTestType.aliveCount();
     expect(afterAliveCount).toBe(beforeAliveCount);
   });
 
@@ -161,11 +161,11 @@ describe('Optional bindings', () => {
 
     helper.setOptionalFullTypeByValue(elem1);
 
-    const beforeAliveCount = csp.BindingsTestType.aliveCount;
+    const beforeAliveCount = csp.BindingsTestType.aliveCount();
 
     helper.setOptionalFullTypeByValue(elem2);
 
-    const afterAliveCount = csp.BindingsTestType.aliveCount;
+    const afterAliveCount = csp.BindingsTestType.aliveCount();
     expect(afterAliveCount).toBe(beforeAliveCount);
   });
 
@@ -261,16 +261,16 @@ describe('Optional bindings', () => {
 
     helper.setOptionalListFullTypeByConstRef(value);
 
-    const aliveCountBefore = csp.BindingsTestType.aliveCount;
+    const aliveCountBefore = csp.BindingsTestType.aliveCount();
 
     {
       using _roundTrip = helper.getOptionalListFullTypeByConstRef();
 
-      const aliveCountDuring = csp.BindingsTestType.aliveCount;
+      const aliveCountDuring = csp.BindingsTestType.aliveCount();
       expect(aliveCountDuring).toBe(aliveCountBefore + value.length);
     }
 
-    const aliveCountAfter = csp.BindingsTestType.aliveCount;
+    const aliveCountAfter = csp.BindingsTestType.aliveCount();
     expect(aliveCountAfter).toBe(aliveCountBefore);
   });
 

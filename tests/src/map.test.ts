@@ -68,7 +68,7 @@ describe('Map bindings', () => {
 
   it('Round trip map of pointers', () => {
     using helper = csp.ContainerBindingMechanismsTestType.create();
-    const beforeAliveCount = csp.BindingsTestType.aliveCount;
+    const beforeAliveCount = csp.BindingsTestType.aliveCount();
     using elem1 = csp.BindingsTestType.create(1, 'one');
     using elem2 = csp.BindingsTestType.create(2, 'two');
     const newMap = new Map([
@@ -77,7 +77,7 @@ describe('Map bindings', () => {
     ]);
 
     // The two creates above are the only allocations; the round trip should add none.
-    const afterAllocationAliveCount = csp.BindingsTestType.aliveCount;
+    const afterAllocationAliveCount = csp.BindingsTestType.aliveCount();
     expect(afterAllocationAliveCount).equal(beforeAliveCount + 2);
 
     helper.setMapOfPointersByValue(newMap);
@@ -86,7 +86,7 @@ describe('Map bindings', () => {
     expect(csp.mapEquals(newMap, roundTrip)).toBe(true);
 
     // Pointer values are non-owning references, so no copies were made.
-    expect(csp.BindingsTestType.aliveCount).equals(afterAllocationAliveCount);
+    expect(csp.BindingsTestType.aliveCount()).equals(afterAllocationAliveCount);
   });
 
   it('Mutating value via pointer map is reflected in original handle', () => {

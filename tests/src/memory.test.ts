@@ -20,47 +20,47 @@ describe('CSPFoundation', () => {
    */
 
   it('Delete releases C++ memory', () => {
-    const before = csp.BindingsTestType.aliveCount;
+    const before = csp.BindingsTestType.aliveCount();
 
     const leaked = csp.BindingsTestType.create(42, 'hello');
-    expect(csp.BindingsTestType.aliveCount).toBe(before + 1);
+    expect(csp.BindingsTestType.aliveCount()).toBe(before + 1);
 
     leaked.delete();
-    expect(csp.BindingsTestType.aliveCount).toBe(before);
+    expect(csp.BindingsTestType.aliveCount()).toBe(before);
   });
 
   it('Releases C++ memory at scope exit', () => {
-    const before = csp.BindingsTestType.aliveCount;
+    const before = csp.BindingsTestType.aliveCount();
 
     {
       using t = csp.BindingsTestType.create(42, 'hello');
-      expect(csp.BindingsTestType.aliveCount).toBe(before + 1);
+      expect(csp.BindingsTestType.aliveCount()).toBe(before + 1);
     }
 
-    expect(csp.BindingsTestType.aliveCount).toBe(before);
+    expect(csp.BindingsTestType.aliveCount()).toBe(before);
   });
 
   it('Releases all C++ memory at scope exit', () => {
-    const before = csp.BindingsTestType.aliveCount;
+    const before = csp.BindingsTestType.aliveCount();
     {
       using a = csp.BindingsTestType.create(42, 'hello');
       using b = csp.BindingsTestType.create(42, 'hello');
       using c = csp.BindingsTestType.create(42, 'hello');
-      expect(csp.BindingsTestType.aliveCount).toBe(before + 3);
+      expect(csp.BindingsTestType.aliveCount()).toBe(before + 3);
     }
-    expect(csp.BindingsTestType.aliveCount).toBe(before);
+    expect(csp.BindingsTestType.aliveCount()).toBe(before);
   });
 
   it('Releases C++ memory when scope exits via exception', () => {
-    const before = csp.BindingsTestType.aliveCount;
+    const before = csp.BindingsTestType.aliveCount();
 
     expect(() => {
       using t = csp.BindingsTestType.create(42, 'hello');
-      expect(csp.BindingsTestType.aliveCount).toBe(before + 1);
+      expect(csp.BindingsTestType.aliveCount()).toBe(before + 1);
       throw new Error('Oh no!');
     }).toThrow('Oh no!');
 
-    expect(csp.BindingsTestType.aliveCount).toBe(before);
+    expect(csp.BindingsTestType.aliveCount()).toBe(before);
   });
 
   it('Throws on double delete', () => {
@@ -134,7 +134,7 @@ describe('CSPFoundation', () => {
     using anchor = csp.BindingsTestType.create(1, 'one');
     bindingsArrayHelper.setArrayOfPointersByValue([anchor]);
 
-    const baseline = csp.BindingsTestType.aliveCount;
+    const baseline = csp.BindingsTestType.aliveCount();
 
     // Create and drop 100K reference-returned proxies without disposing them.
     // If the proxies somehow took ownership of the underlying object, aliveCount
@@ -145,7 +145,7 @@ describe('CSPFoundation', () => {
       // Intentionally no dispose — that's the whole point.
     }
 
-    expect(csp.BindingsTestType.aliveCount).toBe(baseline);
+    expect(csp.BindingsTestType.aliveCount()).toBe(baseline);
   });
 
   /*
@@ -251,14 +251,14 @@ describe('CSPFoundation', () => {
     using elem2 = csp.BindingsTestType.create(2, 'two');
     bindingsArrayHelper.setArrayFullTypeByValue([elem1, elem2]);
 
-    const beforeGet = csp.BindingsTestType.aliveCount;
+    const beforeGet = csp.BindingsTestType.aliveCount();
     {
       using arr = bindingsArrayHelper.getArrayFullTypeByValue();
-      expect(csp.BindingsTestType.aliveCount).toBe(beforeGet + 2);
+      expect(csp.BindingsTestType.aliveCount()).toBe(beforeGet + 2);
       expect(arr.length).toBe(2);
     }
     // Scope exit, destructors should run.
-    expect(csp.BindingsTestType.aliveCount).toBe(beforeGet);
+    expect(csp.BindingsTestType.aliveCount()).toBe(beforeGet);
   });
 
   it('Using on a const-ref returned array of handles releases every element at scope exit', () => {
@@ -271,14 +271,14 @@ describe('CSPFoundation', () => {
     using elem1 = csp.BindingsTestType.create(1, 'one');
     bindingsArrayHelper.setArrayFullTypeByValue([elem1]);
 
-    const beforeGet = csp.BindingsTestType.aliveCount;
+    const beforeGet = csp.BindingsTestType.aliveCount();
     {
       using arr = bindingsArrayHelper.getArrayFullTypeByConstRef();
-      expect(csp.BindingsTestType.aliveCount).toBe(beforeGet + 1);
+      expect(csp.BindingsTestType.aliveCount()).toBe(beforeGet + 1);
       expect(arr.length).toBe(1);
     }
     // Scope exit, destructors should run.
-    expect(csp.BindingsTestType.aliveCount).toBe(beforeGet);
+    expect(csp.BindingsTestType.aliveCount()).toBe(beforeGet);
   });
 
   it('Using on an array of basic types is a tolerated no-op on disposal', () => {
@@ -296,25 +296,25 @@ describe('CSPFoundation', () => {
     using elem2 = csp.BindingsTestType.create(2, 'two');
     bindingsArrayHelper.setArrayFullTypeByValue([elem1, elem2]);
 
-    const beforeGet = csp.BindingsTestType.aliveCount;
+    const beforeGet = csp.BindingsTestType.aliveCount();
     expect(() => {
       using arr = bindingsArrayHelper.getArrayFullTypeByValue();
-      expect(csp.BindingsTestType.aliveCount).toBe(beforeGet + 2);
+      expect(csp.BindingsTestType.aliveCount()).toBe(beforeGet + 2);
       throw new Error('Oh no!');
     }).toThrow('Oh no!');
-    expect(csp.BindingsTestType.aliveCount).toBe(beforeGet);
+    expect(csp.BindingsTestType.aliveCount()).toBe(beforeGet);
   });
 
   it('Disposing an empty returned array is a no-op', () => {
     using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
     bindingsArrayHelper.setArrayFullTypeByValue([]);
-    const beforeGet = csp.BindingsTestType.aliveCount;
+    const beforeGet = csp.BindingsTestType.aliveCount();
     {
       using arr = bindingsArrayHelper.getArrayFullTypeByValue();
-      expect(csp.BindingsTestType.aliveCount).toBe(beforeGet); //No types in empty array, no alive count increment
+      expect(csp.BindingsTestType.aliveCount()).toBe(beforeGet); //No types in empty array, no alive count increment
       expect(arr.length).toBe(0);
     }
-    expect(csp.BindingsTestType.aliveCount).toBe(beforeGet);
+    expect(csp.BindingsTestType.aliveCount()).toBe(beforeGet);
   });
 
   it('Array getter result without `using` leaks until manually disposed', () => {
@@ -322,12 +322,12 @@ describe('CSPFoundation', () => {
     using elem1 = csp.BindingsTestType.create(1, 'one');
     bindingsArrayHelper.setArrayFullTypeByValue([elem1]);
 
-    const beforeGet = csp.BindingsTestType.aliveCount;
+    const beforeGet = csp.BindingsTestType.aliveCount();
     const leaked = bindingsArrayHelper.getArrayFullTypeByValue();
-    expect(csp.BindingsTestType.aliveCount).toBe(beforeGet + 1);
+    expect(csp.BindingsTestType.aliveCount()).toBe(beforeGet + 1);
     // Symbol.dispose is reachable and cleans up.
     leaked[Symbol.dispose]();
-    expect(csp.BindingsTestType.aliveCount).toBe(beforeGet);
+    expect(csp.BindingsTestType.aliveCount()).toBe(beforeGet);
   });
 
   it('Disposing a returned array does not affect the underlying C++ storage', () => {
@@ -335,11 +335,11 @@ describe('CSPFoundation', () => {
     using elem1 = csp.BindingsTestType.create(1, 'one');
     bindingsArrayHelper.setArrayFullTypeByValue([elem1]);
 
-    const beforeGet = csp.BindingsTestType.aliveCount;
+    const beforeGet = csp.BindingsTestType.aliveCount();
     {
       using arr = bindingsArrayHelper.getArrayFullTypeByValue();
     }
-    expect(csp.BindingsTestType.aliveCount).toBe(beforeGet);
+    expect(csp.BindingsTestType.aliveCount()).toBe(beforeGet);
     // Storage survives despite the scope exit — we can fetch again.
     using arr2 = bindingsArrayHelper.getArrayFullTypeByValue();
     expect(arr2[0]!.value).toBe(1);
@@ -351,13 +351,13 @@ describe('CSPFoundation', () => {
     using elem2 = csp.BindingsTestType.create(2, 'two');
     bindingsArrayHelper.setArrayFullTypeByValue([elem1, elem2]);
 
-    const beforeGet = csp.BindingsTestType.aliveCount;
+    const beforeGet = csp.BindingsTestType.aliveCount();
     expect(() => {
       let arr = bindingsArrayHelper.getArrayFullTypeByValue();
       arr[0]!.delete();
       arr[1]!.delete();
     }).not.toThrow();
-    expect(csp.BindingsTestType.aliveCount).toBe(beforeGet);
+    expect(csp.BindingsTestType.aliveCount()).toBe(beforeGet);
 
     // The returned array is a copy, so explicitly deleting an element must not
     // touch the underlying C++ storage — re-fetching still yields both elements.
@@ -372,11 +372,11 @@ describe('CSPFoundation', () => {
     using elem1 = csp.BindingsTestType.create(1, 'one');
     bindingsArrayHelper.setArrayFullTypeByValue([elem1]);
 
-    const beforeGet = csp.BindingsTestType.aliveCount;
+    const beforeGet = csp.BindingsTestType.aliveCount();
     const arr = bindingsArrayHelper.getArrayFullTypeByValue();
-    expect(csp.BindingsTestType.aliveCount).toBe(beforeGet + 1);
+    expect(csp.BindingsTestType.aliveCount()).toBe(beforeGet + 1);
     csp.disposeArray(arr);
-    expect(csp.BindingsTestType.aliveCount).toBe(beforeGet);
+    expect(csp.BindingsTestType.aliveCount()).toBe(beforeGet);
   });
 
   it('disposeArray on a plain JS array of primitives is tolerated', () => {
@@ -387,25 +387,25 @@ describe('CSPFoundation', () => {
   it('disposeArray recurses into nested arrays of handles', () => {
     const a = csp.BindingsTestType.create(1, 'one');
     const b = csp.BindingsTestType.create(2, 'two');
-    const before = csp.BindingsTestType.aliveCount;
+    const before = csp.BindingsTestType.aliveCount();
     csp.disposeArray([[a, b]]);
-    expect(csp.BindingsTestType.aliveCount).toBe(before - 2);
+    expect(csp.BindingsTestType.aliveCount()).toBe(before - 2);
   });
 
   it('Cpp Objects accessible via pointer arrays without allocating', () => {
     using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
-    const beforeAliveCount = csp.BindingsTestType.aliveCount;
+    const beforeAliveCount = csp.BindingsTestType.aliveCount();
 
     let pointerArray = bindingsArrayHelper.getArrayOfCppOwnedPointers();
     expect(pointerArray.length).toBe(2);
     expect(pointerArray[0]?.name).toBe('One');
     expect(pointerArray[1]?.value).toBe(2);
-    expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount);
+    expect(csp.BindingsTestType.aliveCount()).toBe(beforeAliveCount);
   });
 
   it('JS owned object in pointer array that falls out of scope is undefined', () => {
     using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
-    const beforeAliveCount = csp.BindingsTestType.aliveCount;
+    const beforeAliveCount = csp.BindingsTestType.aliveCount();
 
     {
       using elem1 = csp.BindingsTestType.create(1, 'one');
@@ -420,18 +420,18 @@ describe('CSPFoundation', () => {
     expect(roundTripArr.length).toBe(1);
     //Actually accessing the dangling pointer would be non-deterministic UB, so, we'll just use aliveCount
     //Elem1 is disposed, despite the array length still being 1.
-    expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount);
+    expect(csp.BindingsTestType.aliveCount()).toBe(beforeAliveCount);
   });
 
   it('Explicit delete of elements in pointer array is disallowed', () => {
     using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
-    const beforeAliveCount = csp.BindingsTestType.aliveCount;
+    const beforeAliveCount = csp.BindingsTestType.aliveCount();
 
     // No `using` here: elem1 / elem2 are the true owners of their C++ objects. The
     // map holds only non-owning pointers to them, we clean these up by hand for test demonstration.
     const elem1 = csp.BindingsTestType.create(1, 'one');
     const elem2 = csp.BindingsTestType.create(2, 'two');
-    expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount + 2);
+    expect(csp.BindingsTestType.aliveCount()).toBe(beforeAliveCount + 2);
 
     bindingsArrayHelper.setArrayOfPointersByValue([elem1, elem2]);
     let pointerArray = bindingsArrayHelper.getArrayOfPointersByValue();
@@ -441,12 +441,12 @@ describe('CSPFoundation', () => {
     expect(() => pointerArray[1]!.delete()).toThrow();
 
     // Nothing was destroyed — the underlying objects are still alive.
-    expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount + 2);
+    expect(csp.BindingsTestType.aliveCount()).toBe(beforeAliveCount + 2);
 
     // Clean up via the true owners.
     elem1.delete();
     elem2.delete();
-    expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount);
+    expect(csp.BindingsTestType.aliveCount()).toBe(beforeAliveCount);
   });
 
   /*
@@ -468,14 +468,14 @@ describe('CSPFoundation', () => {
       ])
     );
 
-    const beforeGet = csp.BindingsTestType.aliveCount;
+    const beforeGet = csp.BindingsTestType.aliveCount();
     {
       using map = bindingsMapHelper.getMapFullTypeByValue();
-      expect(csp.BindingsTestType.aliveCount).toBe(beforeGet + 2);
+      expect(csp.BindingsTestType.aliveCount()).toBe(beforeGet + 2);
       expect(map.size).toBe(2);
     }
     // Scope exit, destructors should run.
-    expect(csp.BindingsTestType.aliveCount).toBe(beforeGet);
+    expect(csp.BindingsTestType.aliveCount()).toBe(beforeGet);
   });
 
   it('Using on a const-ref returned map of handles releases every value at scope exit', () => {
@@ -483,14 +483,14 @@ describe('CSPFoundation', () => {
     using elem1 = csp.BindingsTestType.create(1, 'one');
     bindingsMapHelper.setMapFullTypeByValue(new Map([[1, elem1]]));
 
-    const beforeGet = csp.BindingsTestType.aliveCount;
+    const beforeGet = csp.BindingsTestType.aliveCount();
     {
       using map = bindingsMapHelper.getMapFullTypeByConstRef();
-      expect(csp.BindingsTestType.aliveCount).toBe(beforeGet + 1);
+      expect(csp.BindingsTestType.aliveCount()).toBe(beforeGet + 1);
       expect(map.size).toBe(1);
     }
     // Scope exit, destructors should run.
-    expect(csp.BindingsTestType.aliveCount).toBe(beforeGet);
+    expect(csp.BindingsTestType.aliveCount()).toBe(beforeGet);
   });
 
   it('Using on a map of basic types is a tolerated no-op on disposal', () => {
@@ -519,25 +519,25 @@ describe('CSPFoundation', () => {
       ])
     );
 
-    const beforeGet = csp.BindingsTestType.aliveCount;
+    const beforeGet = csp.BindingsTestType.aliveCount();
     expect(() => {
       using map = bindingsMapHelper.getMapFullTypeByValue();
-      expect(csp.BindingsTestType.aliveCount).toBe(beforeGet + 2);
+      expect(csp.BindingsTestType.aliveCount()).toBe(beforeGet + 2);
       throw new Error('Oh no!');
     }).toThrow('Oh no!');
-    expect(csp.BindingsTestType.aliveCount).toBe(beforeGet);
+    expect(csp.BindingsTestType.aliveCount()).toBe(beforeGet);
   });
 
   it('Disposing an empty returned map is a no-op', () => {
     using bindingsMapHelper = csp.ContainerBindingMechanismsTestType.create();
     bindingsMapHelper.setMapFullTypeByValue(new Map());
-    const beforeGet = csp.BindingsTestType.aliveCount;
+    const beforeGet = csp.BindingsTestType.aliveCount();
     {
       using map = bindingsMapHelper.getMapFullTypeByValue();
-      expect(csp.BindingsTestType.aliveCount).toBe(beforeGet); // No values in empty map, no alive count increment
+      expect(csp.BindingsTestType.aliveCount()).toBe(beforeGet); // No values in empty map, no alive count increment
       expect(map.size).toBe(0);
     }
-    expect(csp.BindingsTestType.aliveCount).toBe(beforeGet);
+    expect(csp.BindingsTestType.aliveCount()).toBe(beforeGet);
   });
 
   it('Map getter result without `using` leaks until manually disposed', () => {
@@ -545,12 +545,12 @@ describe('CSPFoundation', () => {
     using elem1 = csp.BindingsTestType.create(1, 'one');
     bindingsMapHelper.setMapFullTypeByValue(new Map([[1, elem1]]));
 
-    const beforeGet = csp.BindingsTestType.aliveCount;
+    const beforeGet = csp.BindingsTestType.aliveCount();
     const leaked = bindingsMapHelper.getMapFullTypeByValue();
-    expect(csp.BindingsTestType.aliveCount).toBe(beforeGet + 1);
+    expect(csp.BindingsTestType.aliveCount()).toBe(beforeGet + 1);
     // Symbol.dispose is reachable and cleans up.
     leaked[Symbol.dispose]();
-    expect(csp.BindingsTestType.aliveCount).toBe(beforeGet);
+    expect(csp.BindingsTestType.aliveCount()).toBe(beforeGet);
   });
 
   it('Disposing a returned map does not affect the underlying C++ storage', () => {
@@ -558,11 +558,11 @@ describe('CSPFoundation', () => {
     using elem1 = csp.BindingsTestType.create(1, 'one');
     bindingsMapHelper.setMapFullTypeByValue(new Map([[1, elem1]]));
 
-    const beforeGet = csp.BindingsTestType.aliveCount;
+    const beforeGet = csp.BindingsTestType.aliveCount();
     {
       using map = bindingsMapHelper.getMapFullTypeByValue();
     }
-    expect(csp.BindingsTestType.aliveCount).toBe(beforeGet);
+    expect(csp.BindingsTestType.aliveCount()).toBe(beforeGet);
     // Storage survives despite the scope exit — we can fetch again.
     using map2 = bindingsMapHelper.getMapFullTypeByValue();
     expect(map2.get(1)!.value).toBe(1);
@@ -579,13 +579,13 @@ describe('CSPFoundation', () => {
       ])
     );
 
-    const beforeGet = csp.BindingsTestType.aliveCount;
+    const beforeGet = csp.BindingsTestType.aliveCount();
     expect(() => {
       let map = bindingsMapHelper.getMapFullTypeByValue();
       map.get(1)!.delete();
       map.get(2)!.delete();
     }).not.toThrow();
-    expect(csp.BindingsTestType.aliveCount).toBe(beforeGet);
+    expect(csp.BindingsTestType.aliveCount()).toBe(beforeGet);
 
     // The returned map is a copy, so explicitly deleting a value must not touch the
     // underlying C++ storage — re-fetching still yields both entries.
@@ -600,11 +600,11 @@ describe('CSPFoundation', () => {
     using elem1 = csp.BindingsTestType.create(1, 'one');
     bindingsMapHelper.setMapFullTypeByValue(new Map([[1, elem1]]));
 
-    const beforeGet = csp.BindingsTestType.aliveCount;
+    const beforeGet = csp.BindingsTestType.aliveCount();
     const map = bindingsMapHelper.getMapFullTypeByValue();
-    expect(csp.BindingsTestType.aliveCount).toBe(beforeGet + 1);
+    expect(csp.BindingsTestType.aliveCount()).toBe(beforeGet + 1);
     csp.disposeMap(map);
-    expect(csp.BindingsTestType.aliveCount).toBe(beforeGet);
+    expect(csp.BindingsTestType.aliveCount()).toBe(beforeGet);
   });
 
   it('disposeMap on a plain JS Map of primitives is tolerated', () => {
@@ -622,11 +622,11 @@ describe('CSPFoundation', () => {
   it('disposeMap disposes handles nested in array values', () => {
     const a = csp.BindingsTestType.create(1, 'one');
     const b = csp.BindingsTestType.create(2, 'two');
-    const before = csp.BindingsTestType.aliveCount;
+    const before = csp.BindingsTestType.aliveCount();
     // Value disposal routes through Array.from(map.values()) then the array walker, so it
     // recurses into array values just like disposeArray recurses into nested arrays.
     csp.disposeMap(new Map([[1, [a, b]]]));
-    expect(csp.BindingsTestType.aliveCount).toBe(before - 2);
+    expect(csp.BindingsTestType.aliveCount()).toBe(before - 2);
   });
 
   it('disposeMap disposes values but leaves keys untouched', () => {
@@ -635,12 +635,12 @@ describe('CSPFoundation', () => {
     // is disposed. This is the core contract of disposeMap.
     const keyHandle = csp.BindingsTestType.create(1, 'key');
     const valueHandle = csp.BindingsTestType.create(2, 'value');
-    const before = csp.BindingsTestType.aliveCount;
+    const before = csp.BindingsTestType.aliveCount();
 
     csp.disposeMap(new Map([[keyHandle, valueHandle]]));
 
     // Exactly one disposal: the value. The key handle is spared.
-    expect(csp.BindingsTestType.aliveCount).toBe(before - 1);
+    expect(csp.BindingsTestType.aliveCount()).toBe(before - 1);
     expect(keyHandle.isDeleted()).toBe(false);
     expect(valueHandle.isDeleted()).toBe(true);
 
@@ -649,18 +649,18 @@ describe('CSPFoundation', () => {
 
   it('Cpp objects accessible via pointer maps without allocating', () => {
     using bindingsMapHelper = csp.ContainerBindingMechanismsTestType.create();
-    const beforeAliveCount = csp.BindingsTestType.aliveCount;
+    const beforeAliveCount = csp.BindingsTestType.aliveCount();
 
     let pointerMap = bindingsMapHelper.getMapOfCppOwnedPointers();
     expect(pointerMap.size).toBe(2);
     expect(pointerMap.get(1)?.name).toBe('One');
     expect(pointerMap.get(2)?.value).toBe(2);
-    expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount);
+    expect(csp.BindingsTestType.aliveCount()).toBe(beforeAliveCount);
   });
 
   it('JS owned object in pointer map that falls out of scope is undefined', () => {
     using bindingsMapHelper = csp.ContainerBindingMechanismsTestType.create();
-    const beforeAliveCount = csp.BindingsTestType.aliveCount;
+    const beforeAliveCount = csp.BindingsTestType.aliveCount();
 
     {
       using elem1 = csp.BindingsTestType.create(1, 'one');
@@ -673,18 +673,18 @@ describe('CSPFoundation', () => {
     expect(roundTripMap.size).toBe(1);
     // Actually accessing the dangling pointer would be non-deterministic UB, so we'll just use aliveCount.
     // elem1 is disposed, despite the map size still being 1.
-    expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount);
+    expect(csp.BindingsTestType.aliveCount()).toBe(beforeAliveCount);
   });
 
   it('Explicit delete of values in pointer map is disallowed', () => {
     using bindingsMapHelper = csp.ContainerBindingMechanismsTestType.create();
-    const beforeAliveCount = csp.BindingsTestType.aliveCount;
+    const beforeAliveCount = csp.BindingsTestType.aliveCount();
 
     // No `using` here: elem1 / elem2 are the true owners of their C++ objects. The
     // map holds only non-owning pointers to them, we clean these up by hand for test demonstration.
     const elem1 = csp.BindingsTestType.create(1, 'one');
     const elem2 = csp.BindingsTestType.create(2, 'two');
-    expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount + 2);
+    expect(csp.BindingsTestType.aliveCount()).toBe(beforeAliveCount + 2);
 
     bindingsMapHelper.setMapOfPointersByValue(
       new Map([
@@ -699,12 +699,12 @@ describe('CSPFoundation', () => {
     expect(() => pointerMap.get(2)!.delete()).toThrow();
 
     // Nothing was destroyed — the underlying objects are still alive.
-    expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount + 2);
+    expect(csp.BindingsTestType.aliveCount()).toBe(beforeAliveCount + 2);
 
     // Clean up via the true owners.
     elem1.delete();
     elem2.delete();
-    expect(csp.BindingsTestType.aliveCount).toBe(beforeAliveCount);
+    expect(csp.BindingsTestType.aliveCount()).toBe(beforeAliveCount);
   });
 
   it('Return array of pointers has non-owning enrichment on each element', () => {
