@@ -204,6 +204,11 @@ public:
         m_offThread ? CallOffThread(callback, nullptr) : CallOnThread(callback, nullptr);
     }
 
+    void CallbackFunctionMultiInputPrimitiveArg(int a, int b, TestCallbackNamespace::TestCallbackPrimitiveArg callback)
+    {
+        m_offThread ? CallOffThread(callback, a + b) : CallOnThread(callback, a + b);
+    }
+
     void SetStoredCallbackNoArgs(TestCallbackNamespace::TestCallbackNoArgs callback) { m_storedCallbackNoArgs = std::move(callback); }
     void InvokeStoredCallbackNoArgs() { m_offThread ? CallOffThread(m_storedCallbackNoArgs) : CallOnThread(m_storedCallbackNoArgs); }
 
@@ -331,6 +336,11 @@ EMSCRIPTEN_BINDINGS(CSPCallbacksTestTypeBindings)
         .function(
             "callbackFunctionNullPointerOpt(callback)",
             +[](CallbacksBindingMechanismsTestType& self, TestCallbackOptionalOfPointerJSCallback callback) { self.CallbackFunctionNullPointerOpt(ToNativeCallback(callback)); })
+        .function(
+            "callbackFunctionMultiInputPrimitiveArg(a, b, callback)",
+            +[](CallbacksBindingMechanismsTestType& self, int a, int b, TestCallbackPrimitiveArgJSCallback callback) {
+                self.CallbackFunctionMultiInputPrimitiveArg(a, b, ToNativeCallback(callback));
+            })
         .function(
             "setStoredCallbackNoArgs(callback)",
             +[](CallbacksBindingMechanismsTestType& self, TestCallbackNoArgsJSCallback callback) { self.SetStoredCallbackNoArgs(ToNativeCallback(callback)); })

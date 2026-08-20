@@ -583,6 +583,22 @@ for (const { mode, offThread } of CALLBACK_THREADING_MODE) {
       expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount);
     });
 
+    it('Function with callback and multiple primitive input args', async () => {
+      using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
+
+      let callbackCalled = false;
+
+      helper.callbackFunctionMultiInputPrimitiveArg(1, 2, (primitiveArg) => {
+        callbackCalled = true;
+
+        expect(primitiveArg).toBe(3);
+      });
+
+      await until(() => callbackCalled);
+
+      expect(callbackCalled).toBe(true);
+    });
+
     it('Callback Optional Value Arg Disposal', async () => {
       using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
