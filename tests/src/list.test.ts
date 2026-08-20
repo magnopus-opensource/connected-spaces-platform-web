@@ -26,7 +26,7 @@ describe('List bindings', () => {
     const newList = [1, 2, 3];
 
     helper.setListBasicTypeByValue(newList);
-    using roundTrip = helper.getListBasicTypeByValue();
+    const roundTrip = helper.getListBasicTypeByValue();
 
     expect(csp.arrayEquals(newList, roundTrip)).toBe(true);
   });
@@ -48,10 +48,10 @@ describe('List bindings', () => {
     const newList = [1, 2, 3];
 
     helper.setListBasicTypeByValue(newList);
-    using byValue = helper.getListBasicTypeByValue();
+    const byValue = helper.getListBasicTypeByValue();
 
     helper.setListBasicTypeByConstRef(newList);
-    using byConstRef = helper.getListBasicTypeByConstRef();
+    const byConstRef = helper.getListBasicTypeByConstRef();
 
     expect(csp.arrayEquals(byValue, byConstRef)).toBe(true);
   });
@@ -93,10 +93,11 @@ describe('List bindings', () => {
 
   it('List dispose function is not enumerable', () => {
     using helper = csp.ContainerBindingMechanismsTestType.create();
-    const newList = [1, 2, 3];
+    using elem1 = csp.BindingsTestType.create(1, 'one');
+    const newList = [elem1];
 
-    helper.setListBasicTypeByValue(newList);
-    using roundTripList = helper.getListBasicTypeByValue();
+    helper.setListFullTypeByValue(newList);
+    using roundTripList = helper.getListFullTypeByValue();
 
     // Check that the dispose function exists
     expect(Symbol.dispose in roundTripList).toBe(true);
@@ -110,12 +111,9 @@ describe('List bindings', () => {
     const newList = [1, 2, 3];
 
     helper.setListBasicTypeByValue(newList);
-    using roundTripList = helper.getListBasicTypeByValue();
+    const roundTripList = helper.getListBasicTypeByValue();
 
-    // Ensure that the round-tripped list is deeply equal to the original array using the Vitest
-    // matcher. It checks all enumerable properties as well as array contents, so it will fail if
-    // the dispose function is enumerable. This fact could otherwise trip up developers writing
-    // tests on lists coming out of the bindings.
+    // Ensure that the round-tripped list is deeply equal to the original array using the Vitest matcher.
     expect(roundTripList).toStrictEqual(newList);
   });
 });

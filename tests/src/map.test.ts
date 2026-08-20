@@ -29,7 +29,7 @@ describe('Map bindings', () => {
     ]);
 
     helper.setMapBasicTypeByValue(newMap);
-    using roundTrip = helper.getMapBasicTypeByValue();
+    const roundTrip = helper.getMapBasicTypeByValue();
 
     expect(csp.mapEquals(newMap, roundTrip)).toBe(true);
   });
@@ -58,10 +58,10 @@ describe('Map bindings', () => {
     ]);
 
     helper.setMapBasicTypeByValue(newMap);
-    using byValue = helper.getMapBasicTypeByValue();
+    const byValue = helper.getMapBasicTypeByValue();
 
     helper.setMapBasicTypeByConstRef(newMap);
-    using byConstRef = helper.getMapBasicTypeByConstRef();
+    const byConstRef = helper.getMapBasicTypeByConstRef();
 
     expect(csp.mapEquals(byValue, byConstRef)).toBe(true);
   });
@@ -107,14 +107,11 @@ describe('Map bindings', () => {
 
   it('Map dispose function is not enumerable', () => {
     using bindingsMapHelper = csp.ContainerBindingMechanismsTestType.create();
-    const newMap = new Map([
-      [1, 10],
-      [2, 20],
-      [3, 30]
-    ]);
+    using elem1 = csp.BindingsTestType.create(1, 'one');
+    const newMap = new Map([[1, elem1]]);
 
-    bindingsMapHelper.setMapBasicTypeByValue(newMap);
-    using roundTripMap = bindingsMapHelper.getMapBasicTypeByValue();
+    bindingsMapHelper.setMapFullTypeByValue(newMap);
+    using roundTripMap = bindingsMapHelper.getMapFullTypeByValue();
 
     // Check that the dispose function exists
     expect(Symbol.dispose in roundTripMap).toBe(true);
@@ -132,12 +129,9 @@ describe('Map bindings', () => {
     ]);
 
     bindingsMapHelper.setMapBasicTypeByValue(newMap);
-    using roundTripMap = bindingsMapHelper.getMapBasicTypeByValue();
+    const roundTripMap = bindingsMapHelper.getMapBasicTypeByValue();
 
     // Ensure that the round-tripped map is deeply equal to the original using the Vitest matcher.
-    // It checks all enumerable properties as well as map contents, so it will fail if the dispose
-    // function is enumerable. This fact could otherwise trip up developers writing tests on maps
-    // coming out of the bindings.
     expect(roundTripMap).toStrictEqual(newMap);
   });
 });
