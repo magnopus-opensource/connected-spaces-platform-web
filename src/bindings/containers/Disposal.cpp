@@ -12,9 +12,9 @@
  *
  * Arrays returned from CSP get a [Symbol.dispose] attached at the binding boundary
  * in the JSDisposable<csp::common::Array<T>> WireType adapter (return path), routing through
- * `disposeArray` below. The intended user-facing pattern is `using arr = ...`
- * on anything CSP returns — including basic-type arrays, where dispose is just
- * a no-op walk.
+ * `disposeArray` below. The user will then do `using array = GetArray()` for disposable types,
+ * and `const array = GetArray()` for non disposable types. This is unfortunately un-symmetric,
+ * but it's the JS way, they'll have to rely on typescript to check them.
  *
  * array disposal is intentionally lenient: it disposes any bound handle it finds
  * and silently ignores anything else (numbers, plain objects, nulls). It recurses
