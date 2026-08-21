@@ -69,8 +69,8 @@ for (const { mode, offThread } of CALLBACK_THREADING_MODE) {
       let callbackCalled = false;
       helper.callbackFunctionPointerArg((pointerArg) => {
         callbackCalled = true;
-        expect(pointerArg.value).toBe(1);
-        expect(pointerArg.name).toBe('One');
+        expect(pointerArg?.value).toBe(1);
+        expect(pointerArg?.name).toBe('One');
       });
 
       await untilCallbacksSettled(csp, () => callbackCalled);
@@ -197,9 +197,9 @@ for (const { mode, offThread } of CALLBACK_THREADING_MODE) {
       let callbackCalled = false;
       helper.callbackFunctionPointerArg((pointerArg) => {
         callbackCalled = true;
-        expect(() => pointerArg.delete()).toThrow();
-        expect(() => pointerArg.deleteLater()).toThrow();
-        expect(() => pointerArg[Symbol.dispose]()).toThrow();
+        expect(() => pointerArg?.delete()).toThrow();
+        expect(() => pointerArg?.deleteLater()).toThrow();
+        expect(() => pointerArg?.[Symbol.dispose]()).toThrow();
       });
 
       await untilCallbacksSettled(csp, () => callbackCalled);
@@ -572,7 +572,7 @@ for (const { mode, offThread } of CALLBACK_THREADING_MODE) {
           expect(pointerContainerArg.length).toBe(2);
           expect(primitiveArg).toBe(1);
           expect(valueArg.name).toBe('One');
-          expect(pointerArg.name).toBe('One');
+          expect(pointerArg?.name).toBe('One');
         }
       );
 

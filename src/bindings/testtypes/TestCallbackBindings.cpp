@@ -49,8 +49,8 @@ typedef std::function<void(const csp::common::Array<BindingsTestType>& valueCont
 typedef std::function<void(csp::common::Array<BindingsTestType*> pointerContainerArg)> TestCallbackContainerOfPointers;
 typedef std::function<void(int primitiveArg1, float primitiveArg2)> TestCallbackMultipleArgs;
 typedef std::function<void(csp::common::Map<int, csp::common::Array<BindingsTestType*>> pointerContainerArg)> TestCallbackNestedContainerOfPointers;
-typedef std::function<void(csp::common::Map<int, csp::common::Array<BindingsTestType>> pointerContainerArg)> TestCallbackNestedContainerOfValues;
-typedef std::function<void(const csp::common::Map<int, csp::common::Array<BindingsTestType>>& pointerContainerArg)> TestCallbackNestedContainerOfValuesByConstRef;
+typedef std::function<void(csp::common::Map<int, csp::common::Array<BindingsTestType>> valueContainerArg)> TestCallbackNestedContainerOfValues;
+typedef std::function<void(const csp::common::Map<int, csp::common::Array<BindingsTestType>>& valueContainerArg)> TestCallbackNestedContainerOfValuesByConstRef;
 typedef std::function<void(csp::common::Array<BindingsTestType> valueContainerArg, const csp::common::Array<BindingsTestType>& valueContainerArgByConstRef,
     csp::common::Array<BindingsTestType*> pointerContainerArg, int primitiveArg, BindingsTestType valueArg, BindingsTestType* pointerArg)>
     TestCallbackMixedArgs;
@@ -233,22 +233,22 @@ private:
  */
 MAKE_CALLBACK(TestCallbackNamespace::TestCallbackNoArgs, TestCallbackNoArgsJSCallback, "() => void")
 MAKE_CALLBACK(TestCallbackNamespace::TestCallbackPrimitiveArg, TestCallbackPrimitiveArgJSCallback, "(primitiveArg: number) => void")
-MAKE_CALLBACK(TestCallbackNamespace::TestCallbackPointerArg, TestCallbackPointerArgJSCallback, "(pointerArg: BindingsTestType) => void")
+MAKE_CALLBACK(TestCallbackNamespace::TestCallbackPointerArg, TestCallbackPointerArgJSCallback, "(pointerArg: BindingsTestType | null) => void")
 MAKE_CALLBACK(TestCallbackNamespace::TestCallbackValueArg, TestCallbackValueArgJSCallback, "(valueArg: BindingsTestType) => void")
 MAKE_CALLBACK(TestCallbackNamespace::TestCallbackValueArgByConstRef, TestCallbackValueArgByConstRefJSCallback, "(valueArg: BindingsTestType) => void")
 MAKE_CALLBACK(TestCallbackNamespace::TestCallbackContainerOfValues, TestCallbackContainerOfValuesJSCallback, "(valueContainerArg: BindingsTestType[]) => void")
 MAKE_CALLBACK(TestCallbackNamespace::TestCallbackContainerOfValuesByConstRef, TestCallbackContainerOfValuesByConstRefJSCallback, "(valueContainerArg: BindingsTestType[]) => void")
-MAKE_CALLBACK(TestCallbackNamespace::TestCallbackContainerOfPointers, TestCallbackContainerOfPointersJSCallback, "(pointerContainerArg: BindingsTestType[]) => void")
+MAKE_CALLBACK(TestCallbackNamespace::TestCallbackContainerOfPointers, TestCallbackContainerOfPointersJSCallback, "(pointerContainerArg: (BindingsTestType | null)[]) => void")
 MAKE_CALLBACK(TestCallbackNamespace::TestCallbackMultipleArgs, TestCallbackMultipleArgsJSCallback, "(primitiveArg1: number, primitiveArg2: number) => void")
+MAKE_CALLBACK(TestCallbackNamespace::TestCallbackNestedContainerOfPointers, TestCallbackNestedContainerOfPointersJSCallback,
+    "(pointerContainerArg: Map<number, (BindingsTestType | null)[]>) => void")
 MAKE_CALLBACK(
-    TestCallbackNamespace::TestCallbackNestedContainerOfPointers, TestCallbackNestedContainerOfPointersJSCallback, "(pointerContainerArg: Map<number, BindingsTestType[]>) => void")
-MAKE_CALLBACK(
-    TestCallbackNamespace::TestCallbackNestedContainerOfValues, TestCallbackNestedContainerOfValuesJSCallback, "(pointerContainerArg: Map<number, BindingsTestType[]>) => void")
+    TestCallbackNamespace::TestCallbackNestedContainerOfValues, TestCallbackNestedContainerOfValuesJSCallback, "(valueContainerArg: Map<number, BindingsTestType[]>) => void")
 MAKE_CALLBACK(TestCallbackNamespace::TestCallbackNestedContainerOfValuesByConstRef, TestCallbackNestedContainerOfValuesByConstRefJSCallback,
-    "(pointerContainerArg: Map<number, BindingsTestType[]>) => void")
+    "(valueContainerArg: Map<number, BindingsTestType[]>) => void")
 MAKE_CALLBACK(TestCallbackNamespace::TestCallbackMixedArgs, TestCallbackMixedArgsJSCallback,
-    "(valueContainerArg: BindingsTestType[] , valueContainerArgByConstRef: BindingsTestType[] , pointerContainerArg: BindingsTestType[], primitiveArg: "
-    "number, valueArg: BindingsTestType, pointerArg: BindingsTestType) => void")
+    "(valueContainerArg: BindingsTestType[] , valueContainerArgByConstRef: BindingsTestType[] , pointerContainerArg: (BindingsTestType | null)[], primitiveArg: "
+    "number, valueArg: BindingsTestType, pointerArg: BindingsTestType | null) => void")
 
 MAKE_CALLBACK(TestCallbackNamespace::TestCallbackOptionalOfValue, TestCallbackOptionalOfValueJSCallback, "(valueArg: BindingsTestType | undefined) => void")
 MAKE_CALLBACK(TestCallbackNamespace::TestCallbackOptionalOfPointer, TestCallbackOptionalOfPointerJSCallback, "(pointerArg: BindingsTestType | undefined) => void")
