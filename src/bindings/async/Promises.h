@@ -7,7 +7,7 @@
 #include <CSP/Common/String.h>
 #include <type_traits>
 
-extern "C" emscripten::EM_VAL make_promise_with_cloning_callback(bool cloneArg);
+extern "C" emscripten::EM_VAL make_promise_with_cloning_callback();
 
 namespace {
 
@@ -60,15 +60,9 @@ namespace {
  * WrapperFn: Callable that takes an emscripten::val (the JS callback) and invokes the original C++
  *            function with the JS callback, via ToNativeCallback.
  */
-template <typename CallbackArgT, typename PromiseValType = emscripten::val, typename WrapperFn> inline PromiseValType PromisifyWithClone(WrapperFn&& wrapperFn)
+template <typename PromiseValType = emscripten::val, typename WrapperFn> inline PromiseValType PromisifyWithClone(WrapperFn&& wrapperFn)
 {
-    using DecayedCallbackArgT = std::decay_t<CallbackArgT>;
-
-    // We allow cloning of pointer types, for consistency with value types and callback argument
-    // lifting in the non-promisified case.
-    constexpr bool cloneArg = !std::is_void_v<DecayedCallbackArgT> && !std::is_arithmetic_v<DecayedCallbackArgT> && !std::is_same_v<DecayedCallbackArgT, csp::common::String>;
-
-    emscripten::val promiseAndCallback = emscripten::val::take_ownership(make_promise_with_cloning_callback(cloneArg));
+    emscripten::val promiseAndCallback = emscripten::val::take_ownership(make_promise_with_cloning_callback());
     // This is the JS callback that the C++ function will ultimately call, and is responsible for
     // resolving the promise.
     emscripten::val jsCallback = promiseAndCallback["callback"];
