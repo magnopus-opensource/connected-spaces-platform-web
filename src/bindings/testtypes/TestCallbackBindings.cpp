@@ -88,10 +88,10 @@ csp::common::Array<BindingsTestType*> pointerArray { new BindingsTestType(1, "On
 
 csp::common::Map<int, csp::common::Array<BindingsTestType*>> pointerMap {
     { 0, csp::common::Array<BindingsTestType*> { new BindingsTestType(1, "One"), new BindingsTestType(2, "Two") } },
-    { 1, csp::common::Array<BindingsTestType*> { new BindingsTestType(3, "Three"), new BindingsTestType(4, "Four)") } }
+    { 1, csp::common::Array<BindingsTestType*> { new BindingsTestType(3, "Three"), new BindingsTestType(4, "Four") } }
 };
 csp::common::Map<int, csp::common::Array<BindingsTestType>> valueMap { { 0, csp::common::Array<BindingsTestType> { BindingsTestType(1, "One"), BindingsTestType(2, "Two") } },
-    { 1, csp::common::Array<BindingsTestType> { BindingsTestType(3, "Three"), BindingsTestType(4, "Four)") } } };
+    { 1, csp::common::Array<BindingsTestType> { BindingsTestType(3, "Three"), BindingsTestType(4, "Four") } } };
 
 csp::common::Optional<BindingsTestType> valueOpt { BindingsTestType(1, "One") };
 csp::common::Optional<BindingsTestType*> pointerOpt { new BindingsTestType(1, "One") };
@@ -290,6 +290,50 @@ EMSCRIPTEN_BINDINGS(register_TestCallbackPromiseOfBindingsTestTypeOptional)
     emscripten::register_type<TestCallbackPromiseOfBindingsTestTypeOptional>("Promise<BindingsTestType | undefined>");
 }
 
+EMSCRIPTEN_DECLARE_VAL_TYPE(TestCallbackPromiseOfContainerOfBindingsTestType);
+EMSCRIPTEN_BINDINGS(register_TestCallbackPromiseOfContainerOfBindingsTestType)
+{
+    // Our container types are disposable, so make sure to add "& Disposable" to the TypeScript signature
+    emscripten::register_type<TestCallbackPromiseOfContainerOfBindingsTestType>("Promise<BindingsTestType[] & Disposable>");
+}
+
+EMSCRIPTEN_DECLARE_VAL_TYPE(TestCallbackPromiseOfContainerOfBindingsTestTypePointer);
+EMSCRIPTEN_BINDINGS(register_TestCallbackPromiseOfContainerOfBindingsTestTypePointer)
+{
+    // Our container types are disposable, so make sure to add "& Disposable" to the TypeScript signature
+    emscripten::register_type<TestCallbackPromiseOfContainerOfBindingsTestTypePointer>("Promise<(BindingsTestType | null)[] & Disposable>");
+}
+
+EMSCRIPTEN_DECLARE_VAL_TYPE(TestCallbackPromiseOfNestedContainerOfBindingsTestType);
+EMSCRIPTEN_BINDINGS(register_TestCallbackPromiseOfNestedContainerOfBindingsTestType)
+{
+    // Our container types are disposable, so make sure to add "& Disposable" to the TypeScript signature
+    emscripten::register_type<TestCallbackPromiseOfNestedContainerOfBindingsTestType>("Promise<Map<number, BindingsTestType[]> & Disposable>");
+}
+
+EMSCRIPTEN_DECLARE_VAL_TYPE(TestCallbackPromiseOfNestedContainerOfBindingsTestTypePointer);
+EMSCRIPTEN_BINDINGS(register_TestCallbackPromiseOfNestedContainerOfBindingsTestTypePointer)
+{
+    // Our container types are disposable, so make sure to add "& Disposable" to the TypeScript signature
+    emscripten::register_type<TestCallbackPromiseOfNestedContainerOfBindingsTestTypePointer>("Promise<Map<number, (BindingsTestType | null)[]> & Disposable>");
+}
+
+// Optional of array
+EMSCRIPTEN_DECLARE_VAL_TYPE(TestCallbackPromiseOfOptionalContainerOfBindingsTestType);
+EMSCRIPTEN_BINDINGS(register_TestCallbackPromiseOfOptionalContainerOfBindingsTestType)
+{
+    // Our container types are disposable, so make sure to add "& Disposable" to the TypeScript signature
+    emscripten::register_type<TestCallbackPromiseOfOptionalContainerOfBindingsTestType>("Promise<(BindingsTestType[] & Disposable) | undefined>");
+}
+
+// Array of optional
+EMSCRIPTEN_DECLARE_VAL_TYPE(TestCallbackPromiseOfContainerOfBindingsTestTypeOptional);
+EMSCRIPTEN_BINDINGS(register_TestCallbackPromiseOfContainerOfBindingsTestTypeOptional)
+{
+    // Our container types are disposable, so make sure to add "& Disposable" to the TypeScript signature
+    emscripten::register_type<TestCallbackPromiseOfContainerOfBindingsTestTypeOptional>("Promise<(BindingsTestType | undefined)[] & Disposable>");
+}
+
 EMSCRIPTEN_BINDINGS(CSPCallbacksTestTypeBindings)
 {
     emscripten::class_<CallbacksBindingMechanismsTestType>("CallbacksBindingMechanismsTestType")
@@ -421,6 +465,44 @@ EMSCRIPTEN_BINDINGS(CSPCallbacksTestTypeBindings)
                     [&](emscripten::val cb) { self.CallbackFunctionValueArgByConstRef(ToNativeCallback(cb.as<TestCallbackValueArgByConstRefJSCallback>())); });
             })
         .function(
+            "callbackFunctionContainerOfPointersAsync",
+            +[](CallbacksBindingMechanismsTestType& self) {
+                return PromisifyWithClone<csp::common::Array<BindingsTestType*>, TestCallbackPromiseOfContainerOfBindingsTestTypePointer>(
+                    [&](emscripten::val cb) { self.CallbackFunctionContainerOfPointers(ToNativeCallback(cb.as<TestCallbackContainerOfPointersJSCallback>())); });
+            })
+        .function(
+            "callbackFunctionContainerOfValuesAsync",
+            +[](CallbacksBindingMechanismsTestType& self) {
+                return PromisifyWithClone<csp::common::Array<BindingsTestType>, TestCallbackPromiseOfContainerOfBindingsTestType>(
+                    [&](emscripten::val cb) { self.CallbackFunctionContainerOfValues(ToNativeCallback(cb.as<TestCallbackContainerOfValuesJSCallback>())); });
+            })
+        .function(
+            "callbackFunctionContainerOfValuesByConstRefAsync",
+            +[](CallbacksBindingMechanismsTestType& self) {
+                return PromisifyWithClone<csp::common::Array<BindingsTestType>, TestCallbackPromiseOfContainerOfBindingsTestType>(
+                    [&](emscripten::val cb) { self.CallbackFunctionContainerOfValuesByConstRef(ToNativeCallback(cb.as<TestCallbackContainerOfValuesByConstRefJSCallback>())); });
+            })
+        .function(
+            "callbackFunctionNestedContainerOfPointersAsync",
+            +[](CallbacksBindingMechanismsTestType& self) {
+                return PromisifyWithClone<csp::common::Map<int, csp::common::Array<BindingsTestType*>>, TestCallbackPromiseOfNestedContainerOfBindingsTestTypePointer>(
+                    [&](emscripten::val cb) { self.CallbackFunctionNestedContainerOfPointers(ToNativeCallback(cb.as<TestCallbackNestedContainerOfPointersJSCallback>())); });
+            })
+        .function(
+            "callbackFunctionNestedContainerOfValuesAsync",
+            +[](CallbacksBindingMechanismsTestType& self) {
+                return PromisifyWithClone<csp::common::Map<int, csp::common::Array<BindingsTestType>>, TestCallbackPromiseOfNestedContainerOfBindingsTestType>(
+                    [&](emscripten::val cb) { self.CallbackFunctionNestedContainerOfValues(ToNativeCallback(cb.as<TestCallbackNestedContainerOfValuesJSCallback>())); });
+            })
+        .function(
+            "callbackFunctionNestedContainerOfValuesByConstRefAsync",
+            +[](CallbacksBindingMechanismsTestType& self) {
+                return PromisifyWithClone<csp::common::Map<int, csp::common::Array<BindingsTestType>>, TestCallbackPromiseOfNestedContainerOfBindingsTestType>(
+                    [&](emscripten::val cb) {
+                        self.CallbackFunctionNestedContainerOfValuesByConstRef(ToNativeCallback(cb.as<TestCallbackNestedContainerOfValuesByConstRefJSCallback>()));
+                    });
+            })
+        .function(
             "callbackFunctionValueOptAsync",
             +[](CallbacksBindingMechanismsTestType& self) {
                 return PromisifyWithClone<csp::common::Optional<BindingsTestType>, TestCallbackPromiseOfBindingsTestTypeOptional>(
@@ -443,6 +525,24 @@ EMSCRIPTEN_BINDINGS(CSPCallbacksTestTypeBindings)
             +[](CallbacksBindingMechanismsTestType& self) {
                 return PromisifyWithClone<csp::common::Optional<BindingsTestType*>, TestCallbackPromiseOfBindingsTestTypeOptional>(
                     [&](emscripten::val cb) { self.CallbackFunctionNullPointerOpt(ToNativeCallback(cb.as<TestCallbackOptionalOfPointerJSCallback>())); });
+            })
+        .function(
+            "callbackFunctionOptOfArrayAsync",
+            +[](CallbacksBindingMechanismsTestType& self) {
+                return PromisifyWithClone<csp::common::Optional<csp::common::Array<BindingsTestType>>, TestCallbackPromiseOfOptionalContainerOfBindingsTestType>(
+                    [&](emscripten::val cb) { self.CallbackFunctionOptOfArray(ToNativeCallback(cb.as<TestCallbackOptionalOfArrayJSCallback>())); });
+            })
+        .function(
+            "callbackFunctionArrayOfOptAsync",
+            +[](CallbacksBindingMechanismsTestType& self) {
+                return PromisifyWithClone<csp::common::Array<csp::common::Optional<BindingsTestType>>, TestCallbackPromiseOfContainerOfBindingsTestTypeOptional>(
+                    [&](emscripten::val cb) { self.CallbackFunctionArrayOfOpt(ToNativeCallback(cb.as<TestCallbackArrayOfOptionalJSCallback>())); });
+            })
+        .function(
+            "callbackFunctionArrayOfSomeNullOptAsync",
+            +[](CallbacksBindingMechanismsTestType& self) {
+                return PromisifyWithClone<csp::common::Array<csp::common::Optional<BindingsTestType>>, TestCallbackPromiseOfContainerOfBindingsTestTypeOptional>(
+                    [&](emscripten::val cb) { self.CallbackFunctionArrayOfSomeNullOpt(ToNativeCallback(cb.as<TestCallbackArrayOfOptionalJSCallback>())); });
             })
         .function(
             "callbackFunctionMultiInputPrimitiveArgAsync(a, b)", +[](CallbacksBindingMechanismsTestType& self, int a, int b) {

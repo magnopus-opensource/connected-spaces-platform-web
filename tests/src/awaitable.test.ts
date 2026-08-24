@@ -38,7 +38,7 @@ describe('Awaitable Callbacks', () => {
   });
 
   it('Await primitive result', async () => {
-    const helper = csp.CallbacksBindingMechanismsTestType.create();
+    using helper = csp.CallbacksBindingMechanismsTestType.create();
 
     const result = await helper.callbackFunctionPrimitiveArgAsync();
 
@@ -46,7 +46,7 @@ describe('Awaitable Callbacks', () => {
   });
 
   it('Primitive result with promise', async () => {
-    const helper = csp.CallbacksBindingMechanismsTestType.create();
+    using helper = csp.CallbacksBindingMechanismsTestType.create();
 
     let thenCallbackCalled = false;
 
@@ -62,7 +62,7 @@ describe('Awaitable Callbacks', () => {
   });
 
   it('Await value type result', async () => {
-    const helper = csp.CallbacksBindingMechanismsTestType.create();
+    using helper = csp.CallbacksBindingMechanismsTestType.create();
 
     using result = await helper.callbackFunctionValueArgAsync();
 
@@ -71,7 +71,7 @@ describe('Awaitable Callbacks', () => {
   });
 
   it('Value type result with promise', async () => {
-    const helper = csp.CallbacksBindingMechanismsTestType.create();
+    using helper = csp.CallbacksBindingMechanismsTestType.create();
 
     let thenCallbackCalled = false;
 
@@ -88,7 +88,7 @@ describe('Awaitable Callbacks', () => {
   });
 
   it('Await const ref result', async () => {
-    const helper = csp.CallbacksBindingMechanismsTestType.create();
+    using helper = csp.CallbacksBindingMechanismsTestType.create();
 
     using result = await helper.callbackFunctionValueArgByConstRefAsync();
 
@@ -97,7 +97,7 @@ describe('Awaitable Callbacks', () => {
   });
 
   it('Const ref result with promise', async () => {
-    const helper = csp.CallbacksBindingMechanismsTestType.create();
+    using helper = csp.CallbacksBindingMechanismsTestType.create();
 
     let thenCallbackCalled = false;
 
@@ -114,7 +114,7 @@ describe('Awaitable Callbacks', () => {
   });
 
   it('Await pointer result', async () => {
-    const helper = csp.CallbacksBindingMechanismsTestType.create();
+    using helper = csp.CallbacksBindingMechanismsTestType.create();
 
     // Pointer is non-owning so technically no dispose is needed, but we allow 'using' for
     // consistency
@@ -127,7 +127,7 @@ describe('Awaitable Callbacks', () => {
   });
 
   it('Pointer result with promise', async () => {
-    const helper = csp.CallbacksBindingMechanismsTestType.create();
+    using helper = csp.CallbacksBindingMechanismsTestType.create();
 
     let thenCallbackCalled = false;
 
@@ -138,6 +138,249 @@ describe('Awaitable Callbacks', () => {
 
       expect(result?.value).toBe(1);
       expect(result?.name).toBe('One');
+    });
+
+    await resultPromise;
+
+    expect(thenCallbackCalled).toBe(true);
+  });
+
+  // ----------
+  // Container types
+
+  it('Await container of pointers result', async () => {
+    using helper = csp.CallbacksBindingMechanismsTestType.create();
+
+    using result = await helper.callbackFunctionContainerOfPointersAsync();
+
+    expect(result.length).toBe(2);
+
+    expect(result[0]?.value).toBe(1);
+    expect(result[0]?.name).toBe('One');
+    expect(result[1]?.value).toBe(2);
+    expect(result[1]?.name).toBe('Two');
+  });
+
+  it('Container of pointers result with promise', async () => {
+    using helper = csp.CallbacksBindingMechanismsTestType.create();
+
+    let thenCallbackCalled = false;
+
+    const resultPromise = helper.callbackFunctionContainerOfPointersAsync().then((pointerContainerArg) => {
+      thenCallbackCalled = true;
+
+      expect(pointerContainerArg.length).toBe(2);
+
+      expect(pointerContainerArg[0]?.value).toBe(1);
+      expect(pointerContainerArg[0]?.name).toBe('One');
+      expect(pointerContainerArg[1]?.value).toBe(2);
+      expect(pointerContainerArg[1]?.name).toBe('Two');
+    });
+
+    await resultPromise;
+
+    expect(thenCallbackCalled).toBe(true);
+  });
+
+  it('Await container of values result', async () => {
+    using helper = csp.CallbacksBindingMechanismsTestType.create();
+
+    using result = await helper.callbackFunctionContainerOfValuesAsync();
+
+    expect(result.length).toBe(2);
+
+    expect(result[0]?.value).toBe(1);
+    expect(result[0]?.name).toBe('One');
+    expect(result[1]?.value).toBe(2);
+    expect(result[1]?.name).toBe('Two');
+  });
+
+  it('Container of values result with promise', async () => {
+    using helper = csp.CallbacksBindingMechanismsTestType.create();
+
+    let thenCallbackCalled = false;
+
+    const resultPromise = helper.callbackFunctionContainerOfValuesAsync().then((valueContainerArg) => {
+      thenCallbackCalled = true;
+
+      expect(valueContainerArg.length).toBe(2);
+
+      expect(valueContainerArg[0]?.value).toBe(1);
+      expect(valueContainerArg[0]?.name).toBe('One');
+      expect(valueContainerArg[1]?.value).toBe(2);
+      expect(valueContainerArg[1]?.name).toBe('Two');
+    });
+
+    await resultPromise;
+
+    expect(thenCallbackCalled).toBe(true);
+  });
+
+  it('Await container of values by const ref result', async () => {
+    using helper = csp.CallbacksBindingMechanismsTestType.create();
+
+    using result = await helper.callbackFunctionContainerOfValuesByConstRefAsync();
+
+    expect(result.length).toBe(2);
+
+    expect(result[0]?.value).toBe(1);
+    expect(result[0]?.name).toBe('One');
+    expect(result[1]?.value).toBe(2);
+    expect(result[1]?.name).toBe('Two');
+  });
+
+  it('Container of values by const ref result with promise', async () => {
+    using helper = csp.CallbacksBindingMechanismsTestType.create();
+
+    let thenCallbackCalled = false;
+
+    const resultPromise = helper.callbackFunctionContainerOfValuesByConstRefAsync().then((valueContainerArg) => {
+      thenCallbackCalled = true;
+
+      expect(valueContainerArg.length).toBe(2);
+
+      expect(valueContainerArg[0]?.value).toBe(1);
+      expect(valueContainerArg[0]?.name).toBe('One');
+      expect(valueContainerArg[1]?.value).toBe(2);
+      expect(valueContainerArg[1]?.name).toBe('Two');
+    });
+
+    await resultPromise;
+
+    expect(thenCallbackCalled).toBe(true);
+  });
+
+  // ----------
+  // Nested container types
+
+  it('Await nested container of pointers result', async () => {
+    using helper = csp.CallbacksBindingMechanismsTestType.create();
+
+    using result = await helper.callbackFunctionNestedContainerOfPointersAsync();
+
+    expect(result.size).toBe(2);
+
+    for (const [, array] of result.entries()) {
+      expect(array).not.toBeFalsy();
+      expect(array?.length).toBe(2);
+    }
+  });
+
+  it('Nested container of pointers result with promise', async () => {
+    using helper = csp.CallbacksBindingMechanismsTestType.create();
+
+    let thenCallbackCalled = false;
+
+    const resultPromise = helper.callbackFunctionNestedContainerOfPointersAsync().then((valueContainerArg) => {
+      thenCallbackCalled = true;
+
+      expect(valueContainerArg.size).toBe(2);
+
+      const array1 = valueContainerArg.get(0);
+      expect(array1).not.toBeFalsy();
+      expect(array1?.length).toBe(2);
+      expect(array1?.[0]?.value).toBe(1);
+      expect(array1?.[0]?.name).toBe('One');
+      expect(array1?.[1]?.value).toBe(2);
+      expect(array1?.[1]?.name).toBe('Two');
+
+      const array2 = valueContainerArg.get(1);
+      expect(array2).not.toBeFalsy();
+      expect(array2?.length).toBe(2);
+      expect(array2?.[0]?.value).toBe(3);
+      expect(array2?.[0]?.name).toBe('Three');
+      expect(array2?.[1]?.value).toBe(4);
+      expect(array2?.[1]?.name).toBe('Four');
+    });
+
+    await resultPromise;
+
+    expect(thenCallbackCalled).toBe(true);
+  });
+
+  it('Await nested container of values result', async () => {
+    using helper = csp.CallbacksBindingMechanismsTestType.create();
+
+    using result = await helper.callbackFunctionNestedContainerOfValuesAsync();
+
+    expect(result.size).toBe(2);
+
+    for (const [, array] of result.entries()) {
+      expect(array).not.toBeFalsy();
+      expect(array?.length).toBe(2);
+    }
+  });
+
+  it('Nested container of values result with promise', async () => {
+    using helper = csp.CallbacksBindingMechanismsTestType.create();
+
+    let thenCallbackCalled = false;
+
+    const resultPromise = helper.callbackFunctionNestedContainerOfValuesAsync().then((valueContainerArg) => {
+      thenCallbackCalled = true;
+
+      expect(valueContainerArg.size).toBe(2);
+
+      const array1 = valueContainerArg.get(0);
+      expect(array1).not.toBeFalsy();
+      expect(array1?.length).toBe(2);
+      expect(array1?.[0]?.value).toBe(1);
+      expect(array1?.[0]?.name).toBe('One');
+      expect(array1?.[1]?.value).toBe(2);
+      expect(array1?.[1]?.name).toBe('Two');
+
+      const array2 = valueContainerArg.get(1);
+      expect(array2).not.toBeFalsy();
+      expect(array2?.length).toBe(2);
+      expect(array2?.[0]?.value).toBe(3);
+      expect(array2?.[0]?.name).toBe('Three');
+      expect(array2?.[1]?.value).toBe(4);
+      expect(array2?.[1]?.name).toBe('Four');
+    });
+
+    await resultPromise;
+
+    expect(thenCallbackCalled).toBe(true);
+  });
+
+  it('Await nested container of values by const ref result', async () => {
+    using helper = csp.CallbacksBindingMechanismsTestType.create();
+
+    using result = await helper.callbackFunctionNestedContainerOfValuesByConstRefAsync();
+
+    expect(result.size).toBe(2);
+
+    for (const [, array] of result.entries()) {
+      expect(array).not.toBeFalsy();
+      expect(array?.length).toBe(2);
+    }
+  });
+
+  it('Nested container of values by const ref result with promise', async () => {
+    using helper = csp.CallbacksBindingMechanismsTestType.create();
+
+    let thenCallbackCalled = false;
+
+    const resultPromise = helper.callbackFunctionNestedContainerOfValuesByConstRefAsync().then((valueContainerArg) => {
+      thenCallbackCalled = true;
+
+      expect(valueContainerArg.size).toBe(2);
+
+      const array1 = valueContainerArg.get(0);
+      expect(array1).not.toBeFalsy();
+      expect(array1?.length).toBe(2);
+      expect(array1?.[0]?.value).toBe(1);
+      expect(array1?.[0]?.name).toBe('One');
+      expect(array1?.[1]?.value).toBe(2);
+      expect(array1?.[1]?.name).toBe('Two');
+
+      const array2 = valueContainerArg.get(1);
+      expect(array2).not.toBeFalsy();
+      expect(array2?.length).toBe(2);
+      expect(array2?.[0]?.value).toBe(3);
+      expect(array2?.[0]?.name).toBe('Three');
+      expect(array2?.[1]?.value).toBe(4);
+      expect(array2?.[1]?.name).toBe('Four');
     });
 
     await resultPromise;
@@ -220,6 +463,27 @@ describe('Awaitable Callbacks', () => {
     expect(thenCallbackCalled).toBe(true);
   });
 
+  it('Container of optional type result with promise', async () => {
+    using helper = csp.CallbacksBindingMechanismsTestType.create();
+
+    let thenCallbackCalled = false;
+
+    const resultPromise = helper.callbackFunctionArrayOfOptAsync().then((result) => {
+      thenCallbackCalled = true;
+
+      expect(result.length).toBe(2);
+
+      expect(result[0]?.value).toBe(1);
+      expect(result[0]?.name).toBe('One');
+      expect(result[1]?.value).toBe(2);
+      expect(result[1]?.name).toBe('Two');
+    });
+
+    await resultPromise;
+
+    expect(thenCallbackCalled).toBe(true);
+  });
+
   it('Null optional pointer type result with promise', async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create();
 
@@ -237,7 +501,7 @@ describe('Awaitable Callbacks', () => {
   });
 
   it('Await primitive result from multi primitive input arg function', async () => {
-    const helper = csp.CallbacksBindingMechanismsTestType.create();
+    using helper = csp.CallbacksBindingMechanismsTestType.create();
 
     const result = await helper.callbackFunctionMultiInputPrimitiveArgAsync(1, 2);
 
@@ -248,7 +512,7 @@ describe('Awaitable Callbacks', () => {
   // Pointer lifetime
 
   it('Await pointer result lifetime', async () => {
-    const helper = csp.CallbacksBindingMechanismsTestType.create();
+    using helper = csp.CallbacksBindingMechanismsTestType.create();
 
     const beforeCallbackCount = csp.BindingsTestType.aliveCount();
 
@@ -270,7 +534,7 @@ describe('Awaitable Callbacks', () => {
   // Value type lifetime
 
   it('Await value type lifetime', async () => {
-    const helper = csp.CallbacksBindingMechanismsTestType.create();
+    using helper = csp.CallbacksBindingMechanismsTestType.create();
 
     const beforeCallbackCount = csp.BindingsTestType.aliveCount();
 
@@ -287,7 +551,7 @@ describe('Awaitable Callbacks', () => {
   });
 
   it('Value type lifetime with promise', async () => {
-    const helper = csp.CallbacksBindingMechanismsTestType.create();
+    using helper = csp.CallbacksBindingMechanismsTestType.create();
 
     const beforeCallbackCount = csp.BindingsTestType.aliveCount();
 
@@ -308,7 +572,7 @@ describe('Awaitable Callbacks', () => {
   });
 
   it('Await const ref type lifetime', async () => {
-    const helper = csp.CallbacksBindingMechanismsTestType.create();
+    using helper = csp.CallbacksBindingMechanismsTestType.create();
 
     const beforeCallbackCount = csp.BindingsTestType.aliveCount();
 
@@ -325,7 +589,7 @@ describe('Awaitable Callbacks', () => {
   });
 
   it('Const ref type lifetime with promise', async () => {
-    const helper = csp.CallbacksBindingMechanismsTestType.create();
+    using helper = csp.CallbacksBindingMechanismsTestType.create();
 
     const beforeCallbackCount = csp.BindingsTestType.aliveCount();
 
@@ -373,10 +637,98 @@ describe('Awaitable Callbacks', () => {
   });
 
   // ----------
+  // Container lifetime
+
+  it('Container of non-owning pointers lifetime with promise', async () => {
+    using helper = csp.CallbacksBindingMechanismsTestType.create();
+
+    let thenCallbackCalled = false;
+    const beforeCallbackCount = csp.BindingsTestType.aliveCount();
+
+    const resultPromise = helper.callbackFunctionContainerOfPointersAsync().then((pointerContainerArg) => {
+      thenCallbackCalled = true;
+
+      expect(pointerContainerArg.length).toBe(2);
+
+      // Pointers should not incur any new lifetimes
+      expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount);
+    });
+
+    await resultPromise;
+
+    expect(thenCallbackCalled).toBe(true);
+    expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount);
+  });
+
+  it('Container of values by const ref lifetime with promise', async () => {
+    using helper = csp.CallbacksBindingMechanismsTestType.create();
+
+    let thenCallbackCalled = false;
+    const beforeCallbackCount = csp.BindingsTestType.aliveCount();
+
+    const resultPromise = helper.callbackFunctionContainerOfValuesByConstRefAsync().then((valueContainerArg) => {
+      // Can also use a DisposableStack instead, i.e. disposableStack.use(valueContainerArg)
+      using disposableValueContainerArg = valueContainerArg;
+
+      thenCallbackCalled = true;
+
+      expect(valueContainerArg.length).toBe(2);
+      expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount + 2);
+    });
+
+    await resultPromise;
+
+    expect(thenCallbackCalled).toBe(true);
+    expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount);
+  });
+
+  it('Container of values lifetime with promise', async () => {
+    using helper = csp.CallbacksBindingMechanismsTestType.create();
+
+    let thenCallbackCalled = false;
+    const beforeCallbackCount = csp.BindingsTestType.aliveCount();
+
+    const resultPromise = helper.callbackFunctionContainerOfValuesAsync().then((valueContainerArg) => {
+      // Can also use a DisposableStack instead, i.e. disposableStack.use(valueContainerArg)
+      using disposableValueContainerArg = valueContainerArg;
+
+      thenCallbackCalled = true;
+
+      expect(valueContainerArg.length).toBe(2);
+
+      expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount + 2);
+    });
+
+    await resultPromise;
+
+    expect(thenCallbackCalled).toBe(true);
+    expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount);
+  });
+
+  // ----------
+  // Nested container lifetime
+
+  it('Await nested container of values by lifetime', async () => {
+    using helper = csp.CallbacksBindingMechanismsTestType.create();
+
+    const beforeCallbackCount = csp.BindingsTestType.aliveCount();
+
+    {
+      using result = await helper.callbackFunctionNestedContainerOfValuesAsync();
+
+      expect(result.size).toBe(2);
+
+      expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount + 4);
+    }
+
+    expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount);
+  });
+
+  // ----------
   // Optional lifetime
 
   it('Await optional value type result lifetime', async () => {
-    const helper = csp.CallbacksBindingMechanismsTestType.create();
+    using helper = csp.CallbacksBindingMechanismsTestType.create();
 
     const beforeCallbackCount = csp.BindingsTestType.aliveCount();
 
@@ -398,7 +750,7 @@ describe('Awaitable Callbacks', () => {
   // Multiple awaits or thens on the same promise
 
   it('Value type lifetime, multiple await', async () => {
-    const helper = csp.CallbacksBindingMechanismsTestType.create();
+    using helper = csp.CallbacksBindingMechanismsTestType.create();
 
     const beforeCallbackCount = csp.BindingsTestType.aliveCount();
 
@@ -426,7 +778,7 @@ describe('Awaitable Callbacks', () => {
   });
 
   it('Value type lifetime, count does not increase with multiple awaits', async () => {
-    const helper = csp.CallbacksBindingMechanismsTestType.create();
+    using helper = csp.CallbacksBindingMechanismsTestType.create();
 
     const beforeCallbackCount = csp.BindingsTestType.aliveCount();
 
@@ -447,7 +799,7 @@ describe('Awaitable Callbacks', () => {
   });
 
   it('Value type lifetime, disposing after first use means value is deleted for subsequent awaits', async () => {
-    const helper = csp.CallbacksBindingMechanismsTestType.create();
+    using helper = csp.CallbacksBindingMechanismsTestType.create();
 
     const resultPromise = helper.callbackFunctionValueArgAsync();
 
@@ -466,7 +818,7 @@ describe('Awaitable Callbacks', () => {
   });
 
   it('Value type lifetime with promise, multiple then', async () => {
-    const helper = csp.CallbacksBindingMechanismsTestType.create();
+    using helper = csp.CallbacksBindingMechanismsTestType.create();
 
     const beforeCallbackCount = csp.BindingsTestType.aliveCount();
 
