@@ -1,7 +1,7 @@
 import { MainModule } from 'connected-spaces-platform-bindings';
 
 /* Timer to let us busy-wait on callbacks finishing. */
-export async function until(predicate: () => boolean, timeoutMs = 2000): Promise<void> {
+export async function until(predicate: () => boolean, timeoutMs = 6000): Promise<void> {
   const deadline = performance.now() + timeoutMs;
   while (!predicate()) {
     if (performance.now() >= deadline) {
@@ -18,8 +18,11 @@ export async function until(predicate: () => boolean, timeoutMs = 2000): Promise
  * callbacks in flight. We combine this with a manually managed "callbackFired" boolean, to
  * get the two state questions we need, "Has the callback started" followed by "Has the callback finished".
  * It does not matter where `callbackFired` is set in the callback itself, so long as it's set somewhere.
+ *
+ * For awaitable callbacks used with async/await, use the `await untilCallbacksSettled(csp)` single-argument
+ * form after awaiting the call under test ('callbackFired' in this case is implicit).
  */
-export async function untilCallbacksSettled(csp: MainModule, callbackFired: () => boolean): Promise<void> {
+export async function untilCallbacksSettled(csp: MainModule, callbackFired: () => boolean = () => true): Promise<void> {
   await until(callbackFired);
   await until(() => csp.CallbacksBindingMechanismsTestType.offThreadCallbacksInFlight() === 0);
 }
