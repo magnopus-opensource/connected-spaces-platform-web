@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll } from 'vitest';
+import { it, expect, beforeAll } from 'vitest';
 import { loadCSP } from '../loadModule';
 import { BindingsTestType, type MainModule } from 'connected-spaces-platform-bindings';
 import { describeOnAndOffThread, untilCallbacksSettled } from './testUtils';
