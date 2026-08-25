@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../utils/Handles.h"
 #include "../utils/JSDisposable.h"
 #include "CSP/Common/Optional.h"
 #include "emscripten/bind.h"
@@ -32,23 +33,35 @@ template <typename T> struct TypeID<csp::common::Optional<T>> {
 };
 
 template <typename T> struct BindingType<csp::common::Optional<T>> {
-    using OptionalBinding = BindingType<std::optional<T>>;
-    using WireType = typename OptionalBinding::WireType;
+    using ValBinding = BindingType<val>;
+    using WireType = typename ValBinding::WireType;
 
     static WireType toWireType(const csp::common::Optional<T>& opt, rvp::default_tag)
     {
-        // The use of std::optional via make_optional here will result in an additional copy of the contained value
-        std::optional<T> stdOpt = opt.HasValue() ? std::make_optional<T>(*opt) : std::nullopt;
+        if (!opt.HasValue()) {
+            return ValBinding::toWireType(val::undefined(), rvp::default_tag {});
+        }
 
-        return OptionalBinding::toWireType(stdOpt, rvp::default_tag {});
+        if constexpr (std::is_pointer_v<T>) {
+            return ValBinding::toWireType(bindings::utils::NonOwningVal(*opt), rvp::default_tag {});
+        } else {
+            return ValBinding::toWireType(val(*opt), rvp::default_tag {});
+        }
     }
 
     static csp::common::Optional<T> fromWireType(WireType v)
     {
-        std::optional<T> opt = OptionalBinding::fromWireType(v);
+        val js = ValBinding::fromWireType(v);
 
-        // There will be an additional copy of the contained value here if the value is non-movable
-        return opt.has_value() ? csp::common::Optional<T>(std::move(*opt)) : csp::common::Optional<T>();
+        if (js.isUndefined() || js.isNull()) {
+            return csp::common::Optional<T>();
+        }
+
+        if constexpr (std::is_pointer_v<T>) {
+            return csp::common::Optional<T>(js.as<T>(allow_raw_pointers()));
+        } else {
+            return csp::common::Optional<T>(js.as<T>());
+        }
     }
 };
 
