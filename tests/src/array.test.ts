@@ -50,7 +50,7 @@ describe('CSPFoundation', () => {
     const newArr = [1, 2, 3];
 
     bindingsArrayHelper.setArrayBasicTypeByValue(newArr);
-    using roundTripArr = bindingsArrayHelper.getArrayBasicTypeByValue();
+    const roundTripArr = bindingsArrayHelper.getArrayBasicTypeByValue();
 
     expect(csp.arrayEquals(newArr, roundTripArr)).toBe(true);
   });
@@ -75,7 +75,7 @@ describe('CSPFoundation', () => {
     const newArr = [1];
 
     bindingsArrayHelper.setArrayBasicTypeByValue(newArr);
-    using roundTripArr = bindingsArrayHelper.getArrayBasicTypeByValue();
+    const roundTripArr = bindingsArrayHelper.getArrayBasicTypeByValue();
 
     expect(csp.arrayEquals(newArr, roundTripArr)).toBe(true);
   });
@@ -85,7 +85,7 @@ describe('CSPFoundation', () => {
     const newArr = Array.from({ length: 10000 }, (_, i) => i);
 
     bindingsArrayHelper.setArrayBasicTypeByValue(newArr);
-    using roundTripArr = bindingsArrayHelper.getArrayBasicTypeByValue();
+    const roundTripArr = bindingsArrayHelper.getArrayBasicTypeByValue();
 
     expect(csp.arrayEquals(newArr, roundTripArr)).toBe(true);
   });
@@ -95,10 +95,10 @@ describe('CSPFoundation', () => {
     const newArr = [1, 2, 3];
 
     bindingsArrayHelper.setArrayBasicTypeByValue(newArr);
-    using roundTripArrByValue = bindingsArrayHelper.getArrayBasicTypeByValue();
+    const roundTripArrByValue = bindingsArrayHelper.getArrayBasicTypeByValue();
 
     bindingsArrayHelper.setArrayBasicTypeByConstRef(newArr);
-    using roundTripArrByConstRef = bindingsArrayHelper.getArrayBasicTypeByConstRef();
+    const roundTripArrByConstRef = bindingsArrayHelper.getArrayBasicTypeByConstRef();
 
     expect(csp.arrayEquals(roundTripArrByValue, roundTripArrByConstRef)).toBe(true);
   });
@@ -359,10 +359,11 @@ describe('CSPFoundation', () => {
 
   it('Array dispose function is not enumerable', () => {
     using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
-    const newArr = [1, 2, 3];
+    using elem1 = csp.BindingsTestType.create(1, 'one');
+    const newArr = [elem1];
 
-    bindingsArrayHelper.setArrayBasicTypeByValue(newArr);
-    using roundTripArr = bindingsArrayHelper.getArrayBasicTypeByValue();
+    bindingsArrayHelper.setArrayFullTypeByValue(newArr);
+    using roundTripArr = bindingsArrayHelper.getArrayFullTypeByValue();
 
     // Check that the dispose function exists
     expect(Symbol.dispose in roundTripArr).toBe(true);
@@ -376,12 +377,9 @@ describe('CSPFoundation', () => {
     const newArr = [1, 2, 3];
 
     bindingsArrayHelper.setArrayBasicTypeByValue(newArr);
-    using roundTripArr = bindingsArrayHelper.getArrayBasicTypeByValue();
+    const roundTripArr = bindingsArrayHelper.getArrayBasicTypeByValue();
 
     // Ensure that the round-tripped array is deeply equal to the original using the Vitest matcher.
-    // It checks all enumerable properties as well as array contents, so it will fail if the dispose
-    // function is enumerable. This fact could otherwise trip up developers writing tests on arrays
-    // coming out of the bindings.
     expect(roundTripArr).toStrictEqual(newArr);
   });
 });

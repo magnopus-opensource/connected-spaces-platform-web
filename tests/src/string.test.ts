@@ -175,7 +175,7 @@ describe('String bindings', () => {
     const testArray = ['alpha', 'beta', 'gamma'];
 
     helper.setArrayStringByValue(testArray);
-    using roundTrip = helper.getArrayStringByValue();
+    const roundTrip = helper.getArrayStringByValue();
 
     expect(csp.arrayEquals(roundTrip, testArray)).toBe(true);
   });
@@ -185,7 +185,7 @@ describe('String bindings', () => {
     const testArray = ['hello', 'world'];
 
     helper.setArrayStringByConstRef(testArray);
-    using roundTrip = helper.getArrayStringByConstRef();
+    const roundTrip = helper.getArrayStringByConstRef();
 
     expect(csp.arrayEquals(roundTrip, testArray)).toBe(true);
   });
@@ -195,7 +195,7 @@ describe('String bindings', () => {
     const testArray: string[] = [];
 
     helper.setArrayStringByValue(testArray);
-    using roundTrip = helper.getArrayStringByValue();
+    const roundTrip = helper.getArrayStringByValue();
 
     expect(csp.arrayEquals(roundTrip, testArray)).toBe(true);
   });
@@ -210,7 +210,7 @@ describe('String bindings', () => {
     ]);
 
     helper.setMapStringIntByValue(testMap);
-    using roundTrip = helper.getMapStringIntByValue();
+    const roundTrip = helper.getMapStringIntByValue();
 
     expect(csp.mapEquals(roundTrip, testMap)).toBe(true);
   });
@@ -223,7 +223,7 @@ describe('String bindings', () => {
     ]);
 
     helper.setMapStringIntByConstRef(testMap);
-    using roundTrip = helper.getMapStringIntByConstRef();
+    const roundTrip = helper.getMapStringIntByConstRef();
 
     expect(csp.mapEquals(roundTrip, testMap)).toBe(true);
   });
@@ -236,7 +236,7 @@ describe('String bindings', () => {
     ]);
 
     helper.setMapStringIntByValue(testMap);
-    using roundTrip = helper.getMapStringIntByValue();
+    const roundTrip = helper.getMapStringIntByValue();
 
     expect(csp.mapEquals(roundTrip, testMap)).toBe(true);
   });
@@ -249,7 +249,7 @@ describe('String bindings', () => {
     ]);
 
     helper.setMapStringStringByValue(testMap);
-    using roundTrip = helper.getMapStringStringByValue();
+    const roundTrip = helper.getMapStringStringByValue();
 
     expect(csp.mapEquals(roundTrip, testMap)).toBe(true);
   });
@@ -262,7 +262,7 @@ describe('String bindings', () => {
     ]);
 
     helper.setMapStringStringByConstRef(testMap);
-    using roundTrip = helper.getMapStringStringByConstRef();
+    const roundTrip = helper.getMapStringStringByConstRef();
 
     expect(csp.mapEquals(roundTrip, testMap)).toBe(true);
   });
@@ -275,7 +275,7 @@ describe('String bindings', () => {
     ]);
 
     helper.setMapStringStringByConstRef(testMap);
-    using roundTrip = helper.getMapStringStringByConstRef();
+    const roundTrip = helper.getMapStringStringByConstRef();
 
     expect(csp.mapEquals(roundTrip, testMap)).toBe(true);
   });
@@ -349,10 +349,10 @@ describe('String bindings', () => {
 
       const heapBefore = (freshCsp as unknown as { HEAPU8: Uint8Array }).HEAPU8.byteLength;
 
-      // Each getter returns a fresh array whose strings will all be freed on dispose with `using`.
+      // Each getter returns a fresh array whose strings are all freed as they cross the boundary.
       // If the strings inside aren't destroyed: 100 * ~1KB * 1K iterations = ~100MB leak.
       for (let i = 0; i < 1_000; i++) {
-        using arr = helper.getArrayStringByValue();
+        const arr = helper.getArrayStringByValue();
         void arr.length;
       }
 
@@ -371,10 +371,10 @@ describe('String bindings', () => {
 
       const heapBefore = (freshCsp as unknown as { HEAPU8: Uint8Array }).HEAPU8.byteLength;
 
-      // Each getter returns a fresh map whose strings will all be freed on dispose with `using`.
+      // Each getter returns a fresh map whose strings are all freed as they cross the boundary.
       // If the strings inside aren't destroyed: 100 * ~1KB * 1K iterations = ~100MB leak.
       for (let i = 0; i < 1_000; i++) {
-        using map = helper.getMapStringStringByValue();
+        const map = helper.getMapStringStringByValue();
         void map.size;
       }
 

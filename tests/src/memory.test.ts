@@ -281,15 +281,6 @@ describe('CSPFoundation', () => {
     expect(csp.BindingsTestType.aliveCount()).toBe(beforeGet);
   });
 
-  it('Using on an array of basic types is a tolerated no-op on disposal', () => {
-    using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
-    bindingsArrayHelper.setArrayBasicTypeByValue([1, 2, 3]);
-    expect(() => {
-      using arr = bindingsArrayHelper.getArrayBasicTypeByValue();
-      expect(arr.length).toBe(3);
-    }).not.toThrow();
-  });
-
   it('Releases array handles when the scope exits via exception', () => {
     using bindingsArrayHelper = csp.ContainerBindingMechanismsTestType.create();
     using elem1 = csp.BindingsTestType.create(1, 'one');
@@ -491,21 +482,6 @@ describe('CSPFoundation', () => {
     }
     // Scope exit, destructors should run.
     expect(csp.BindingsTestType.aliveCount()).toBe(beforeGet);
-  });
-
-  it('Using on a map of basic types is a tolerated no-op on disposal', () => {
-    using bindingsMapHelper = csp.ContainerBindingMechanismsTestType.create();
-    bindingsMapHelper.setMapBasicTypeByValue(
-      new Map([
-        [1, 10],
-        [2, 20],
-        [3, 30]
-      ])
-    );
-    expect(() => {
-      using map = bindingsMapHelper.getMapBasicTypeByValue();
-      expect(map.size).toBe(3);
-    }).not.toThrow();
   });
 
   it('Releases map handles when the scope exits via exception', () => {

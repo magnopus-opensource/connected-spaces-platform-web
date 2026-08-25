@@ -121,8 +121,7 @@ EMSCRIPTEN_BINDINGS(CSPTestTypeBindings)
         .property("value", &BindingsTestType::GetValue, &BindingsTestType::SetValue)
         .property("name", &BindingsTestType::GetName, &BindingsTestType::SetName)
         .function("equals", &BindingsTestType::operator==)
-        .class_function(
-            "aliveCount", +[] { return BindingsTestType::AliveCount.load(); });
+        .class_function("aliveCount", +[] { return BindingsTestType::AliveCount.load(); });
 
     //Register the named version of the non-owning pointer type, as we use it as a raw `val` via NonOwningVal.
     emscripten::register_type<BindingsTestTypePointer>("BindingsTestType | null");
@@ -154,19 +153,13 @@ EMSCRIPTEN_BINDINGS(CSPTestTypeBindings)
      */
 
     // Array
-    emscripten::register_type<bindings::utils::JSDisposable<csp::common::Array<int>>>("(number[] & Disposable)");
     emscripten::register_type<bindings::utils::JSDisposable<csp::common::Array<BindingsTestType>>>("(BindingsTestType[] & Disposable)");
-    emscripten::register_type<bindings::utils::JSDisposable<csp::common::Array<csp::common::String>>>("(string[] & Disposable)");
 
     // List
-    emscripten::register_type<bindings::utils::JSDisposable<csp::common::List<int>>>("(number[] & Disposable)");
     emscripten::register_type<bindings::utils::JSDisposable<csp::common::List<BindingsTestType>>>("(BindingsTestType[] & Disposable)");
 
     // Map
-    emscripten::register_type<bindings::utils::JSDisposable<csp::common::Map<int, int>>>("(Map<number, number> & Disposable)");
     emscripten::register_type<bindings::utils::JSDisposable<csp::common::Map<int, BindingsTestType>>>("(Map<number, BindingsTestType> & Disposable)");
-    emscripten::register_type<bindings::utils::JSDisposable<csp::common::Map<csp::common::String, int>>>("(Map<string, number> & Disposable)");
-    emscripten::register_type<bindings::utils::JSDisposable<csp::common::Map<csp::common::String, csp::common::String>>>("(Map<string, string> & Disposable)");
 
     // Optional
     emscripten::register_optional<int>();

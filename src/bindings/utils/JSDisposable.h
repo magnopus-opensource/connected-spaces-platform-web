@@ -1,8 +1,26 @@
 #pragma once
 
+#include "CSP/Common/Array.h"
+#include "CSP/Common/List.h"
+#include "CSP/Common/Map.h"
+#include "CSP/Common/Optional.h"
+#include "CSP/Common/String.h"
 #include <optional>
+#include <type_traits>
 
 namespace bindings::utils {
+
+/*
+ * Inner-Types that inherently should not be disposed, because they are represented as JS primitives
+ */
+template <typename T> inline constexpr bool RequiresNoDisposal = std::is_enum_v<T> || std::is_arithmetic_v<T> || std::is_same_v<std::remove_cv_t<T>, csp::common::String>;
+
+/* Might be tempting to just put more static asserts in the container specializations themselves, but doing it here means even JsDisposable<Array<Array<int>>> gets flagged */
+template <typename T> inline constexpr bool RequiresNoDisposal<csp::common::Array<T>> = RequiresNoDisposal<T>;
+template <typename T> inline constexpr bool RequiresNoDisposal<csp::common::List<T>> = RequiresNoDisposal<T>;
+template <typename T> inline constexpr bool RequiresNoDisposal<csp::common::Optional<T>> = RequiresNoDisposal<T>;
+template <typename K, typename V> inline constexpr bool RequiresNoDisposal<csp::common::Map<K, V>> = RequiresNoDisposal<V>;
+
 /*
  * Return-only wrapper for types crossing C++ -> JS.
  *
@@ -31,6 +49,8 @@ namespace bindings::utils {
  * which will primarily be containers.
  */
 template <typename T> class JSDisposable {
+
+    static_assert(!RequiresNoDisposal<T>, "JSDisposable<T> is redundant for this T, as it is always represented by a JS primitive type.");
 
     // ownedType must be declared before view: member init order follows
     // declaration order, and the rvalue ctor binds view to *ownedType.
