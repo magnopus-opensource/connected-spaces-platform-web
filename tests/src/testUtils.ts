@@ -82,7 +82,7 @@ export function forceHeapGrowth(freshCSPModule: any) {
  * Utility function to allow running the same test suite in both on- and off-thread modes.
  * The mode is passed in to the test suite function "describeFn".
  */
-export const describeOnAndOffThread = (name: string, describeFn: (offThread: boolean) => void) => {
+export const describeOnAndOffThread = (name: string, describeFn: (offThread: boolean, modeLabel: string) => void) => {
   /* "mode" is just used to print the test name nicely. */
   const CALLBACK_THREADING_MODE = [
     { mode: 'On Thread', offThread: false },
@@ -90,6 +90,6 @@ export const describeOnAndOffThread = (name: string, describeFn: (offThread: boo
   ];
 
   for (const { mode, offThread } of CALLBACK_THREADING_MODE) {
-    describe(`${name} - ${mode}`, () => describeFn(offThread));
+    describe(`${name} - ${mode}`, () => describeFn(offThread, mode));
   }
 };

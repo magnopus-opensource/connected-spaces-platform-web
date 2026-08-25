@@ -24,14 +24,14 @@ import createModule, { type MainModule } from 'connected-spaces-platform-binding
  * for lifetime inspection of dying objects, which isn't a normal thing to be doing outside of tests.
  */
 
-describeOnAndOffThread('Callbacks', (offThread) => {
+describeOnAndOffThread('Callbacks', (offThread, modeLabel) => {
   let csp: MainModule;
 
   beforeAll(async () => {
     csp = await loadCSP();
   });
 
-  it('Callback No Args', async () => {
+  it(`Callback No Args (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     let callbackCalled = false;
@@ -43,7 +43,7 @@ describeOnAndOffThread('Callbacks', (offThread) => {
     expect(callbackCalled).toBe(true);
   });
 
-  it('Callback Primitive Arg', async () => {
+  it(`Callback Primitive Arg (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     let callbackCalled = false;
@@ -56,7 +56,7 @@ describeOnAndOffThread('Callbacks', (offThread) => {
     expect(callbackCalled).toBe(true);
   });
 
-  it('Callback Pointer Arg', async () => {
+  it(`Callback Pointer Arg (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     let callbackCalled = false;
@@ -70,7 +70,7 @@ describeOnAndOffThread('Callbacks', (offThread) => {
     expect(callbackCalled).toBe(true);
   });
 
-  it('Callback Value Arg', async () => {
+  it(`Callback Value Arg (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     let callbackCalled = false;
@@ -84,7 +84,7 @@ describeOnAndOffThread('Callbacks', (offThread) => {
     expect(callbackCalled).toBe(true);
   });
 
-  it('Callback Container of Pointers Arg', async () => {
+  it(`Callback Container of Pointers Arg (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     let callbackCalled = false;
@@ -101,7 +101,7 @@ describeOnAndOffThread('Callbacks', (offThread) => {
     expect(callbackCalled).toBe(true);
   });
 
-  it('Callback Container of Values Arg', async () => {
+  it(`Callback Container of Values Arg (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     let callbackCalled = false;
@@ -118,7 +118,7 @@ describeOnAndOffThread('Callbacks', (offThread) => {
     expect(callbackCalled).toBe(true);
   });
 
-  it('Callback Multiple Args', async () => {
+  it(`Callback Multiple Args (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     let callbackCalled = false;
@@ -132,7 +132,7 @@ describeOnAndOffThread('Callbacks', (offThread) => {
     expect(callbackCalled).toBe(true);
   });
 
-  it.skipIf(offThread)('Callback That Throws On Thread', () => {
+  it.skipIf(offThread)(`Callback That Throws On Thread (${modeLabel})`, () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     // Synchronous callbacks should behave just like nested calls */
@@ -154,7 +154,7 @@ describeOnAndOffThread('Callbacks', (offThread) => {
     expect(secondCallbackCalled).toBe(true);
   });
 
-  it.skipIf(!offThread)('Callback That Throws Off Thread', async () => {
+  it.skipIf(!offThread)(`Callback That Throws Off Thread (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     // Off thread callbacks do not throw, they convert to errors
@@ -184,7 +184,7 @@ describeOnAndOffThread('Callbacks', (offThread) => {
     expect(secondCallbackCalled).toBe(true);
   });
 
-  it('Pointer arg is non-owning', async () => {
+  it(`Pointer arg is non-owning (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     let callbackCalled = false;
@@ -199,7 +199,7 @@ describeOnAndOffThread('Callbacks', (offThread) => {
     expect(callbackCalled).toBe(true);
   });
 
-  it('Callback Optional Value Arg', async () => {
+  it(`Callback Optional Value Arg (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     let callbackCalled = false;
@@ -213,7 +213,7 @@ describeOnAndOffThread('Callbacks', (offThread) => {
     expect(callbackCalled).toBe(true);
   });
 
-  it('Callback Optional Pointer Arg', async () => {
+  it(`Callback Optional Pointer Arg (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     let callbackCalled = false;
@@ -227,7 +227,7 @@ describeOnAndOffThread('Callbacks', (offThread) => {
     expect(callbackCalled).toBe(true);
   });
 
-  it('Callback Array of Optional Arg', async () => {
+  it(`Callback Array of Optional Arg (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     let callbackCalled = false;
@@ -244,7 +244,7 @@ describeOnAndOffThread('Callbacks', (offThread) => {
     expect(callbackCalled).toBe(true);
   });
 
-  it('Callback Optional of Array Arg', async () => {
+  it(`Callback Optional of Array Arg (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     let callbackCalled = false;
@@ -262,7 +262,7 @@ describeOnAndOffThread('Callbacks', (offThread) => {
     expect(callbackCalled).toBe(true);
   });
 
-  it('Callback Array of Some Null Optional Arg', async () => {
+  it(`Callback Array of Some Null Optional Arg (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     let callbackCalled = false;
@@ -279,7 +279,7 @@ describeOnAndOffThread('Callbacks', (offThread) => {
     expect(callbackCalled).toBe(true);
   });
 
-  it('Callback Optional Null Value Arg', async () => {
+  it(`Callback Optional Null Value Arg (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     let callbackCalled = false;
@@ -292,7 +292,7 @@ describeOnAndOffThread('Callbacks', (offThread) => {
     expect(callbackCalled).toBe(true);
   });
 
-  it('Callback Optional Null Pointer Arg', async () => {
+  it(`Callback Optional Null Pointer Arg (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     let callbackCalled = false;
@@ -305,7 +305,7 @@ describeOnAndOffThread('Callbacks', (offThread) => {
     expect(callbackCalled).toBe(true);
   });
 
-  it('Callback called multiple times', async () => {
+  it(`Callback called multiple times (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     let callbackCalledCount = 0;
@@ -321,7 +321,7 @@ describeOnAndOffThread('Callbacks', (offThread) => {
     expect(callbackCalledCount).toBe(3);
   });
 
-  it('Re-register callback', async () => {
+  it(`Re-register callback (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     let callbackCalledOne = false;
@@ -344,7 +344,7 @@ describeOnAndOffThread('Callbacks', (offThread) => {
     expect(callbackCalledTwo).toBe(true);
   });
 
-  it('Callback registration does not leak', async () => {
+  it(`Callback registration does not leak (${modeLabel})`, async () => {
     const freshCsp = await createModule();
     forceHeapGrowth(freshCsp);
 
@@ -390,7 +390,7 @@ describeOnAndOffThread('Callbacks', (offThread) => {
    * to the objects. The backend CSP interop container types can add a fair amount of redundant copies
    * themselves (default constructions), but we separate that in the test infra so it's not a concern here.
    */
-  it('Callback by const ref arg disposes at end of scope automatically', async () => {
+  it(`Callback by const ref arg disposes at end of scope automatically (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     let callbackCalled = false;
@@ -406,7 +406,7 @@ describeOnAndOffThread('Callbacks', (offThread) => {
     expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount);
   });
 
-  it('Callback value arg disposes at end of scope automatically', async () => {
+  it(`Callback value arg disposes at end of scope automatically (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     let callbackCalled = false;
@@ -422,7 +422,7 @@ describeOnAndOffThread('Callbacks', (offThread) => {
     expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount);
   });
 
-  it('Callback non-owning pointer arg does nothing at end of scope automatically', async () => {
+  it(`Callback non-owning pointer arg does nothing at end of scope automatically (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     let callbackCalled = false;
@@ -439,7 +439,7 @@ describeOnAndOffThread('Callbacks', (offThread) => {
     expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount);
   });
 
-  it('Callback value container by const ref disposes contents at end of scope automatically', async () => {
+  it(`Callback value container by const ref disposes contents at end of scope automatically (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     let callbackCalled = false;
@@ -456,7 +456,7 @@ describeOnAndOffThread('Callbacks', (offThread) => {
     expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount);
   });
 
-  it('Callback value container disposes contents at end of scope automatically', async () => {
+  it(`Callback value container disposes contents at end of scope automatically (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     let callbackCalled = false;
@@ -474,7 +474,7 @@ describeOnAndOffThread('Callbacks', (offThread) => {
     expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount);
   });
 
-  it('Callback non-owning pointer container does nothing with contents at end of scope automatically', async () => {
+  it(`Callback non-owning pointer container does nothing with contents at end of scope automatically (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     let callbackCalled = false;
@@ -492,7 +492,7 @@ describeOnAndOffThread('Callbacks', (offThread) => {
     expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount);
   });
 
-  it('Callback nested value container by const ref disposes contents at end of scope automatically', async () => {
+  it(`Callback nested value container by const ref disposes contents at end of scope automatically (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     let callbackCalled = false;
@@ -511,7 +511,7 @@ describeOnAndOffThread('Callbacks', (offThread) => {
     expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount);
   });
 
-  it('Callback nested value container disposes contents at end of scope automatically', async () => {
+  it(`Callback nested value container disposes contents at end of scope automatically (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     let callbackCalled = false;
@@ -531,7 +531,7 @@ describeOnAndOffThread('Callbacks', (offThread) => {
     expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount);
   });
 
-  it('Callback nested pointer container does nothing with contents at end of scope automatically', async () => {
+  it(`Callback nested pointer container does nothing with contents at end of scope automatically (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     let callbackCalled = false;
@@ -551,7 +551,7 @@ describeOnAndOffThread('Callbacks', (offThread) => {
     expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount);
   });
 
-  it('Callback with many mixed argument types', async () => {
+  it(`Callback with many mixed argument types (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     let callbackCalled = false;
@@ -576,7 +576,7 @@ describeOnAndOffThread('Callbacks', (offThread) => {
     expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount);
   });
 
-  it('Function with callback and multiple primitive input args', async () => {
+  it(`Function with callback and multiple primitive input args (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     let callbackCalled = false;
@@ -592,7 +592,7 @@ describeOnAndOffThread('Callbacks', (offThread) => {
     expect(callbackCalled).toBe(true);
   });
 
-  it('Callback Optional Value Arg Disposal', async () => {
+  it(`Callback Optional Value Arg Disposal (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     const beforeCallbackCount = csp.BindingsTestType.aliveCount();
@@ -608,7 +608,7 @@ describeOnAndOffThread('Callbacks', (offThread) => {
     expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount);
   });
 
-  it('Callback Optional Pointer Arg Disposal', async () => {
+  it(`Callback Optional Pointer Arg Disposal (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     const beforeCallbackCount = csp.BindingsTestType.aliveCount();

@@ -1,4 +1,4 @@
-import { it, expect, beforeAll } from 'vitest';
+import { beforeAll, beforeEach, expect, it } from 'vitest';
 import { loadCSP } from '../loadModule';
 import { BindingsTestType, type MainModule } from 'connected-spaces-platform-bindings';
 import { describeOnAndOffThread, untilCallbacksSettled } from './testUtils';
@@ -7,14 +7,18 @@ import { describeOnAndOffThread, untilCallbacksSettled } from './testUtils';
  * Tests for the binding of awaitable callbacks into the typescript boundary.
  */
 
-describeOnAndOffThread('Awaitable Callbacks', (offThread) => {
+describeOnAndOffThread('Awaitable Callbacks', (offThread, modeLabel) => {
   let csp: MainModule;
 
   beforeAll(async () => {
     csp = await loadCSP();
   });
 
-  it('Await void result', async () => {
+  beforeEach(async () => {
+    await untilCallbacksSettled(csp);
+  });
+
+  it(`Await void result (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     // @ts-expect-error There is no return value normally but we want to test that the promise
@@ -24,7 +28,7 @@ describeOnAndOffThread('Awaitable Callbacks', (offThread) => {
     expect(result).toBeUndefined();
   });
 
-  it('Void result with promise', async () => {
+  it(`Void result with promise (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     let thenCallbackCalled = false;
@@ -38,7 +42,7 @@ describeOnAndOffThread('Awaitable Callbacks', (offThread) => {
     expect(thenCallbackCalled).toBe(true);
   });
 
-  it('Await primitive result', async () => {
+  it(`Await primitive result (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     const result = await helper.callbackFunctionPrimitiveArgAsync();
@@ -46,7 +50,7 @@ describeOnAndOffThread('Awaitable Callbacks', (offThread) => {
     expect(result).toBe(10);
   });
 
-  it('Primitive result with promise', async () => {
+  it(`Primitive result with promise (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     let thenCallbackCalled = false;
@@ -62,7 +66,7 @@ describeOnAndOffThread('Awaitable Callbacks', (offThread) => {
     expect(thenCallbackCalled).toBe(true);
   });
 
-  it('Await value type result', async () => {
+  it(`Await value type result (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     using result = await helper.callbackFunctionValueArgAsync();
@@ -71,7 +75,7 @@ describeOnAndOffThread('Awaitable Callbacks', (offThread) => {
     expect(result.name).toBe('One');
   });
 
-  it('Value type result with promise', async () => {
+  it(`Value type result with promise (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     let thenCallbackCalled = false;
@@ -89,7 +93,7 @@ describeOnAndOffThread('Awaitable Callbacks', (offThread) => {
     expect(thenCallbackCalled).toBe(true);
   });
 
-  it('Await const ref result', async () => {
+  it(`Await const ref result (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     using result = await helper.callbackFunctionValueArgByConstRefAsync();
@@ -98,7 +102,7 @@ describeOnAndOffThread('Awaitable Callbacks', (offThread) => {
     expect(result.name).toBe('One');
   });
 
-  it('Const ref result with promise', async () => {
+  it(`Const ref result with promise (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     let thenCallbackCalled = false;
@@ -116,7 +120,7 @@ describeOnAndOffThread('Awaitable Callbacks', (offThread) => {
     expect(thenCallbackCalled).toBe(true);
   });
 
-  it('Await pointer result', async () => {
+  it(`Await pointer result (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     // Pointer is non-owning so technically no dispose is needed, but we allow 'using' for
@@ -129,7 +133,7 @@ describeOnAndOffThread('Awaitable Callbacks', (offThread) => {
     expect(result?.name).toBe('One');
   });
 
-  it('Pointer result with promise', async () => {
+  it(`Pointer result with promise (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     let thenCallbackCalled = false;
@@ -152,7 +156,7 @@ describeOnAndOffThread('Awaitable Callbacks', (offThread) => {
   // ----------
   // Container types
 
-  it('Await container of pointers result', async () => {
+  it(`Await container of pointers result (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     using result = await helper.callbackFunctionContainerOfPointersAsync();
@@ -165,7 +169,7 @@ describeOnAndOffThread('Awaitable Callbacks', (offThread) => {
     expect(result[1]?.name).toBe('Two');
   });
 
-  it('Container of pointers result with promise', async () => {
+  it(`Container of pointers result with promise (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     let thenCallbackCalled = false;
@@ -187,7 +191,7 @@ describeOnAndOffThread('Awaitable Callbacks', (offThread) => {
     expect(thenCallbackCalled).toBe(true);
   });
 
-  it('Await container of values result', async () => {
+  it(`Await container of values result (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     using result = await helper.callbackFunctionContainerOfValuesAsync();
@@ -200,7 +204,7 @@ describeOnAndOffThread('Awaitable Callbacks', (offThread) => {
     expect(result[1]?.name).toBe('Two');
   });
 
-  it('Container of values result with promise', async () => {
+  it(`Container of values result with promise (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     let thenCallbackCalled = false;
@@ -222,7 +226,7 @@ describeOnAndOffThread('Awaitable Callbacks', (offThread) => {
     expect(thenCallbackCalled).toBe(true);
   });
 
-  it('Await container of values by const ref result', async () => {
+  it(`Await container of values by const ref result (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     using result = await helper.callbackFunctionContainerOfValuesByConstRefAsync();
@@ -235,7 +239,7 @@ describeOnAndOffThread('Awaitable Callbacks', (offThread) => {
     expect(result[1]?.name).toBe('Two');
   });
 
-  it('Container of values by const ref result with promise', async () => {
+  it(`Container of values by const ref result with promise (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     let thenCallbackCalled = false;
@@ -260,7 +264,7 @@ describeOnAndOffThread('Awaitable Callbacks', (offThread) => {
   // ----------
   // Nested container types
 
-  it('Await nested container of pointers result', async () => {
+  it(`Await nested container of pointers result (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     using result = await helper.callbackFunctionNestedContainerOfPointersAsync();
@@ -273,7 +277,7 @@ describeOnAndOffThread('Awaitable Callbacks', (offThread) => {
     }
   });
 
-  it('Nested container of pointers result with promise', async () => {
+  it(`Nested container of pointers result with promise (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     let thenCallbackCalled = false;
@@ -306,7 +310,7 @@ describeOnAndOffThread('Awaitable Callbacks', (offThread) => {
     expect(thenCallbackCalled).toBe(true);
   });
 
-  it('Await nested container of values result', async () => {
+  it(`Await nested container of values result (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     using result = await helper.callbackFunctionNestedContainerOfValuesAsync();
@@ -319,7 +323,7 @@ describeOnAndOffThread('Awaitable Callbacks', (offThread) => {
     }
   });
 
-  it('Nested container of values result with promise', async () => {
+  it(`Nested container of values result with promise (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     let thenCallbackCalled = false;
@@ -352,7 +356,7 @@ describeOnAndOffThread('Awaitable Callbacks', (offThread) => {
     expect(thenCallbackCalled).toBe(true);
   });
 
-  it('Await nested container of values by const ref result', async () => {
+  it(`Await nested container of values by const ref result (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     using result = await helper.callbackFunctionNestedContainerOfValuesByConstRefAsync();
@@ -365,7 +369,7 @@ describeOnAndOffThread('Awaitable Callbacks', (offThread) => {
     }
   });
 
-  it('Nested container of values by const ref result with promise', async () => {
+  it(`Nested container of values by const ref result with promise (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     let thenCallbackCalled = false;
@@ -401,7 +405,7 @@ describeOnAndOffThread('Awaitable Callbacks', (offThread) => {
   // ----------
   // Optional types
 
-  it('Await optional value type result', async () => {
+  it(`Await optional value type result (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     using result = await helper.callbackFunctionValueOptAsync();
@@ -411,7 +415,7 @@ describeOnAndOffThread('Awaitable Callbacks', (offThread) => {
     expect(result?.name).toBe('One');
   });
 
-  it('Optional value type result with promise', async () => {
+  it(`Optional value type result with promise (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     let thenCallbackCalled = false;
@@ -430,7 +434,7 @@ describeOnAndOffThread('Awaitable Callbacks', (offThread) => {
     expect(thenCallbackCalled).toBe(true);
   });
 
-  it('Await optional pointer type result', async () => {
+  it(`Await optional pointer type result (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     using result = await helper.callbackFunctionPointerOptAsync();
@@ -440,7 +444,7 @@ describeOnAndOffThread('Awaitable Callbacks', (offThread) => {
     expect(result?.name).toBe('One');
   });
 
-  it('Optional pointer type result with promise', async () => {
+  it(`Optional pointer type result with promise (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     let thenCallbackCalled = false;
@@ -459,7 +463,7 @@ describeOnAndOffThread('Awaitable Callbacks', (offThread) => {
     expect(thenCallbackCalled).toBe(true);
   });
 
-  it('Null optional value type result with promise', async () => {
+  it(`Null optional value type result with promise (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     let thenCallbackCalled = false;
@@ -476,7 +480,7 @@ describeOnAndOffThread('Awaitable Callbacks', (offThread) => {
     expect(thenCallbackCalled).toBe(true);
   });
 
-  it('Container of optional type result with promise', async () => {
+  it(`Container of optional type result with promise (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     let thenCallbackCalled = false;
@@ -498,7 +502,7 @@ describeOnAndOffThread('Awaitable Callbacks', (offThread) => {
     expect(thenCallbackCalled).toBe(true);
   });
 
-  it('Null optional pointer type result with promise', async () => {
+  it(`Null optional pointer type result with promise (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     let thenCallbackCalled = false;
@@ -515,7 +519,7 @@ describeOnAndOffThread('Awaitable Callbacks', (offThread) => {
     expect(thenCallbackCalled).toBe(true);
   });
 
-  it('Await primitive result from multi primitive input arg function', async () => {
+  it(`Await primitive result from multi primitive input arg function (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     const result = await helper.callbackFunctionMultiInputPrimitiveArgAsync(1, 2);
@@ -526,7 +530,7 @@ describeOnAndOffThread('Awaitable Callbacks', (offThread) => {
   // ----------
   // Pointer lifetime
 
-  it('Await pointer result lifetime', async () => {
+  it(`Await pointer result lifetime (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     const beforeCallbackCount = csp.BindingsTestType.aliveCount();
@@ -548,7 +552,7 @@ describeOnAndOffThread('Awaitable Callbacks', (offThread) => {
   // ----------
   // Value type lifetime
 
-  it('Await value type lifetime', async () => {
+  it(`Await value type lifetime (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     const beforeCallbackCount = csp.BindingsTestType.aliveCount();
@@ -567,7 +571,7 @@ describeOnAndOffThread('Awaitable Callbacks', (offThread) => {
     expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount);
   });
 
-  it('Value type lifetime with promise', async () => {
+  it(`Value type lifetime with promise (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     let thenCallbackCalled = false;
@@ -598,7 +602,7 @@ describeOnAndOffThread('Awaitable Callbacks', (offThread) => {
     expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount);
   });
 
-  it('Await const ref type lifetime', async () => {
+  it(`Await const ref type lifetime (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     const beforeCallbackCount = csp.BindingsTestType.aliveCount();
@@ -617,7 +621,7 @@ describeOnAndOffThread('Awaitable Callbacks', (offThread) => {
     expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount);
   });
 
-  it('Const ref type lifetime with promise', async () => {
+  it(`Const ref type lifetime with promise (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     let thenCallbackCalled = false;
@@ -647,7 +651,7 @@ describeOnAndOffThread('Awaitable Callbacks', (offThread) => {
     expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount);
   });
 
-  it('Referencing an un-disposed value arg outside an async callback works', async () => {
+  it(`Referencing an un-disposed value arg outside an async callback works (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     let thenCallbackCalled = false;
@@ -679,7 +683,7 @@ describeOnAndOffThread('Awaitable Callbacks', (offThread) => {
   // ----------
   // Container lifetime
 
-  it('Container of non-owning pointers lifetime with promise', async () => {
+  it(`Container of non-owning pointers lifetime with promise (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     let thenCallbackCalled = false;
@@ -701,7 +705,7 @@ describeOnAndOffThread('Awaitable Callbacks', (offThread) => {
     expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount);
   });
 
-  it('Container of values by const ref lifetime with promise', async () => {
+  it(`Container of values by const ref lifetime with promise (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     let thenCallbackCalled = false;
@@ -732,7 +736,7 @@ describeOnAndOffThread('Awaitable Callbacks', (offThread) => {
     expect(csp.BindingsTestType.aliveCount()).toBe(beforeCallbackCount);
   });
 
-  it('Container of values lifetime with promise', async () => {
+  it(`Container of values lifetime with promise (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     let thenCallbackCalled = false;
@@ -766,7 +770,7 @@ describeOnAndOffThread('Awaitable Callbacks', (offThread) => {
   // ----------
   // Nested container lifetime
 
-  it('Await nested container of values by lifetime', async () => {
+  it(`Await nested container of values by lifetime (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     const beforeCallbackCount = csp.BindingsTestType.aliveCount();
@@ -787,7 +791,7 @@ describeOnAndOffThread('Awaitable Callbacks', (offThread) => {
   // ----------
   // Optional lifetime
 
-  it('Await optional value type result lifetime', async () => {
+  it(`Await optional value type result lifetime (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     const beforeCallbackCount = csp.BindingsTestType.aliveCount();
@@ -811,7 +815,7 @@ describeOnAndOffThread('Awaitable Callbacks', (offThread) => {
   // ----------
   // Multiple awaits or thens on the same promise
 
-  it('Value type lifetime, multiple await', async () => {
+  it(`Value type lifetime, multiple await (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     const beforeCallbackCount = csp.BindingsTestType.aliveCount();
@@ -841,7 +845,7 @@ describeOnAndOffThread('Awaitable Callbacks', (offThread) => {
     }).rejects.toThrow();
   });
 
-  it('Value type lifetime, count does not increase with multiple awaits', async () => {
+  it(`Value type lifetime, count does not increase with multiple awaits (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     const beforeCallbackCount = csp.BindingsTestType.aliveCount();
@@ -864,7 +868,7 @@ describeOnAndOffThread('Awaitable Callbacks', (offThread) => {
     result1.delete();
   });
 
-  it('Value type lifetime, disposing after first use means value is deleted for subsequent awaits', async () => {
+  it(`Value type lifetime, disposing after first use means value is deleted for subsequent awaits (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     const resultPromise = helper.callbackFunctionValueArgAsync();
@@ -883,7 +887,7 @@ describeOnAndOffThread('Awaitable Callbacks', (offThread) => {
     expect(() => result2.value).toThrow();
   });
 
-  it('Value type lifetime with promise, multiple then', async () => {
+  it(`Value type lifetime with promise, multiple then (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
     const beforeCallbackCount = csp.BindingsTestType.aliveCount();
