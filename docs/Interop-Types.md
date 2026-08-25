@@ -90,7 +90,7 @@ setValue();
 setValue(undefined);
 ```
 
-The implementation of the bindings for `csp::common:Optional` uses the built-in Embind bindings for `std::optional`, which some additional handling for optional of types with an attached `[Symbol.dispose]` to ensure support for `using` on optional values where expected.
+The implementation of the bindings for `csp::common:Optional` has some additional handling for optional of types with an attached `[Symbol.dispose]` to ensure support for `using` on optional values where expected.
 Note that `using` on a value of type `(T & Disposable) | undefined` works because `using` on `undefined` or `null` values is a no-op.
 
 One key difference to be mindful of when registering `csp::common::Optional` types is that `emscripten::register_optional` should be used instead of `emscripten::register_type`. For example:
@@ -120,7 +120,7 @@ the bindings will enable standard JavaScript strings to be used:
 
 ```ts
 const str = csp.getString(); // 'Hello!'
-csp.setString("Hello back!");
+csp.setString('Hello back!');
 ```
 
 The binding for string piggy-backs on the built-in Embind implementation for `std::string`, and because of that involves an extra copy into an `std::string` that we may look to remove in future if it becomes an issue.
@@ -151,8 +151,8 @@ Pointer arrays do not invoke copies (well ... they copy _pointers_ but that's no
 The binding surface supports pointer arrays where the contained objects are owned in JS/TS, as below:
 
 ```ts
-using elem1 = csp.MyType.create(1, "one");
-using elem2 = csp.MyType.create(2, "two");
+using elem1 = csp.MyType.create(1, 'one');
+using elem2 = csp.MyType.create(2, 'two');
 csp.setPointerArray([elem1, elem2]);
 ```
 
@@ -214,8 +214,8 @@ Secondly is why primitive types are disposable? Honestly this is a bit of a styl
 As JS does not support any sort of operator extension, this project provides free functions to bridge assumed C++ capability (in this case value equality) into JS/TS.
 
 ```ts
-const a = [csp.MyType.create(1, "one"), csp.MyType.create(2, "two")];
-const b = [csp.MyType.create(1, "one"), csp.MyType.create(2, "two")];
+const a = [csp.MyType.create(1, 'one'), csp.MyType.create(2, 'two')];
+const b = [csp.MyType.create(1, 'one'), csp.MyType.create(2, 'two')];
 expect(csp.arrayEquals(a, b)).toBe(true); //C++ style value-equality
 expect(a === b).toBe(false); //JS style identity equality
 ```
