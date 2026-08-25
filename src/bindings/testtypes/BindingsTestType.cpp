@@ -121,7 +121,8 @@ EMSCRIPTEN_BINDINGS(CSPTestTypeBindings)
         .property("value", &BindingsTestType::GetValue, &BindingsTestType::SetValue)
         .property("name", &BindingsTestType::GetName, &BindingsTestType::SetName)
         .function("equals", &BindingsTestType::operator==)
-        .class_function("aliveCount", +[] { return BindingsTestType::AliveCount.load(); });
+        .class_function(
+            "aliveCount", +[] { return BindingsTestType::AliveCount.load(); });
 
     //Register the named version of the non-owning pointer type, as we use it as a raw `val` via NonOwningVal.
     emscripten::register_type<BindingsTestTypePointer>("BindingsTestType | null");
