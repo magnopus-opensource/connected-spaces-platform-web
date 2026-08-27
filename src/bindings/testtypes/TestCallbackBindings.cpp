@@ -270,67 +270,40 @@ MAKE_CALLBACK(TestCallbackNamespace::TestCallbackArrayOfOptional, TestCallbackAr
  * types, bestowing the TypeScript definitions for the functions with the correct return types.
  */
 EMSCRIPTEN_DECLARE_VAL_TYPE(TestCallbackPromiseOfVoid);
-EMSCRIPTEN_BINDINGS(register_TestCallbackPromiseOfVoid) { emscripten::register_type<TestCallbackPromiseOfVoid>("Promise<void>"); }
-
 EMSCRIPTEN_DECLARE_VAL_TYPE(TestCallbackPromiseOfNumber);
-EMSCRIPTEN_BINDINGS(register_TestCallbackPromiseOfNumber) { emscripten::register_type<TestCallbackPromiseOfNumber>("Promise<number>"); }
-
 EMSCRIPTEN_DECLARE_VAL_TYPE(TestCallbackPromiseOfBindingsTestType);
-EMSCRIPTEN_BINDINGS(register_TestCallbackPromiseOfBindingsTestType) { emscripten::register_type<TestCallbackPromiseOfBindingsTestType>("Promise<BindingsTestType>"); }
-
 EMSCRIPTEN_DECLARE_VAL_TYPE(TestCallbackPromiseOfBindingsTestTypePointer);
-EMSCRIPTEN_BINDINGS(register_TestCallbackPromiseOfBindingsTestTypePointer)
-{
-    emscripten::register_type<TestCallbackPromiseOfBindingsTestTypePointer>("Promise<BindingsTestType | null>");
-}
-
 EMSCRIPTEN_DECLARE_VAL_TYPE(TestCallbackPromiseOfBindingsTestTypeOptional);
-EMSCRIPTEN_BINDINGS(register_TestCallbackPromiseOfBindingsTestTypeOptional)
-{
-    emscripten::register_type<TestCallbackPromiseOfBindingsTestTypeOptional>("Promise<BindingsTestType | undefined>");
-}
-
 EMSCRIPTEN_DECLARE_VAL_TYPE(TestCallbackPromiseOfContainerOfBindingsTestType);
-EMSCRIPTEN_BINDINGS(register_TestCallbackPromiseOfContainerOfBindingsTestType)
-{
-    // Our container types are disposable, so make sure to add "& Disposable" to the TypeScript signature
-    emscripten::register_type<TestCallbackPromiseOfContainerOfBindingsTestType>("Promise<BindingsTestType[] & Disposable>");
-}
-
 EMSCRIPTEN_DECLARE_VAL_TYPE(TestCallbackPromiseOfContainerOfBindingsTestTypePointer);
-EMSCRIPTEN_BINDINGS(register_TestCallbackPromiseOfContainerOfBindingsTestTypePointer)
-{
-    // Our container types are disposable, so make sure to add "& Disposable" to the TypeScript signature
-    emscripten::register_type<TestCallbackPromiseOfContainerOfBindingsTestTypePointer>("Promise<(BindingsTestType | null)[] & Disposable>");
-}
-
 EMSCRIPTEN_DECLARE_VAL_TYPE(TestCallbackPromiseOfNestedContainerOfBindingsTestType);
-EMSCRIPTEN_BINDINGS(register_TestCallbackPromiseOfNestedContainerOfBindingsTestType)
-{
-    // Our container types are disposable, so make sure to add "& Disposable" to the TypeScript signature
-    emscripten::register_type<TestCallbackPromiseOfNestedContainerOfBindingsTestType>("Promise<Map<number, BindingsTestType[]> & Disposable>");
-}
-
 EMSCRIPTEN_DECLARE_VAL_TYPE(TestCallbackPromiseOfNestedContainerOfBindingsTestTypePointer);
-EMSCRIPTEN_BINDINGS(register_TestCallbackPromiseOfNestedContainerOfBindingsTestTypePointer)
-{
-    // Our container types are disposable, so make sure to add "& Disposable" to the TypeScript signature
-    emscripten::register_type<TestCallbackPromiseOfNestedContainerOfBindingsTestTypePointer>("Promise<Map<number, (BindingsTestType | null)[]> & Disposable>");
-}
-
 // Optional of array
 EMSCRIPTEN_DECLARE_VAL_TYPE(TestCallbackPromiseOfOptionalContainerOfBindingsTestType);
-EMSCRIPTEN_BINDINGS(register_TestCallbackPromiseOfOptionalContainerOfBindingsTestType)
-{
-    // Our container types are disposable, so make sure to add "& Disposable" to the TypeScript signature
-    emscripten::register_type<TestCallbackPromiseOfOptionalContainerOfBindingsTestType>("Promise<(BindingsTestType[] & Disposable) | undefined>");
-}
-
 // Array of optional
 EMSCRIPTEN_DECLARE_VAL_TYPE(TestCallbackPromiseOfContainerOfBindingsTestTypeOptional);
-EMSCRIPTEN_BINDINGS(register_TestCallbackPromiseOfContainerOfBindingsTestTypeOptional)
+
+EMSCRIPTEN_BINDINGS(register_TestCallbackPromiseTypes)
 {
+    emscripten::register_type<TestCallbackPromiseOfVoid>("Promise<void>");
+
+    emscripten::register_type<TestCallbackPromiseOfNumber>("Promise<number>");
+
+    emscripten::register_type<TestCallbackPromiseOfBindingsTestType>("Promise<BindingsTestType>");
+    emscripten::register_type<TestCallbackPromiseOfBindingsTestTypePointer>("Promise<BindingsTestType | null>");
+    emscripten::register_type<TestCallbackPromiseOfBindingsTestTypeOptional>("Promise<BindingsTestType | undefined>");
+
     // Our container types are disposable, so make sure to add "& Disposable" to the TypeScript signature
+
+    emscripten::register_type<TestCallbackPromiseOfContainerOfBindingsTestType>("Promise<BindingsTestType[] & Disposable>");
+    emscripten::register_type<TestCallbackPromiseOfContainerOfBindingsTestTypePointer>("Promise<(BindingsTestType | null)[] & Disposable>");
+
+    emscripten::register_type<TestCallbackPromiseOfNestedContainerOfBindingsTestType>("Promise<Map<number, BindingsTestType[]> & Disposable>");
+    emscripten::register_type<TestCallbackPromiseOfNestedContainerOfBindingsTestTypePointer>("Promise<Map<number, (BindingsTestType | null)[]> & Disposable>");
+
+    // Optional of array
+    emscripten::register_type<TestCallbackPromiseOfOptionalContainerOfBindingsTestType>("Promise<(BindingsTestType[] & Disposable) | undefined>");
+    // Array of optional
     emscripten::register_type<TestCallbackPromiseOfContainerOfBindingsTestTypeOptional>("Promise<(BindingsTestType | undefined)[] & Disposable>");
 }
 
