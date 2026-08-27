@@ -437,115 +437,114 @@ EMSCRIPTEN_BINDINGS(CSPCallbacksTestTypeBindings)
         .function(
             "callbackFunctionNoArgsAsync",
             +[](CallbacksBindingMechanismsTestType& self) {
-                return PromisifyWithClone<TestCallbackPromiseOfVoid>(
-                    [&](emscripten::val cb) { self.CallbackFunctionNoArgs(ToNativeCallback(cb.as<TestCallbackNoArgsJSCallback>())); });
+                return Promisify<TestCallbackPromiseOfVoid>([&](emscripten::val cb) { self.CallbackFunctionNoArgs(ToNativeCallback(cb.as<TestCallbackNoArgsJSCallback>())); });
             })
         .function(
             "callbackFunctionPrimitiveArgAsync",
             +[](CallbacksBindingMechanismsTestType& self) {
-                return PromisifyWithClone<TestCallbackPromiseOfNumber>(
+                return Promisify<TestCallbackPromiseOfNumber>(
                     [&](emscripten::val cb) { self.CallbackFunctionPrimitiveArg(ToNativeCallback(cb.as<TestCallbackPrimitiveArgJSCallback>())); });
             })
         .function(
             "callbackFunctionPointerArgAsync",
             +[](CallbacksBindingMechanismsTestType& self) {
-                return PromisifyWithClone<TestCallbackPromiseOfBindingsTestTypePointer>(
+                return Promisify<TestCallbackPromiseOfBindingsTestTypePointer>(
                     [&](emscripten::val cb) { self.CallbackFunctionPointerArg(ToNativeCallback(cb.as<TestCallbackPointerArgJSCallback>())); });
             })
         .function(
             "callbackFunctionValueArgAsync",
             +[](CallbacksBindingMechanismsTestType& self) {
-                return PromisifyWithClone<TestCallbackPromiseOfBindingsTestType>(
+                return Promisify<TestCallbackPromiseOfBindingsTestType>(
                     [&](emscripten::val cb) { self.CallbackFunctionValueArg(ToNativeCallback(cb.as<TestCallbackValueArgJSCallback>())); });
             })
         .function(
             "callbackFunctionValueArgByConstRefAsync",
             +[](CallbacksBindingMechanismsTestType& self) {
-                return PromisifyWithClone<TestCallbackPromiseOfBindingsTestType>(
+                return Promisify<TestCallbackPromiseOfBindingsTestType>(
                     [&](emscripten::val cb) { self.CallbackFunctionValueArgByConstRef(ToNativeCallback(cb.as<TestCallbackValueArgByConstRefJSCallback>())); });
             })
         .function(
             "callbackFunctionContainerOfPointersAsync",
             +[](CallbacksBindingMechanismsTestType& self) {
-                return PromisifyWithClone<TestCallbackPromiseOfContainerOfBindingsTestTypePointer>(
+                return Promisify<TestCallbackPromiseOfContainerOfBindingsTestTypePointer>(
                     [&](emscripten::val cb) { self.CallbackFunctionContainerOfPointers(ToNativeCallback(cb.as<TestCallbackContainerOfPointersJSCallback>())); });
             })
         .function(
             "callbackFunctionContainerOfValuesAsync",
             +[](CallbacksBindingMechanismsTestType& self) {
-                return PromisifyWithClone<TestCallbackPromiseOfContainerOfBindingsTestType>(
+                return Promisify<TestCallbackPromiseOfContainerOfBindingsTestType>(
                     [&](emscripten::val cb) { self.CallbackFunctionContainerOfValues(ToNativeCallback(cb.as<TestCallbackContainerOfValuesJSCallback>())); });
             })
         .function(
             "callbackFunctionContainerOfValuesByConstRefAsync",
             +[](CallbacksBindingMechanismsTestType& self) {
-                return PromisifyWithClone<TestCallbackPromiseOfContainerOfBindingsTestType>(
+                return Promisify<TestCallbackPromiseOfContainerOfBindingsTestType>(
                     [&](emscripten::val cb) { self.CallbackFunctionContainerOfValuesByConstRef(ToNativeCallback(cb.as<TestCallbackContainerOfValuesByConstRefJSCallback>())); });
             })
         .function(
             "callbackFunctionNestedContainerOfPointersAsync",
             +[](CallbacksBindingMechanismsTestType& self) {
-                return PromisifyWithClone<TestCallbackPromiseOfNestedContainerOfBindingsTestTypePointer>(
+                return Promisify<TestCallbackPromiseOfNestedContainerOfBindingsTestTypePointer>(
                     [&](emscripten::val cb) { self.CallbackFunctionNestedContainerOfPointers(ToNativeCallback(cb.as<TestCallbackNestedContainerOfPointersJSCallback>())); });
             })
         .function(
             "callbackFunctionNestedContainerOfValuesAsync",
             +[](CallbacksBindingMechanismsTestType& self) {
-                return PromisifyWithClone<TestCallbackPromiseOfNestedContainerOfBindingsTestType>(
+                return Promisify<TestCallbackPromiseOfNestedContainerOfBindingsTestType>(
                     [&](emscripten::val cb) { self.CallbackFunctionNestedContainerOfValues(ToNativeCallback(cb.as<TestCallbackNestedContainerOfValuesJSCallback>())); });
             })
         .function(
             "callbackFunctionNestedContainerOfValuesByConstRefAsync",
             +[](CallbacksBindingMechanismsTestType& self) {
-                return PromisifyWithClone<TestCallbackPromiseOfNestedContainerOfBindingsTestType>([&](emscripten::val cb) {
+                return Promisify<TestCallbackPromiseOfNestedContainerOfBindingsTestType>([&](emscripten::val cb) {
                     self.CallbackFunctionNestedContainerOfValuesByConstRef(ToNativeCallback(cb.as<TestCallbackNestedContainerOfValuesByConstRefJSCallback>()));
                 });
             })
         .function(
             "callbackFunctionValueOptAsync",
             +[](CallbacksBindingMechanismsTestType& self) {
-                return PromisifyWithClone<TestCallbackPromiseOfBindingsTestTypeOptional>(
+                return Promisify<TestCallbackPromiseOfBindingsTestTypeOptional>(
                     [&](emscripten::val cb) { self.CallbackFunctionValueOpt(ToNativeCallback(cb.as<TestCallbackOptionalOfValueJSCallback>())); });
             })
         .function(
             "callbackFunctionPointerOptAsync",
             +[](CallbacksBindingMechanismsTestType& self) {
-                return PromisifyWithClone<TestCallbackPromiseOfBindingsTestTypeOptional>(
+                return Promisify<TestCallbackPromiseOfBindingsTestTypeOptional>(
                     [&](emscripten::val cb) { self.CallbackFunctionPointerOpt(ToNativeCallback(cb.as<TestCallbackOptionalOfPointerJSCallback>())); });
             })
         .function(
             "callbackFunctionNullValueOptAsync",
             +[](CallbacksBindingMechanismsTestType& self) {
-                return PromisifyWithClone<TestCallbackPromiseOfBindingsTestTypeOptional>(
+                return Promisify<TestCallbackPromiseOfBindingsTestTypeOptional>(
                     [&](emscripten::val cb) { self.CallbackFunctionNullValueOpt(ToNativeCallback(cb.as<TestCallbackOptionalOfValueJSCallback>())); });
             })
         .function(
             "callbackFunctionNullPointerOptAsync",
             +[](CallbacksBindingMechanismsTestType& self) {
-                return PromisifyWithClone<TestCallbackPromiseOfBindingsTestTypeOptional>(
+                return Promisify<TestCallbackPromiseOfBindingsTestTypeOptional>(
                     [&](emscripten::val cb) { self.CallbackFunctionNullPointerOpt(ToNativeCallback(cb.as<TestCallbackOptionalOfPointerJSCallback>())); });
             })
         .function(
             "callbackFunctionOptOfArrayAsync",
             +[](CallbacksBindingMechanismsTestType& self) {
-                return PromisifyWithClone<TestCallbackPromiseOfOptionalContainerOfBindingsTestType>(
+                return Promisify<TestCallbackPromiseOfOptionalContainerOfBindingsTestType>(
                     [&](emscripten::val cb) { self.CallbackFunctionOptOfArray(ToNativeCallback(cb.as<TestCallbackOptionalOfArrayJSCallback>())); });
             })
         .function(
             "callbackFunctionArrayOfOptAsync",
             +[](CallbacksBindingMechanismsTestType& self) {
-                return PromisifyWithClone<TestCallbackPromiseOfContainerOfBindingsTestTypeOptional>(
+                return Promisify<TestCallbackPromiseOfContainerOfBindingsTestTypeOptional>(
                     [&](emscripten::val cb) { self.CallbackFunctionArrayOfOpt(ToNativeCallback(cb.as<TestCallbackArrayOfOptionalJSCallback>())); });
             })
         .function(
             "callbackFunctionArrayOfSomeNullOptAsync",
             +[](CallbacksBindingMechanismsTestType& self) {
-                return PromisifyWithClone<TestCallbackPromiseOfContainerOfBindingsTestTypeOptional>(
+                return Promisify<TestCallbackPromiseOfContainerOfBindingsTestTypeOptional>(
                     [&](emscripten::val cb) { self.CallbackFunctionArrayOfSomeNullOpt(ToNativeCallback(cb.as<TestCallbackArrayOfOptionalJSCallback>())); });
             })
         .function(
             "callbackFunctionMultiInputPrimitiveArgAsync(a, b)", +[](CallbacksBindingMechanismsTestType& self, int a, int b) {
-                return PromisifyWithClone<TestCallbackPromiseOfNumber>(
+                return Promisify<TestCallbackPromiseOfNumber>(
                     [&](emscripten::val cb) { self.CallbackFunctionMultiInputPrimitiveArg(a, b, ToNativeCallback(cb.as<TestCallbackPrimitiveArgJSCallback>())); });
             });
 }

@@ -17,7 +17,7 @@ namespace {
  *
  *   void func(std::function<void(int)> callback);
  *
- * PromisifyWithClone is used to turn it into a promise-returning function on the JavaScript side:
+ * Promisify is used to turn it into a promise-returning function on the JavaScript side:
  *
  *   function funcAsync(): Promise<number>;
  *
@@ -26,7 +26,7 @@ namespace {
  *   EMSCRIPTEN_BINDINGS(...) {
  *     emscripten::function("funcAsync", +[]()
  *     {
- *       return PromisifyWithClone<PromiseNumberValType>(
+ *       return Promisify<PromiseNumberValType>(
  *         [](emscripten::val cb) { func(ToNativeCallback(cb.as<FuncCallbackJSType>())) }
  *       );
  *     });
@@ -47,7 +47,7 @@ namespace {
  *
  * The 'Clone' in the name of the function refers to the fact that the JS callback the bound C++
  * function ultimately calls will perform an additional clone of the callback argument before
- * resolving the promise. This is required because PromisifyWithClone is designed to be used with
+ * resolving the promise. This is required because Promisify is designed to be used with
  * the existing ToNativeCallback machinery which will automatically dispose of the callback argument
  * after the callback returns. The clone ensures the argument is kept alive, but means that the user
  * must dispose the argument themselves.
@@ -58,7 +58,7 @@ namespace {
  * WrapperFn: Callable that takes an emscripten::val (the JS callback) and invokes the original C++
  *            function with the JS callback, via ToNativeCallback.
  */
-template <typename PromiseValType = emscripten::val, typename WrapperFn> inline PromiseValType PromisifyWithClone(WrapperFn&& wrapperFn)
+template <typename PromiseValType = emscripten::val, typename WrapperFn> inline PromiseValType Promisify(WrapperFn&& wrapperFn)
 {
     emscripten::val promiseAndCallback = emscripten::val::take_ownership(make_promise_with_cloning_callback());
     // This is the JS callback that the C++ function will ultimately call, and is responsible for
