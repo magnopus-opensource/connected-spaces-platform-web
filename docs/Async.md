@@ -142,17 +142,20 @@ Conceptually, the implementation looks something like this:
 ```cpp
 void jsFunctionWithCallbackAsync() {
   emscripten::val promise, resolve = createPromise();
+
   auto callback = [](int argument) {
     resolve(argument);
   };
+
   CppFunctionWithCallback(callback);
+
   return promise;
 }
 ```
 
 Instead of providing a callback from the JavaScript side, the async version creates a JavaScript promise and callback resolving the promise within the bindings layer. This callback is supplied to the C++ function and the promise is returned from the function call.
 
-This async version of the function is used as any other function returning a promise, either with `await` or a `then()` function.
+This async version of the function is used as any other function returning a promise in JavaScript, either with `await` or a `then()` function.
 
 ```js
 const result = await jsFunctionWithCallbackAsync();
@@ -165,12 +168,11 @@ jsFunctionWithCallbackAsync().then((result) => {
 });
 ```
 
-### Arguments
+### Promise Fulfillment Values
 
-To be compatible with how promises work in JavaScript, we made the decision that arguments for async callbacks would not be disposed automatically as with standard callback functions, but must be disposed by the caller. In particular, promises may be stored and awaited at any point in the future, with the lifetime of the fulfilled value at a minimum tied to that of the promise, meaning there is no natural place for the automatic disposal to occur.
-Therefore special care must be taken by the caller to avoid leaking these arguments.
+The value returned by a successful promise is called the _fulfillment value_ (`result` in the examples above). The fulfillment value from async calls in the library may be `Disposable`, meaning that the caller must dispose it to avoid leaking.
 
-With the `await` syntax, this allows quite naturally for asynchronous function calls to utilize the `using` keyword to dispose the argument at the end of scope:
+This can done easily and simply with the `await` syntax and the `using` keyword, which will dispose the argument at the end of the current scope.
 
 ```js
 {
@@ -180,7 +182,7 @@ With the `await` syntax, this allows quite naturally for asynchronous function c
 }
 ```
 
-This becomes more awkward when using `then()` functions where disposing arguments appears somewhat unnatural, requiring either rebinding the variable, calling `delete` or `Symbol.dispose` manually, or using a `DisposableStack` if the variable is lifted out of the `then` function. Users must be attentive to doing this to avoid leaking.
+Disposing the fulfillment value becomes slightly more awkward when using `then()`, requiring either rebinding the variable, calling `delete` or `Symbol.dispose` manually, or using a `DisposableStack` if the variable is lifted out of the `then` function. Callers must be especially attentive in this case to avoid leaking.
 
 ```js
 jsFunctionReturningDisposableAsync().then((result) => {
@@ -191,4 +193,20 @@ jsFunctionReturningDisposableAsync().then((result) => {
 });
 ```
 
-The fact that no automatic disposal happens implies there is no need to perform any additional clones on values returned from an async function in JavaScript.
+With the fulfillment value corresponding to the callback argument for the bound C++ function, you may notice that the need for explicit disposal by the caller is a departure from the automatic argument disposal provided for non-async callback functions. This difference is especially apparent when using `then` functions as in the example just above.
+The manual disposal is necessary to be compatible with how promises work in JavaScript. In particular, promises may be stored and awaited at any point in the future, with the lifetime of the fulfillment value at a minimum tied to that of the promise, meaning there is no natural place for the automatic disposal to occur.
+
+However, the fact that no automatic disposal happens implies there is no need to perform any additional clones on values returned from an async function in JavaScript.
+
+```js
+let liftedResult;
+...
+jsFunctionReturningDisposableAsync().then((result) => {
+  // Lift result out of function - no clone needed
+  liftedResult = result;
+  ...
+  // disposableResult disposed here
+});
+...
+// Remember to dispose liftedResult!
+```
