@@ -2,6 +2,10 @@
 
 #include "emscripten/em_js.h"
 
+// Declare the JavaScript symbols that the JS code in this file depends on.
+// We need to do this to ensure the dependencies are included in the output JS file.
+EM_JS_DEPS(make_promise_with_cloning_callback_deps, "$CspRequestError");
+
 /*
  * Create a JavaScript promise along with a callback used to resolve it with a value.
  *
@@ -14,23 +18,6 @@ EM_JS(emscripten::EM_VAL, make_promise_with_cloning_callback, (emscripten::EM_VA
     // clang-format off
 
     const progressCallback = Emval.toValue(progressCallbackHandle);
-
-    class CspRequestError extends Error {
-        constructor(message, resultCode, httpResultCode, responseBody, failureReason) {
-            super(message);
-
-            if (Error.captureStackTrace) {
-                Error.captureStackTrace(this, CspRequestError);
-            }
-
-            this.name = 'CspRequestError';
-
-            this.resultCode = resultCode;
-            this.httpResultCode = httpResultCode;
-            this.responseBody = responseBody;
-            this.failureReason = failureReason;
-        }
-    }
 
     let resolve;
     let reject;

@@ -12,8 +12,8 @@
  * - Import the interface here and add it to `TypeOverrides` below.
  */
 
-// Note: there is currently an error for the import, as this is the path for the installed version
-// of the generated bindings JS file.
+// @ts-expect-error Error with import as this is the path for the installed version of the generated
+// bindings JS file.
 import type { MainModule as _GeneratedMainModule } from '../connected-spaces-platform-bindings.js';
 
 //==================================================================================================
@@ -23,9 +23,10 @@ import type { MainModule as _GeneratedMainModule } from '../connected-spaces-pla
 import type { EqualityOverrides } from './equality.d.ts';
 import type { DisposalOverrides } from './disposal.d.ts';
 import type { CloneOverrides } from './clone.d.ts';
+import type { CspRequestErrorOverrides } from './csp-request-error.d.ts';
 
 // Union of all type overlay interfaces.
-type TypeOverrides = EqualityOverrides & DisposalOverrides & CloneOverrides;
+type TypeOverrides = EqualityOverrides & DisposalOverrides & CloneOverrides & CspRequestErrorOverrides;
 
 //==================================================================================================
 
@@ -34,8 +35,17 @@ export type MainModule = Omit<_GeneratedMainModule, keyof TypeOverrides> & TypeO
 
 // Re-export all other generated types.
 // The generated MainModule will be skipped as the local MainModule shadows the generated one.
+// @ts-expect-error This is the path for the installed version of the generated bindings JS file.
 export * from '../connected-spaces-platform-bindings.js';
 
 // Re-export the factory function with the narrowed MainModule return type
 declare function MainModuleFactory(options?: unknown): Promise<MainModule>;
 export default MainModuleFactory;
+
+//==================================================================================================
+
+// Re-export any additional types that are not part of MainModule
+
+// ADD NEW EXPORTS HERE
+
+export type { CspRequestError } from './csp-request-error.d.ts';

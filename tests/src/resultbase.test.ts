@@ -1,6 +1,6 @@
 import { it, expect, beforeAll } from 'vitest';
 import { loadCSP } from '../loadModule';
-import type { MainModule, StringResultTestType } from 'connected-spaces-platform-bindings';
+import type { MainModule } from 'connected-spaces-platform-bindings';
 import { describeOnAndOffThread, untilCallbacksSettled } from './testUtils';
 
 /*
@@ -80,12 +80,13 @@ describeOnAndOffThread('ResultBase Callbacks', (offThread, modelLabel) => {
     } catch (error) {
       callbackThrew = true;
 
-      // @ts-expect-error CspRequestError type not defined in bindings so it is unknown
-      expect(error.failureReason).toBe(csp.ERequestFailureReason.UserMissingPassword);
-      // @ts-expect-error Same as above
-      expect(error.resultCode).toBe(csp.EResultCode.Failed);
-      // @ts-expect-error Same as above
-      expect(error.httpResultCode).toBe(csp.EResponseCodes.ResponseUnauthorized);
+      expect(error).toBeInstanceOf(csp.CspRequestError);
+
+      if (error instanceof csp.CspRequestError) {
+        expect(error.failureReason).toBe(csp.ERequestFailureReason.UserMissingPassword);
+        expect(error.resultCode).toBe(csp.EResultCode.Failed);
+        expect(error.httpResultCode).toBe(csp.EResponseCodes.ResponseUnauthorized);
+      }
     }
 
     expect(callbackThrew).toBe(true);

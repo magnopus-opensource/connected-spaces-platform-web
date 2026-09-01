@@ -63,6 +63,7 @@ target_link_options(connected-spaces-platform-bindings PRIVATE
     "-sINCOMING_MODULE_JS_API=['buffer','fetchSettings','instantiateWasm','locateFile','mainScriptUrlOrBlob','wasmMemory', 'noExitRuntime']"
     --emit-tsd=connected-spaces-platform-bindings.d.ts
     --no-entry
+    --js-library=${CMAKE_SOURCE_DIR}/src/js/js-library.js
     --extern-pre-js=${CMAKE_SOURCE_DIR}/src/polyfills/polyfills.js
   >
 )
