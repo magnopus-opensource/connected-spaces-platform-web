@@ -80,13 +80,12 @@ describeOnAndOffThread('ResultBase Callbacks', (offThread, modelLabel) => {
     } catch (error) {
       callbackThrew = true;
 
-      // This is weird because error is not an Error type as you would normally expect
-      // We also need to dispose it
-      using errorResult = error as StringResultTestType;
-
-      expect(errorResult.resultCode).toBe(csp.EResultCode.Failed);
-      expect(errorResult.httpResultCode).toBe(csp.EResponseCodes.ResponseUnauthorized);
-      expect(errorResult.value).toBe('Failure');
+      // @ts-expect-error CspRequestError type not defined in bindings so it is unknown
+      expect(error.failureReason).toBe(csp.ERequestFailureReason.UserMissingPassword);
+      // @ts-expect-error Same as above
+      expect(error.resultCode).toBe(csp.EResultCode.Failed);
+      // @ts-expect-error Same as above
+      expect(error.httpResultCode).toBe(csp.EResponseCodes.ResponseUnauthorized);
     }
 
     expect(callbackThrew).toBe(true);

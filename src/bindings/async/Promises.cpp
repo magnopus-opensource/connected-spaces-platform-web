@@ -15,6 +15,23 @@ EM_JS(emscripten::EM_VAL, make_promise_with_cloning_callback, (emscripten::EM_VA
 
     const progressCallback = Emval.toValue(progressCallbackHandle);
 
+    class CspRequestError extends Error {
+        constructor(message, resultCode, httpResultCode, responseBody, failureReason) {
+            super(message);
+
+            if (Error.captureStackTrace) {
+                Error.captureStackTrace(this, CspRequestError);
+            }
+
+            this.name = 'CspRequestError';
+
+            this.resultCode = resultCode;
+            this.httpResultCode = httpResultCode;
+            this.responseBody = responseBody;
+            this.failureReason = failureReason;
+        }
+    }
+
     let resolve;
     let reject;
 
@@ -90,8 +107,7 @@ EM_JS(emscripten::EM_VAL, make_promise_with_cloning_callback, (emscripten::EM_VA
             if (arg.resultCode === Module['EResultCode'].Success) {
                 resolve(cloneArg(arg));
             } else if (arg.resultCode === Module['EResultCode'].Failed) {
-                // TODO: cloning here means that the arg must be disposed in the catch handler (function or block)
-                reject(cloneArg(arg));
+                reject(new CspRequestError('CSP request failed', arg.resultCode, arg.httpResultCode, arg.responseBody, arg.failureReason));
             } else if (arg.resultCode === Module['EResultCode'].InProgress) {
                 progressCallback?.(arg.requestProgress, arg.responseProgress);
             } else if (arg.resultCode === Module['EResultCode'].Init) {
