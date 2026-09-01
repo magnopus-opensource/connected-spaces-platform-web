@@ -1,27 +1,23 @@
 #pragma once
 
 #include "../containers/Array.h"
-#include "../containers/Disposal.h"
 #include "../containers/List.h"
 #include "../containers/Map.h"
 #include "../containers/Optional.h"
 #include "../containers/String.h"
-#include "../testtypes/BindingsTestType.h"
 #include "../utils/Handles.h"
 #include "../utils/RAIIVal.h"
 #include "CatchingCallback.h"
 #include "ThreadAffineCallback.h"
 #include "emscripten/bind.h"
 #include "emscripten/val.h"
+#include "emscripten/wire.h"
 #include <CSP/Common/Optional.h>
-#include <emscripten/wire.h>
 #include <functional>
-#include <iostream>
 #include <memory>
 #include <pthread.h>
 #include <type_traits>
 #include <utility>
-#include <vector>
 
 namespace {
 
@@ -154,7 +150,7 @@ inline auto AdaptedRAIINativeCallback(emscripten::val& cb)
                 std::array<bindings::utils::RAIIVal, sizeof...(args)> raiiArgs = { MakeRAIIVal(std::forward<decltype(args)>(args))... };
 
                 /* Call the JS callback with the argument objects. We provide an index sequence {0,1,2,3} so we can index into the raiiArgs std::array variadically */
-                InvokeRAIIGuardedCallback(cb, raiiArgs, std::make_index_sequence<sizeof...(args)> { });
+                InvokeRAIIGuardedCallback(cb, raiiArgs, std::make_index_sequence<sizeof...(args)> {});
                 /* Args falls out of scope, disposal occurs according to disposal policy */
             }
         };
@@ -179,14 +175,14 @@ inline auto AdaptedRAIINativeCallback(emscripten::val& cb)
 
 /*
  * Perform the emscripten incantations to register and adapt a callback, enriching it with typescript types.
- * Firstly, declare a value type, generating a typeID aware `val` type within the emscripten machinery, which is neccesary for typescript generation.
- * Then, inside a bespoke EMSCRIPTEN_BINDINGS block, register this new type to a specific typescript signiature, enriching it so it appears where it is used.
+ * Firstly, declare a value type, generating a typeID aware `val` type within the emscripten machinery, which is necessary for typescript generation.
+ * Then, inside a bespoke EMSCRIPTEN_BINDINGS block, register this new type to a specific typescript signature, enriching it so it appears where it is used.
  * Finally, generate a converter function.
  * This converter function converts from the `val` type (which is something Javascript can use and call), and the C++ callback
  * We create a closure which captures the `val` callback, and does nothing but call it with forwarded arguments
  * This adapter closure is what ends up being passed into C++, bridging the two langauges, and allowing C++ to call JS.
  *
- * FullyQualifiedCppCallbackType:  Include the namespace, it'll look something like "TestCallbackNamespace::TestCallbackNoArgs"
+ * FullyQualifiedCppCallbackType: Include the namespace, it'll look something like "TestCallbackNamespace::TestCallbackNoArgs"
  * EmbindCallbackType: An arbitrary name to give the embind type of the callback, pattern is to call it like : "TestCallbackNoArgsJSCallback"
  * TypescriptSig: A string representing the typescript signiature, for the no-arg case, it's just "() => void", a single array callback arg might look like "(BindingsTestType[]) => void"
  */

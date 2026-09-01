@@ -150,7 +150,7 @@ for (const { mode, offThread } of CALLBACK_THREADING_MODE) {
       using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 
       let callbackCalled = false;
-      let liftedPointerArg: BindingsTestType | undefined;
+      let liftedPointerArg: BindingsTestType | null | undefined;
       helper.callbackFunctionPointerArg((pointerArg) => {
         callbackCalled = true;
         liftedPointerArg = pointerArg;
@@ -175,7 +175,7 @@ for (const { mode, offThread } of CALLBACK_THREADING_MODE) {
 
       helper.callbackFunctionPointerArg((pointerArg) => {
         callbackCalled = true;
-        liftedPointerArg = pointerArg.clone();
+        liftedPointerArg = pointerArg?.clone();
         expect(csp.BindingsTestType.aliveCount()).toBe(beforeAliveCount);
       });
 

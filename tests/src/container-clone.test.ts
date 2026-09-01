@@ -52,7 +52,7 @@ describe('clone ', () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create();
 
     let callbackCalled = false;
-    let liftedPointerContainerArg: BindingsTestType[] = [];
+    let liftedPointerContainerArg: (BindingsTestType | null)[] = [];
     let beforeAliveCount = csp.BindingsTestType.aliveCount();
     helper.callbackFunctionContainerOfPointers((pointerAry) => {
       callbackCalled = true;
@@ -103,7 +103,7 @@ describe('clone ', () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create();
 
     let callbackCalled = false;
-    let liftedPointerMapArg: Map<number, BindingsTestType[]> = new Map();
+    let liftedPointerMapArg: Map<number, (BindingsTestType | null)[]> = new Map();
     let beforeAliveCount = csp.BindingsTestType.aliveCount();
     helper.callbackFunctionNestedContainerOfPointers((mapArg) => {
       callbackCalled = true;

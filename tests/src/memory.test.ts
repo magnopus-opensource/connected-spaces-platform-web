@@ -710,9 +710,9 @@ describe('CSPFoundation', () => {
     let called = false;
     helper.callbackFunctionPointerArg((pointerArg) => {
       called = true;
-      expect(() => pointerArg.delete()).toThrow();
-      expect(() => pointerArg.deleteLater()).toThrow();
-      expect(() => pointerArg[Symbol.dispose]()).toThrow();
+      expect(() => pointerArg?.delete()).toThrow();
+      expect(() => pointerArg?.deleteLater()).toThrow();
+      expect(() => pointerArg?.[Symbol.dispose]()).toThrow();
     });
     expect(called).toBe(true);
   });
@@ -724,9 +724,9 @@ describe('CSPFoundation', () => {
       called = true;
       expect(arr.length).toBe(2);
       for (const el of arr) {
-        expect(() => el.delete()).toThrow();
-        expect(() => el.deleteLater()).toThrow();
-        expect(() => el[Symbol.dispose]()).toThrow();
+        expect(() => el?.delete()).toThrow();
+        expect(() => el?.deleteLater()).toThrow();
+        expect(() => el?.[Symbol.dispose]()).toThrow();
       }
     });
     expect(called).toBe(true);
@@ -739,9 +739,9 @@ describe('CSPFoundation', () => {
       called = true;
       for (const arr of map.values()) {
         for (const el of arr) {
-          expect(() => el.delete()).toThrow();
-          expect(() => el.deleteLater()).toThrow();
-          expect(() => el[Symbol.dispose]()).toThrow();
+          expect(() => el?.delete()).toThrow();
+          expect(() => el?.deleteLater()).toThrow();
+          expect(() => el?.[Symbol.dispose]()).toThrow();
         }
       }
     });

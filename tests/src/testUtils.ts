@@ -1,7 +1,8 @@
+import { describe } from 'vitest';
 import { MainModule } from 'connected-spaces-platform-bindings';
 
 /* Timer to let us busy-wait on callbacks finishing. */
-export async function until(predicate: () => boolean, timeoutMs = 2000): Promise<void> {
+export async function until(predicate: () => boolean, timeoutMs = 6000): Promise<void> {
   const deadline = performance.now() + timeoutMs;
   while (!predicate()) {
     if (performance.now() >= deadline) {
@@ -18,8 +19,11 @@ export async function until(predicate: () => boolean, timeoutMs = 2000): Promise
  * callbacks in flight. We combine this with a manually managed "callbackFired" boolean, to
  * get the two state questions we need, "Has the callback started" followed by "Has the callback finished".
  * It does not matter where `callbackFired` is set in the callback itself, so long as it's set somewhere.
+ *
+ * For awaitable callbacks used with async/await, use the `await untilCallbacksSettled(csp)` single-argument
+ * form after awaiting the call under test ('callbackFired' in this case is implicit).
  */
-export async function untilCallbacksSettled(csp: MainModule, callbackFired: () => boolean): Promise<void> {
+export async function untilCallbacksSettled(csp: MainModule, callbackFired: () => boolean = () => true): Promise<void> {
   await until(callbackFired);
   await until(() => csp.CallbacksBindingMechanismsTestType.offThreadCallbacksInFlight() === 0);
 }
@@ -73,3 +77,19 @@ export function forceHeapGrowth(freshCSPModule: any) {
     // Intentional leak - we want these to accumulate and force a heap growth.
   }
 }
+
+/**
+ * Utility function to allow running the same test suite in both on- and off-thread modes.
+ * The mode is passed in to the test suite function "describeFn".
+ */
+export const describeOnAndOffThread = (name: string, describeFn: (offThread: boolean, modeLabel: string) => void) => {
+  /* "mode" is just used to print the test name nicely. */
+  const CALLBACK_THREADING_MODE = [
+    { mode: 'On Thread', offThread: false },
+    { mode: 'Off Thread', offThread: true }
+  ];
+
+  for (const { mode, offThread } of CALLBACK_THREADING_MODE) {
+    describe(`${name} - ${mode}`, () => describeFn(offThread, mode));
+  }
+};

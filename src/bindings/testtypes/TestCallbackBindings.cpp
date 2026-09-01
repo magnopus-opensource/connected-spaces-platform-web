@@ -9,6 +9,7 @@
  */
 
 #include "../async/Callbacks.h"
+#include "../async/Promises.h"
 #include "../utils/JSDisposable.h"
 #include "BindingsTestType.h"
 
@@ -16,8 +17,8 @@
 #include "emscripten/val.h"
 #include <CSP/Common/Array.h>
 #include <CSP/Common/Map.h>
-
 #include <CSP/Common/Optional.h>
+
 #include <iostream>
 #include <memory>
 #include <optional>
@@ -40,20 +41,27 @@
  */
 namespace TestCallbackNamespace {
 typedef std::function<void()> TestCallbackNoArgs;
+
 typedef std::function<void(int primitiveArg)> TestCallbackPrimitiveArg;
+
 typedef std::function<void(BindingsTestType* pointerArg)> TestCallbackPointerArg;
+
 typedef std::function<void(BindingsTestType valueArg)> TestCallbackValueArg;
 typedef std::function<void(const BindingsTestType& valueArg)> TestCallbackValueArgByConstRef;
+
 typedef std::function<void(csp::common::Array<BindingsTestType> valueContainerArg)> TestCallbackContainerOfValues;
 typedef std::function<void(const csp::common::Array<BindingsTestType>& valueContainerArg)> TestCallbackContainerOfValuesByConstRef;
 typedef std::function<void(csp::common::Array<BindingsTestType*> pointerContainerArg)> TestCallbackContainerOfPointers;
+
 typedef std::function<void(int primitiveArg1, float primitiveArg2)> TestCallbackMultipleArgs;
+
 typedef std::function<void(csp::common::Map<int, csp::common::Array<BindingsTestType*>> pointerContainerArg)> TestCallbackNestedContainerOfPointers;
-typedef std::function<void(csp::common::Map<int, csp::common::Array<BindingsTestType>> pointerContainerArg)> TestCallbackNestedContainerOfValues;
-typedef std::function<void(const csp::common::Map<int, csp::common::Array<BindingsTestType>>& pointerContainerArg)> TestCallbackNestedContainerOfValuesByConstRef;
+typedef std::function<void(csp::common::Map<int, csp::common::Array<BindingsTestType>> valueContainerArg)> TestCallbackNestedContainerOfValues;
+typedef std::function<void(const csp::common::Map<int, csp::common::Array<BindingsTestType>>& valueContainerArg)> TestCallbackNestedContainerOfValuesByConstRef;
 typedef std::function<void(csp::common::Array<BindingsTestType> valueContainerArg, const csp::common::Array<BindingsTestType>& valueContainerArgByConstRef,
     csp::common::Array<BindingsTestType*> pointerContainerArg, int primitiveArg, BindingsTestType valueArg, BindingsTestType* pointerArg)>
     TestCallbackMixedArgs;
+
 typedef std::function<void(const csp::common::Optional<BindingsTestType>& optionalValueArg)> TestCallbackOptionalOfValue;
 typedef std::function<void(const csp::common::Optional<BindingsTestType*>& optionalPointerArg)> TestCallbackOptionalOfPointer;
 typedef std::function<void(const csp::common::Optional<csp::common::Array<BindingsTestType>>& optionalOfArrayArg)> TestCallbackOptionalOfArray;
@@ -77,12 +85,13 @@ BindingsTestType* singleTypeTwoPtr = new BindingsTestType { 1, "One" };
 csp::common::Array<BindingsTestType> valueArray { BindingsTestType(1, "One"), BindingsTestType(2, "Two") };
 csp::common::Array<BindingsTestType> valueArrayTwo { BindingsTestType(3, "Three"), BindingsTestType(4, "Four") };
 csp::common::Array<BindingsTestType*> pointerArray { new BindingsTestType(1, "One"), new BindingsTestType(2, "Two") };
+
 csp::common::Map<int, csp::common::Array<BindingsTestType*>> pointerMap {
     { 0, csp::common::Array<BindingsTestType*> { new BindingsTestType(1, "One"), new BindingsTestType(2, "Two") } },
-    { 1, csp::common::Array<BindingsTestType*> { new BindingsTestType(3, "Three"), new BindingsTestType(4, "Four)") } }
+    { 1, csp::common::Array<BindingsTestType*> { new BindingsTestType(3, "Three"), new BindingsTestType(4, "Four") } }
 };
 csp::common::Map<int, csp::common::Array<BindingsTestType>> valueMap { { 0, csp::common::Array<BindingsTestType> { BindingsTestType(1, "One"), BindingsTestType(2, "Two") } },
-    { 1, csp::common::Array<BindingsTestType> { BindingsTestType(3, "Three"), BindingsTestType(4, "Four)") } } };
+    { 1, csp::common::Array<BindingsTestType> { BindingsTestType(3, "Three"), BindingsTestType(4, "Four") } } };
 
 csp::common::Optional<BindingsTestType> valueOpt { BindingsTestType(1, "One") };
 csp::common::Optional<BindingsTestType*> pointerOpt { new BindingsTestType(1, "One") };
@@ -204,6 +213,11 @@ public:
         m_offThread ? CallOffThread(callback, nullptr) : CallOnThread(callback, nullptr);
     }
 
+    void CallbackFunctionMultiInputPrimitiveArg(int a, int b, TestCallbackNamespace::TestCallbackPrimitiveArg callback)
+    {
+        m_offThread ? CallOffThread(callback, a + b) : CallOnThread(callback, a + b);
+    }
+
     void SetStoredCallbackNoArgs(TestCallbackNamespace::TestCallbackNoArgs callback) { m_storedCallbackNoArgs = std::move(callback); }
     void InvokeStoredCallbackNoArgs() { m_offThread ? CallOffThread(m_storedCallbackNoArgs) : CallOnThread(m_storedCallbackNoArgs); }
 
@@ -228,27 +242,70 @@ private:
  */
 MAKE_CALLBACK(TestCallbackNamespace::TestCallbackNoArgs, TestCallbackNoArgsJSCallback, "() => void")
 MAKE_CALLBACK(TestCallbackNamespace::TestCallbackPrimitiveArg, TestCallbackPrimitiveArgJSCallback, "(primitiveArg: number) => void")
-MAKE_CALLBACK(TestCallbackNamespace::TestCallbackPointerArg, TestCallbackPointerArgJSCallback, "(pointerArg: BindingsTestType) => void")
+MAKE_CALLBACK(TestCallbackNamespace::TestCallbackPointerArg, TestCallbackPointerArgJSCallback, "(pointerArg: BindingsTestType | null) => void")
 MAKE_CALLBACK(TestCallbackNamespace::TestCallbackValueArg, TestCallbackValueArgJSCallback, "(valueArg: BindingsTestType) => void")
 MAKE_CALLBACK(TestCallbackNamespace::TestCallbackValueArgByConstRef, TestCallbackValueArgByConstRefJSCallback, "(valueArg: BindingsTestType) => void")
 MAKE_CALLBACK(TestCallbackNamespace::TestCallbackContainerOfValues, TestCallbackContainerOfValuesJSCallback, "(valueContainerArg: BindingsTestType[]) => void")
 MAKE_CALLBACK(TestCallbackNamespace::TestCallbackContainerOfValuesByConstRef, TestCallbackContainerOfValuesByConstRefJSCallback, "(valueContainerArg: BindingsTestType[]) => void")
-MAKE_CALLBACK(TestCallbackNamespace::TestCallbackContainerOfPointers, TestCallbackContainerOfPointersJSCallback, "(pointerContainerArg: BindingsTestType[]) => void")
+MAKE_CALLBACK(TestCallbackNamespace::TestCallbackContainerOfPointers, TestCallbackContainerOfPointersJSCallback, "(pointerContainerArg: (BindingsTestType | null)[]) => void")
 MAKE_CALLBACK(TestCallbackNamespace::TestCallbackMultipleArgs, TestCallbackMultipleArgsJSCallback, "(primitiveArg1: number, primitiveArg2: number) => void")
+MAKE_CALLBACK(TestCallbackNamespace::TestCallbackNestedContainerOfPointers, TestCallbackNestedContainerOfPointersJSCallback,
+    "(pointerContainerArg: Map<number, (BindingsTestType | null)[]>) => void")
 MAKE_CALLBACK(
-    TestCallbackNamespace::TestCallbackNestedContainerOfPointers, TestCallbackNestedContainerOfPointersJSCallback, "(pointerContainerArg: Map<number, BindingsTestType[]>) => void")
-MAKE_CALLBACK(
-    TestCallbackNamespace::TestCallbackNestedContainerOfValues, TestCallbackNestedContainerOfValuesJSCallback, "(pointerContainerArg: Map<number, BindingsTestType[]>) => void")
+    TestCallbackNamespace::TestCallbackNestedContainerOfValues, TestCallbackNestedContainerOfValuesJSCallback, "(valueContainerArg: Map<number, BindingsTestType[]>) => void")
 MAKE_CALLBACK(TestCallbackNamespace::TestCallbackNestedContainerOfValuesByConstRef, TestCallbackNestedContainerOfValuesByConstRefJSCallback,
-    "(pointerContainerArg: Map<number, BindingsTestType[]>) => void")
+    "(valueContainerArg: Map<number, BindingsTestType[]>) => void")
 MAKE_CALLBACK(TestCallbackNamespace::TestCallbackMixedArgs, TestCallbackMixedArgsJSCallback,
-    "(valueContainerArg: BindingsTestType[] , valueContainerArgByConstRef: BindingsTestType[] , pointerContainerArg: BindingsTestType[], primitiveArg: "
-    "number, valueArg: BindingsTestType, pointerArg: BindingsTestType) => void")
+    "(valueContainerArg: BindingsTestType[] , valueContainerArgByConstRef: BindingsTestType[] , pointerContainerArg: (BindingsTestType | null)[], primitiveArg: "
+    "number, valueArg: BindingsTestType, pointerArg: BindingsTestType | null) => void")
 
 MAKE_CALLBACK(TestCallbackNamespace::TestCallbackOptionalOfValue, TestCallbackOptionalOfValueJSCallback, "(valueArg: BindingsTestType | undefined) => void")
 MAKE_CALLBACK(TestCallbackNamespace::TestCallbackOptionalOfPointer, TestCallbackOptionalOfPointerJSCallback, "(pointerArg: BindingsTestType | undefined) => void")
 MAKE_CALLBACK(TestCallbackNamespace::TestCallbackOptionalOfArray, TestCallbackOptionalOfArrayJSCallback, "(optionalOfArrayArg: BindingsTestType[] | undefined) => void")
 MAKE_CALLBACK(TestCallbackNamespace::TestCallbackArrayOfOptional, TestCallbackArrayOfOptionalJSCallback, "(arrayOfOptionalArg: (BindingsTestType | undefined)[]) => void")
+
+/**
+ * Register the promise types for the callback return types.
+ * These must exist and be named so that the bindings for the async functions to construct these
+ * types, bestowing the TypeScript definitions for the functions with the correct return types.
+ */
+EMSCRIPTEN_DECLARE_VAL_TYPE(TestCallbackPromiseOfVoid);
+EMSCRIPTEN_DECLARE_VAL_TYPE(TestCallbackPromiseOfNumber);
+EMSCRIPTEN_DECLARE_VAL_TYPE(TestCallbackPromiseOfBindingsTestType);
+EMSCRIPTEN_DECLARE_VAL_TYPE(TestCallbackPromiseOfBindingsTestTypePointer);
+EMSCRIPTEN_DECLARE_VAL_TYPE(TestCallbackPromiseOfBindingsTestTypeOptional);
+EMSCRIPTEN_DECLARE_VAL_TYPE(TestCallbackPromiseOfContainerOfBindingsTestType);
+EMSCRIPTEN_DECLARE_VAL_TYPE(TestCallbackPromiseOfContainerOfBindingsTestTypePointer);
+EMSCRIPTEN_DECLARE_VAL_TYPE(TestCallbackPromiseOfNestedContainerOfBindingsTestType);
+EMSCRIPTEN_DECLARE_VAL_TYPE(TestCallbackPromiseOfNestedContainerOfBindingsTestTypePointer);
+// Optional of array
+EMSCRIPTEN_DECLARE_VAL_TYPE(TestCallbackPromiseOfOptionalContainerOfBindingsTestType);
+// Array of optional
+EMSCRIPTEN_DECLARE_VAL_TYPE(TestCallbackPromiseOfContainerOfBindingsTestTypeOptional);
+
+EMSCRIPTEN_BINDINGS(register_TestCallbackPromiseTypes)
+{
+    emscripten::register_type<TestCallbackPromiseOfVoid>("Promise<void>");
+
+    emscripten::register_type<TestCallbackPromiseOfNumber>("Promise<number>");
+
+    emscripten::register_type<TestCallbackPromiseOfBindingsTestType>("Promise<BindingsTestType>");
+    emscripten::register_type<TestCallbackPromiseOfBindingsTestTypePointer>("Promise<BindingsTestType | null>");
+    emscripten::register_type<TestCallbackPromiseOfBindingsTestTypeOptional>("Promise<BindingsTestType | undefined>");
+
+    // Our container types are disposable, so make sure to add "& Disposable" to the TypeScript signature
+
+    emscripten::register_type<TestCallbackPromiseOfContainerOfBindingsTestType>("Promise<BindingsTestType[] & Disposable>");
+    emscripten::register_type<TestCallbackPromiseOfContainerOfBindingsTestTypePointer>("Promise<(BindingsTestType | null)[] & Disposable>");
+
+    emscripten::register_type<TestCallbackPromiseOfNestedContainerOfBindingsTestType>("Promise<Map<number, BindingsTestType[]> & Disposable>");
+    emscripten::register_type<TestCallbackPromiseOfNestedContainerOfBindingsTestTypePointer>("Promise<Map<number, (BindingsTestType | null)[]> & Disposable>");
+
+    // Optional of array
+    emscripten::register_type<TestCallbackPromiseOfOptionalContainerOfBindingsTestType>("Promise<(BindingsTestType[] & Disposable) | undefined>");
+    // Array of optional
+    emscripten::register_type<TestCallbackPromiseOfContainerOfBindingsTestTypeOptional>("Promise<(BindingsTestType | undefined)[] & Disposable>");
+}
 
 EMSCRIPTEN_BINDINGS(CSPCallbacksTestTypeBindings)
 {
@@ -332,6 +389,11 @@ EMSCRIPTEN_BINDINGS(CSPCallbacksTestTypeBindings)
             "callbackFunctionNullPointerOpt(callback)",
             +[](CallbacksBindingMechanismsTestType& self, TestCallbackOptionalOfPointerJSCallback callback) { self.CallbackFunctionNullPointerOpt(ToNativeCallback(callback)); })
         .function(
+            "callbackFunctionMultiInputPrimitiveArg(a, b, callback)",
+            +[](CallbacksBindingMechanismsTestType& self, int a, int b, TestCallbackPrimitiveArgJSCallback callback) {
+                self.CallbackFunctionMultiInputPrimitiveArg(a, b, ToNativeCallback(callback));
+            })
+        .function(
             "setStoredCallbackNoArgs(callback)",
             +[](CallbacksBindingMechanismsTestType& self, TestCallbackNoArgsJSCallback callback) { self.SetStoredCallbackNoArgs(ToNativeCallback(callback)); })
         .function(
@@ -340,7 +402,122 @@ EMSCRIPTEN_BINDINGS(CSPCallbacksTestTypeBindings)
             "setStoredCallbackWithArgs(callback)",
             +[](CallbacksBindingMechanismsTestType& self, TestCallbackContainerOfValuesJSCallback callback) { self.SetStoredCallbackWithArgs(ToNativeCallback(callback)); })
         .function(
-            "invokeStoredCallbackWithArgs(args)", +[](CallbacksBindingMechanismsTestType& self, csp::common::Array<BindingsTestType> valueContainerArg) {
+            "invokeStoredCallbackWithArgs(args)",
+            +[](CallbacksBindingMechanismsTestType& self, csp::common::Array<BindingsTestType> valueContainerArg) {
                 self.InvokeStoredCallbackWithArgs(std::move(valueContainerArg));
+            })
+        // Async versions, returning promises
+        .function(
+            "callbackFunctionNoArgsAsync",
+            +[](CallbacksBindingMechanismsTestType& self) {
+                return Promisify<TestCallbackPromiseOfVoid>([&](emscripten::val cb) { self.CallbackFunctionNoArgs(ToNativeCallback(cb.as<TestCallbackNoArgsJSCallback>())); });
+            })
+        .function(
+            "callbackFunctionPrimitiveArgAsync",
+            +[](CallbacksBindingMechanismsTestType& self) {
+                return Promisify<TestCallbackPromiseOfNumber>(
+                    [&](emscripten::val cb) { self.CallbackFunctionPrimitiveArg(ToNativeCallback(cb.as<TestCallbackPrimitiveArgJSCallback>())); });
+            })
+        .function(
+            "callbackFunctionPointerArgAsync",
+            +[](CallbacksBindingMechanismsTestType& self) {
+                return Promisify<TestCallbackPromiseOfBindingsTestTypePointer>(
+                    [&](emscripten::val cb) { self.CallbackFunctionPointerArg(ToNativeCallback(cb.as<TestCallbackPointerArgJSCallback>())); });
+            })
+        .function(
+            "callbackFunctionValueArgAsync",
+            +[](CallbacksBindingMechanismsTestType& self) {
+                return Promisify<TestCallbackPromiseOfBindingsTestType>(
+                    [&](emscripten::val cb) { self.CallbackFunctionValueArg(ToNativeCallback(cb.as<TestCallbackValueArgJSCallback>())); });
+            })
+        .function(
+            "callbackFunctionValueArgByConstRefAsync",
+            +[](CallbacksBindingMechanismsTestType& self) {
+                return Promisify<TestCallbackPromiseOfBindingsTestType>(
+                    [&](emscripten::val cb) { self.CallbackFunctionValueArgByConstRef(ToNativeCallback(cb.as<TestCallbackValueArgByConstRefJSCallback>())); });
+            })
+        .function(
+            "callbackFunctionContainerOfPointersAsync",
+            +[](CallbacksBindingMechanismsTestType& self) {
+                return Promisify<TestCallbackPromiseOfContainerOfBindingsTestTypePointer>(
+                    [&](emscripten::val cb) { self.CallbackFunctionContainerOfPointers(ToNativeCallback(cb.as<TestCallbackContainerOfPointersJSCallback>())); });
+            })
+        .function(
+            "callbackFunctionContainerOfValuesAsync",
+            +[](CallbacksBindingMechanismsTestType& self) {
+                return Promisify<TestCallbackPromiseOfContainerOfBindingsTestType>(
+                    [&](emscripten::val cb) { self.CallbackFunctionContainerOfValues(ToNativeCallback(cb.as<TestCallbackContainerOfValuesJSCallback>())); });
+            })
+        .function(
+            "callbackFunctionContainerOfValuesByConstRefAsync",
+            +[](CallbacksBindingMechanismsTestType& self) {
+                return Promisify<TestCallbackPromiseOfContainerOfBindingsTestType>(
+                    [&](emscripten::val cb) { self.CallbackFunctionContainerOfValuesByConstRef(ToNativeCallback(cb.as<TestCallbackContainerOfValuesByConstRefJSCallback>())); });
+            })
+        .function(
+            "callbackFunctionNestedContainerOfPointersAsync",
+            +[](CallbacksBindingMechanismsTestType& self) {
+                return Promisify<TestCallbackPromiseOfNestedContainerOfBindingsTestTypePointer>(
+                    [&](emscripten::val cb) { self.CallbackFunctionNestedContainerOfPointers(ToNativeCallback(cb.as<TestCallbackNestedContainerOfPointersJSCallback>())); });
+            })
+        .function(
+            "callbackFunctionNestedContainerOfValuesAsync",
+            +[](CallbacksBindingMechanismsTestType& self) {
+                return Promisify<TestCallbackPromiseOfNestedContainerOfBindingsTestType>(
+                    [&](emscripten::val cb) { self.CallbackFunctionNestedContainerOfValues(ToNativeCallback(cb.as<TestCallbackNestedContainerOfValuesJSCallback>())); });
+            })
+        .function(
+            "callbackFunctionNestedContainerOfValuesByConstRefAsync",
+            +[](CallbacksBindingMechanismsTestType& self) {
+                return Promisify<TestCallbackPromiseOfNestedContainerOfBindingsTestType>([&](emscripten::val cb) {
+                    self.CallbackFunctionNestedContainerOfValuesByConstRef(ToNativeCallback(cb.as<TestCallbackNestedContainerOfValuesByConstRefJSCallback>()));
+                });
+            })
+        .function(
+            "callbackFunctionValueOptAsync",
+            +[](CallbacksBindingMechanismsTestType& self) {
+                return Promisify<TestCallbackPromiseOfBindingsTestTypeOptional>(
+                    [&](emscripten::val cb) { self.CallbackFunctionValueOpt(ToNativeCallback(cb.as<TestCallbackOptionalOfValueJSCallback>())); });
+            })
+        .function(
+            "callbackFunctionPointerOptAsync",
+            +[](CallbacksBindingMechanismsTestType& self) {
+                return Promisify<TestCallbackPromiseOfBindingsTestTypeOptional>(
+                    [&](emscripten::val cb) { self.CallbackFunctionPointerOpt(ToNativeCallback(cb.as<TestCallbackOptionalOfPointerJSCallback>())); });
+            })
+        .function(
+            "callbackFunctionNullValueOptAsync",
+            +[](CallbacksBindingMechanismsTestType& self) {
+                return Promisify<TestCallbackPromiseOfBindingsTestTypeOptional>(
+                    [&](emscripten::val cb) { self.CallbackFunctionNullValueOpt(ToNativeCallback(cb.as<TestCallbackOptionalOfValueJSCallback>())); });
+            })
+        .function(
+            "callbackFunctionNullPointerOptAsync",
+            +[](CallbacksBindingMechanismsTestType& self) {
+                return Promisify<TestCallbackPromiseOfBindingsTestTypeOptional>(
+                    [&](emscripten::val cb) { self.CallbackFunctionNullPointerOpt(ToNativeCallback(cb.as<TestCallbackOptionalOfPointerJSCallback>())); });
+            })
+        .function(
+            "callbackFunctionOptOfArrayAsync",
+            +[](CallbacksBindingMechanismsTestType& self) {
+                return Promisify<TestCallbackPromiseOfOptionalContainerOfBindingsTestType>(
+                    [&](emscripten::val cb) { self.CallbackFunctionOptOfArray(ToNativeCallback(cb.as<TestCallbackOptionalOfArrayJSCallback>())); });
+            })
+        .function(
+            "callbackFunctionArrayOfOptAsync",
+            +[](CallbacksBindingMechanismsTestType& self) {
+                return Promisify<TestCallbackPromiseOfContainerOfBindingsTestTypeOptional>(
+                    [&](emscripten::val cb) { self.CallbackFunctionArrayOfOpt(ToNativeCallback(cb.as<TestCallbackArrayOfOptionalJSCallback>())); });
+            })
+        .function(
+            "callbackFunctionArrayOfSomeNullOptAsync",
+            +[](CallbacksBindingMechanismsTestType& self) {
+                return Promisify<TestCallbackPromiseOfContainerOfBindingsTestTypeOptional>(
+                    [&](emscripten::val cb) { self.CallbackFunctionArrayOfSomeNullOpt(ToNativeCallback(cb.as<TestCallbackArrayOfOptionalJSCallback>())); });
+            })
+        .function(
+            "callbackFunctionMultiInputPrimitiveArgAsync(a, b)", +[](CallbacksBindingMechanismsTestType& self, int a, int b) {
+                return Promisify<TestCallbackPromiseOfNumber>(
+                    [&](emscripten::val cb) { self.CallbackFunctionMultiInputPrimitiveArg(a, b, ToNativeCallback(cb.as<TestCallbackPrimitiveArgJSCallback>())); });
             });
 }
