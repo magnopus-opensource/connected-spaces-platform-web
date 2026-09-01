@@ -7,8 +7,6 @@
  */
 #pragma once
 
-#pragma once
-
 #include "emscripten/val.h"
 #include <atomic>
 #include <string>

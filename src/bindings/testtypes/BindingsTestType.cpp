@@ -120,7 +120,7 @@ EMSCRIPTEN_BINDINGS(CSPTestTypeBindings)
             "create(value, name)", +[](int value, std::string name) { return BindingsTestType(value, std::move(name)); })
         .property("value", &BindingsTestType::GetValue, &BindingsTestType::SetValue)
         .property("name", &BindingsTestType::GetName, &BindingsTestType::SetName)
-        .function("equals", &BindingsTestType::operator==)
+        .function("equals(other)", &BindingsTestType::operator==)
         .class_function(
             "aliveCount", +[] { return BindingsTestType::AliveCount.load(); });
 
