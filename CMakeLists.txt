@@ -6,9 +6,12 @@ project(ConnectedSpacesPlatformWeb VERSION 1.0
 
 add_executable(connected-spaces-platform-bindings
     Bindings.cpp
+    src/bindings/csp/Common/SharedEnums.cpp
+    src/bindings/csp/Systems/WebService.cpp
     src/bindings/testtypes/BindingsTestType.cpp
     src/bindings/testtypes/TestContainerBindings.cpp
     src/bindings/testtypes/TestCallbackBindings.cpp
+    src/bindings/testtypes/TestResultBindings.cpp
     src/bindings/containers/Equality.cpp
     src/bindings/containers/Disposal.cpp
     src/bindings/containers/Clone.cpp
