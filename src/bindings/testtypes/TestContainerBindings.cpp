@@ -107,6 +107,7 @@ public:
     // Optional<BindingsTestType>
     csp::common::Optional<BindingsTestType> GetOptionalFullTypeByValue() const { return m_optionalFullType; }
     const csp::common::Optional<BindingsTestType>& GetOptionalFullTypeByConstRef() const { return m_optionalFullType; }
+    const csp::common::Optional<BindingsTestType*> GetOptionalFullTypePointer() const { return m_optionalPointerType; }
     void SetOptionalFullTypeByValue(csp::common::Optional<BindingsTestType> value) { m_optionalFullType = std::move(value); }
     void SetOptionalFullTypeByConstRef(const csp::common::Optional<BindingsTestType>& value) { m_optionalFullType = value; }
 
@@ -179,6 +180,7 @@ private:
     csp::common::Map<csp::common::String, csp::common::String> m_mapStringString;
     csp::common::Optional<int> m_optionalBasicType;
     csp::common::Optional<BindingsTestType> m_optionalFullType;
+    csp::common::Optional<BindingsTestType*> m_optionalPointerType;
     csp::common::Optional<csp::common::String> m_optionalString;
     csp::common::Optional<csp::common::List<BindingsTestType>> m_optionalListFullType;
     csp::common::String m_cspString;
@@ -208,6 +210,8 @@ public:
         m_mapOfCppOwnedPointers[2] = new BindingsTestType(2, "Two");
 
         m_singlePointerType = new BindingsTestType(1, "One");
+
+        m_optionalPointerType = csp::common::Optional<BindingsTestType*>(m_singlePointerType);
     }
 };
 
@@ -311,20 +315,22 @@ EMSCRIPTEN_BINDINGS(CSPContainerTestTypeBindings)
         .function("setMapStringStringByConstRef(value)", &ContainerBindingMechanismsTestType::SetMapStringStringByConstRef)
         .function("getCspStringByValue", &ContainerBindingMechanismsTestType::GetCspStringByValue)
         .function("getCspStringByConstRef", &ContainerBindingMechanismsTestType::GetCspStringByConstRef)
-        .function("setCspStringByValue", &ContainerBindingMechanismsTestType::SetCspStringByValue)
-        .function("setCspStringByConstRef", &ContainerBindingMechanismsTestType::SetCspStringByConstRef)
+        .function("setCspStringByValue(value)", &ContainerBindingMechanismsTestType::SetCspStringByValue)
+        .function("setCspStringByConstRef(value)", &ContainerBindingMechanismsTestType::SetCspStringByConstRef)
         .function("getOptionalBasicTypeByValue", &ContainerBindingMechanismsTestType::GetOptionalBasicTypeByValue)
         .function("getOptionalBasicTypeByConstRef", &ContainerBindingMechanismsTestType::GetOptionalBasicTypeByConstRef)
-        .function("setOptionalBasicTypeByValue", &ContainerBindingMechanismsTestType::SetOptionalBasicTypeByValue)
-        .function("setOptionalBasicTypeByConstRef", &ContainerBindingMechanismsTestType::SetOptionalBasicTypeByConstRef)
+        .function("setOptionalBasicTypeByValue(value)", &ContainerBindingMechanismsTestType::SetOptionalBasicTypeByValue)
+        .function("setOptionalBasicTypeByConstRef(value)", &ContainerBindingMechanismsTestType::SetOptionalBasicTypeByConstRef)
         .function("getOptionalFullTypeByValue", &ContainerBindingMechanismsTestType::GetOptionalFullTypeByValue)
         .function("getOptionalFullTypeByConstRef", &ContainerBindingMechanismsTestType::GetOptionalFullTypeByConstRef)
-        .function("setOptionalFullTypeByValue", &ContainerBindingMechanismsTestType::SetOptionalFullTypeByValue)
-        .function("setOptionalFullTypeByConstRef", &ContainerBindingMechanismsTestType::SetOptionalFullTypeByConstRef)
+        .function(
+            "getOptionalFullTypeAsPointer", +[](const ContainerBindingMechanismsTestType& self) { return self.GetOptionalFullTypePointer(); })
+        .function("setOptionalFullTypeByValue(value)", &ContainerBindingMechanismsTestType::SetOptionalFullTypeByValue)
+        .function("setOptionalFullTypeByConstRef(value)", &ContainerBindingMechanismsTestType::SetOptionalFullTypeByConstRef)
         .function("getOptionalStringByValue", &ContainerBindingMechanismsTestType::GetOptionalStringByValue)
         .function("getOptionalStringByConstRef", &ContainerBindingMechanismsTestType::GetOptionalStringByConstRef)
-        .function("setOptionalStringByValue", &ContainerBindingMechanismsTestType::SetOptionalStringByValue)
-        .function("setOptionalStringByConstRef", &ContainerBindingMechanismsTestType::SetOptionalStringByConstRef)
+        .function("setOptionalStringByValue(value)", &ContainerBindingMechanismsTestType::SetOptionalStringByValue)
+        .function("setOptionalStringByConstRef(value)", &ContainerBindingMechanismsTestType::SetOptionalStringByConstRef)
         .function(
             "getOptionalListFullTypeByValue",
             +[](const ContainerBindingMechanismsTestType& self) {
@@ -335,8 +341,8 @@ EMSCRIPTEN_BINDINGS(CSPContainerTestTypeBindings)
             +[](const ContainerBindingMechanismsTestType& self) {
                 return bindings::utils::JSDisposable<csp::common::Optional<csp::common::List<BindingsTestType>>> { self.GetOptionalListFullTypeByConstRef() };
             })
-        .function("setOptionalListFullTypeByValue", &ContainerBindingMechanismsTestType::SetOptionalListFullTypeByValue)
-        .function("setOptionalListFullTypeByConstRef", &ContainerBindingMechanismsTestType::SetOptionalListFullTypeByConstRef)
+        .function("setOptionalListFullTypeByValue(value)", &ContainerBindingMechanismsTestType::SetOptionalListFullTypeByValue)
+        .function("setOptionalListFullTypeByConstRef(value)", &ContainerBindingMechanismsTestType::SetOptionalListFullTypeByConstRef)
         .function(
             "getListOfOptionalFullTypeByValue",
             +[](const ContainerBindingMechanismsTestType& self) {
@@ -347,6 +353,6 @@ EMSCRIPTEN_BINDINGS(CSPContainerTestTypeBindings)
             +[](const ContainerBindingMechanismsTestType& self) {
                 return bindings::utils::JSDisposable<csp::common::List<csp::common::Optional<BindingsTestType>>> { self.GetListOfOptionalFullTypeByConstRef() };
             })
-        .function("setListOfOptionalFullTypeByValue", &ContainerBindingMechanismsTestType::SetListOfOptionalFullTypeByValue)
-        .function("setListOfOptionalFullTypeByConstRef", &ContainerBindingMechanismsTestType::SetListOfOptionalFullTypeByConstRef);
+        .function("setListOfOptionalFullTypeByValue(value)", &ContainerBindingMechanismsTestType::SetListOfOptionalFullTypeByValue)
+        .function("setListOfOptionalFullTypeByConstRef(value)", &ContainerBindingMechanismsTestType::SetListOfOptionalFullTypeByConstRef);
 }

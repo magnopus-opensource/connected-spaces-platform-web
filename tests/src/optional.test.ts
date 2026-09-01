@@ -181,6 +181,23 @@ describe('Optional bindings', () => {
     expect(csp.optionalEquals(roundTrip, elem)).toBe(false);
   });
 
+  // Pointer tests
+
+  it('Optional of pointer is non-owning', () => {
+    using helper = csp.ContainerBindingMechanismsTestType.create();
+
+    const optionalPointer = helper.getOptionalFullTypeAsPointer();
+
+    expect(optionalPointer).not.toBeNullable();
+
+    expect(optionalPointer?.value).toBe(1);
+    expect(optionalPointer?.name).toBe('One');
+
+    expect(() => optionalPointer?.delete()).toThrow();
+    expect(() => optionalPointer?.deleteLater()).toThrow();
+    expect(() => optionalPointer?.[Symbol.dispose]()).toThrow();
+  });
+
   // String tests
 
   it('Optional round trip string by value', () => {

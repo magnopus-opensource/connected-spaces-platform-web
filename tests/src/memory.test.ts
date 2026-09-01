@@ -774,4 +774,30 @@ describe('CSPFoundation', () => {
       nonOwning?.deleteLater();
     }).toThrow('nonOwning?.deleteLater is not a function');
   });
+
+  it('Optional of non-owning pointer has undefined ownership behaviours', () => {
+    using helper = csp.ContainerBindingMechanismsTestType.create();
+
+    const nonOwning = helper.getOptionalFullTypeAsPointer();
+
+    expect(nonOwning).not.toBeNullable();
+
+    expect(() => nonOwning?.delete()).toThrow();
+    expect(() => nonOwning?.deleteLater()).toThrow();
+    expect(() => nonOwning?.[Symbol.dispose]()).toThrow();
+
+    expect(() => {
+      using nonOwning = helper.getSingleFullTypeAsPointer();
+    }).toThrow(TypeError);
+
+    expect(() => {
+      let nonOwning = helper.getSingleFullTypeAsPointer();
+      nonOwning?.delete();
+    }).toThrow('nonOwning?.delete is not a function');
+
+    expect(() => {
+      let nonOwning = helper.getSingleFullTypeAsPointer();
+      nonOwning?.deleteLater();
+    }).toThrow('nonOwning?.deleteLater is not a function');
+  });
 });
