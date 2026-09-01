@@ -10,8 +10,11 @@
  * We also clone pointer types, for consistency with value types and non-awaitable callback
  * arguments.
  */
-EM_JS(emscripten::EM_VAL, make_promise_with_cloning_callback, (), {
+EM_JS(emscripten::EM_VAL, make_promise_with_cloning_callback, (emscripten::EM_VAL progressCallbackHandle), {
     // clang-format off
+
+    const progressCallback = Emval.toValue(progressCallbackHandle);
+
     let resolve;
     let reject;
 
@@ -50,21 +53,18 @@ EM_JS(emscripten::EM_VAL, make_promise_with_cloning_callback, (), {
         return null;
     };
 
-    const callback = (arg) => {
-        // Clone the argument to keep it alive because we use this callback with toNativeCallback,
-        // which will dispose the argument after the callback returns.
-
+    const cloneArg = (arg) => {
         if (!arg) {
             // Do not try to clone null or undefined values. Note that this will catch all
             // "falsy" values such as 0 or empty string which we also do not clone anyway.
             // Null or undefined pointer/optional types, which request a clone, will arrive here too.
-            resolve(arg);
+            return arg;
         } else if ((Array.isArray(arg) || arg instanceof Map)) {
             // Clone a container (array or Map) using the correct clone function.
             const clonedContainer = cloneContainer(arg);
 
             if (clonedContainer !== null) {
-                resolve(clonedContainer);
+                return clonedContainer;
             } else {
                 // In theory this should never happen except in the case of a coding error.
                 reject('Error: could not clone container - unknown container type');
@@ -72,9 +72,36 @@ EM_JS(emscripten::EM_VAL, make_promise_with_cloning_callback, (), {
         } else if (typeof arg !== 'object' || !('clone' in arg)) {
             // Do not clone other types that don't have a clone function. This will catch primitive
             // types (number, boolean, string)
-            resolve(arg);
+            return arg;
         } else {
-            resolve(arg.clone());
+            return arg.clone();
+        }
+    };
+
+    const isResultType = (arg) => {
+        return arg && arg instanceof Module['ResultBase'];
+    };
+
+    const callback = (arg) => {
+        // Clone the argument to keep it alive because we use this callback with toNativeCallback,
+        // which will dispose the argument after the callback returns.
+
+        if (isResultType(arg)) {
+            if (arg.resultCode === Module['EResultCode'].Success) {
+                resolve(cloneArg(arg));
+            } else if (arg.resultCode === Module['EResultCode'].Failed) {
+                // TODO: cloning here means that the arg must be disposed in the catch handler (function or block)
+                reject(cloneArg(arg));
+            } else if (arg.resultCode === Module['EResultCode'].InProgress) {
+                progressCallback?.(arg.requestProgress, arg.responseProgress);
+            } else if (arg.resultCode === Module['EResultCode'].Init) {
+                // Do nothing - request has just been initialised
+            } else {
+                resolve(cloneArg(arg));
+            }
+        }
+        else {
+            resolve(cloneArg(arg));
         }
 
         // arg will be disposed on exiting here if callback is used with toNativeCallback and not
