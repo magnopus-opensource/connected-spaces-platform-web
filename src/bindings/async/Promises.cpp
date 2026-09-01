@@ -19,23 +19,6 @@ EM_JS(emscripten::EM_VAL, make_promise_with_cloning_callback, (emscripten::EM_VA
 
     const progressCallback = Emval.toValue(progressCallbackHandle);
 
-    class CspRequestError extends Error {
-        constructor(message, resultCode, httpResultCode, responseBody, failureReason) {
-            super(message);
-
-            if (Error.captureStackTrace) {
-                Error.captureStackTrace(this, CspRequestError);
-            }
-
-            this.name = 'CspRequestError';
-
-            this.resultCode = resultCode;
-            this.httpResultCode = httpResultCode;
-            this.responseBody = responseBody;
-            this.failureReason = failureReason;
-        }
-    }
-
     let resolve;
     let reject;
 
