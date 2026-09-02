@@ -6,9 +6,12 @@ project(ConnectedSpacesPlatformWeb VERSION 1.0
 
 add_executable(connected-spaces-platform-bindings
     Bindings.cpp
+    src/bindings/csp/Common/SharedEnums.cpp
+    src/bindings/csp/Systems/WebService.cpp
     src/bindings/testtypes/BindingsTestType.cpp
     src/bindings/testtypes/TestContainerBindings.cpp
     src/bindings/testtypes/TestCallbackBindings.cpp
+    src/bindings/testtypes/TestResultBindings.cpp
     src/bindings/containers/Equality.cpp
     src/bindings/containers/Disposal.cpp
     src/bindings/containers/Clone.cpp
@@ -60,6 +63,7 @@ target_link_options(connected-spaces-platform-bindings PRIVATE
     "-sINCOMING_MODULE_JS_API=['buffer','fetchSettings','instantiateWasm','locateFile','mainScriptUrlOrBlob','wasmMemory', 'noExitRuntime']"
     --emit-tsd=connected-spaces-platform-bindings.d.ts
     --no-entry
+    --js-library=${CMAKE_SOURCE_DIR}/src/js/js-library.js
     --extern-pre-js=${CMAKE_SOURCE_DIR}/src/polyfills/polyfills.js
   >
 )

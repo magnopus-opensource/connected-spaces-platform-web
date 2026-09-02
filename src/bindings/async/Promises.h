@@ -5,7 +5,7 @@
 #include "emscripten/emscripten.h"
 #include "emscripten/val.h"
 
-extern "C" emscripten::EM_VAL make_promise_with_cloning_callback();
+extern "C" emscripten::EM_VAL make_promise_with_cloning_callback(emscripten::EM_VAL progressCallbackHandle);
 
 namespace {
 
@@ -45,22 +45,36 @@ namespace {
  *        emscripten::register_type<PromiseNumberValType>("Promise<number>");
  *      }
  *
- * The 'Clone' in the name of the function refers to the fact that the JS callback the bound C++
- * function ultimately calls will perform an additional clone of the callback argument before
- * resolving the promise. This is required because Promisify is designed to be used with
- * the existing ToNativeCallback machinery which will automatically dispose of the callback argument
- * after the callback returns. The clone ensures the argument is kept alive, but means that the user
- * must dispose the argument themselves.
+ * Promisify has native support for C++ functions using ResultBase-derived types as the callback
+ * parameter. In this case the promise will resolve if the result is successful, and reject if the
+ * result is a failure. An optional progress callback can also be provided to Promisify which will
+ * be called with progress updates if the C++ function reports in-progress results.
+ * For non-ResultBase values, the promise will be resolved with the callback parameter.
  *
- * PromiseValType: Specialised Embind val type corresponding to the return type of the function in
- *                 TypeScript. Defaults to emscripten::val (which will appear as 'any' in the
- *                 TypeScript definitions).
- * WrapperFn: Callable that takes an emscripten::val (the JS callback) and invokes the original C++
- *            function with the JS callback, via ToNativeCallback.
+ * The JS callback that the bound C++ function ultimately calls (`jsCallback`) will perform an
+ * additional clone of the callback argument before resolving the promise. This is required because
+ * Promisify is designed to be used with the existing ToNativeCallback machinery which will
+ * automatically dispose of the callback argument after the callback returns. The clone ensures the
+ * argument is kept alive, but means that the user must dispose the argument themselves.
+ *
+ * Template parameters:
+ *     PromiseValType: Specialised Embind val type corresponding to the return type of the function
+ *                     in TypeScript. Defaults to emscripten::val (which will appear as 'any' in the
+ *                     TypeScript definitions).
+ *     WrapperFn: Callable that takes an emscripten::val (the JS callback) and invokes the original
+ *                C++ function with the JS callback, via ToNativeCallback.
+ *
+ * Parameters:
+ *     wrapperFn: Callable that takes an emscripten::val (the JS callback) and invokes the original
+ *                C++ function, passing in the JS callback, via ToNativeCallback.
+ *     progressCallback: Optional emscripten::val representing a JavaScript function that will be
+ *                       called with progress updates. This is used when promisify-ing C++ functions
+ *                       based on ResultBase that report progress.
  */
-template <typename PromiseValType = emscripten::val, typename WrapperFn> inline PromiseValType Promisify(WrapperFn&& wrapperFn)
+template <typename PromiseValType = emscripten::val, typename WrapperFn>
+inline PromiseValType Promisify(WrapperFn&& wrapperFn, emscripten::val progressCallback = emscripten::val::undefined())
 {
-    emscripten::val promiseAndCallback = emscripten::val::take_ownership(make_promise_with_cloning_callback());
+    emscripten::val promiseAndCallback = emscripten::val::take_ownership(make_promise_with_cloning_callback(progressCallback.as_handle()));
     // This is the JS callback that the C++ function will ultimately call, and is responsible for
     // resolving the promise.
     emscripten::val jsCallback = promiseAndCallback["callback"];

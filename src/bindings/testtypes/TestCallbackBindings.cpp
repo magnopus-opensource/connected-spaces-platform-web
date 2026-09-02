@@ -12,6 +12,7 @@
 #include "../async/Promises.h"
 #include "../utils/JSDisposable.h"
 #include "BindingsTestType.h"
+#include "StringResultTestType.h"
 
 #include "emscripten/bind.h"
 #include "emscripten/val.h"
@@ -19,6 +20,8 @@
 #include <CSP/Common/Map.h>
 #include <CSP/Common/Optional.h>
 
+#include <CSP/Common/SharedEnums.h>
+#include <cstddef>
 #include <iostream>
 #include <memory>
 #include <optional>
@@ -66,6 +69,10 @@ typedef std::function<void(const csp::common::Optional<BindingsTestType>& option
 typedef std::function<void(const csp::common::Optional<BindingsTestType*>& optionalPointerArg)> TestCallbackOptionalOfPointer;
 typedef std::function<void(const csp::common::Optional<csp::common::Array<BindingsTestType>>& optionalOfArrayArg)> TestCallbackOptionalOfArray;
 typedef std::function<void(const csp::common::Array<csp::common::Optional<BindingsTestType>>& arrayOfOptionalArg)> TestCallbackArrayOfOptional;
+
+typedef std::function<void(const StringResultTestType& result)> TestCallbackStringResultTestType;
+
+typedef std::function<void(float progress)> TestCallbackProgressCallbackType;
 }
 
 namespace {
@@ -98,6 +105,7 @@ csp::common::Optional<BindingsTestType*> pointerOpt { new BindingsTestType(1, "O
 csp::common::Optional<csp::common::Array<BindingsTestType>> optOfArray { { BindingsTestType(1, "One"), BindingsTestType(2, "Two") } };
 csp::common::Array<csp::common::Optional<BindingsTestType>> arrayOfOpt { { BindingsTestType(1, "One") }, { BindingsTestType(2, "Two") } };
 csp::common::Array<csp::common::Optional<BindingsTestType>> arrayOfSomeNullOpt { nullptr, { BindingsTestType(2, "Two") } };
+
 }
 
 namespace {
@@ -228,6 +236,56 @@ public:
         m_offThread ? CallOffThread(m_storedCallbackwithArgs, std::move(valueContainerArg)) : CallOnThread(m_storedCallbackwithArgs, std::move(valueContainerArg));
     }
 
+    void CallbackFunctionStringResultSucceeded(TestCallbackNamespace::TestCallbackStringResultTestType callback)
+    {
+        StringResultTestType result(csp::systems::EResultCode::Success, csp::web::EResponseCodes::ResponseOK);
+        result.SetValue("Success");
+
+        /* Moving is important here to avoid referencing a stack-destructed object and get the tuple to store the value. */
+        m_offThread ? CallOffThread(callback, std::move(result)) : CallOnThread(callback, std::move(result));
+    }
+
+    void CallbackFunctionStringResultFailed(TestCallbackNamespace::TestCallbackStringResultTestType callback)
+    {
+        StringResultTestType result(csp::systems::EResultCode::Failed, csp::web::EResponseCodes::ResponseUnauthorized, csp::systems::ERequestFailureReason::UserMissingPassword);
+        result.SetValue("Failure");
+
+        /* Moving is important here to avoid referencing a stack-destructed object and get the tuple to store the value. */
+        m_offThread ? CallOffThread(callback, std::move(result)) : CallOnThread(callback, std::move(result));
+    }
+
+    void CallbackFunctionStringResultProgress(TestCallbackNamespace::TestCallbackStringResultTestType callback)
+    {
+        auto testProgressResult = [callback]() {
+            const size_t ProgressSteps = 4;
+
+            StringResultTestType initialResult(csp::systems::EResultCode::Init, csp::web::EResponseCodes::ResponseAccepted);
+            initialResult.SetValue("Initialized");
+            initialResult.SetProgress(0.0f, 0.0f);
+
+            callback(initialResult);
+
+            for (size_t i = 0; i < ProgressSteps; ++i) {
+
+                StringResultTestType inProgressresult(csp::systems::EResultCode::InProgress, csp::web::EResponseCodes::ResponseProcessing);
+                inProgressresult.SetValue("In Progress");
+                inProgressresult.SetProgress(static_cast<float>(i) / static_cast<float>(ProgressSteps), 0.0f);
+
+                callback(inProgressresult);
+
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            }
+
+            StringResultTestType completedResult(csp::systems::EResultCode::Success, csp::web::EResponseCodes::ResponseOK);
+            completedResult.SetValue("Success");
+            completedResult.SetProgress(1.0f, 1.0f);
+
+            callback(completedResult);
+        };
+
+        m_offThread ? CallOffThread(testProgressResult) : CallOnThread(testProgressResult);
+    }
+
 private:
     bool m_offThread = false; //If true, we'll call callbacks on a detached thread.
     //For multi-invoke tests
@@ -263,6 +321,10 @@ MAKE_CALLBACK(TestCallbackNamespace::TestCallbackOptionalOfValue, TestCallbackOp
 MAKE_CALLBACK(TestCallbackNamespace::TestCallbackOptionalOfPointer, TestCallbackOptionalOfPointerJSCallback, "(pointerArg: BindingsTestType | undefined) => void")
 MAKE_CALLBACK(TestCallbackNamespace::TestCallbackOptionalOfArray, TestCallbackOptionalOfArrayJSCallback, "(optionalOfArrayArg: BindingsTestType[] | undefined) => void")
 MAKE_CALLBACK(TestCallbackNamespace::TestCallbackArrayOfOptional, TestCallbackArrayOfOptionalJSCallback, "(arrayOfOptionalArg: (BindingsTestType | undefined)[]) => void")
+
+MAKE_CALLBACK(TestCallbackNamespace::TestCallbackStringResultTestType, CallbackFunctionStringResultTestTypeJSCallback, "(resultArg: StringResultTestType) => void")
+
+MAKE_CALLBACK(TestCallbackNamespace::TestCallbackProgressCallbackType, TestCallbackProgressCallbackTypeJSCallback, "(requestProgress: number, responseProgress: number) => void")
 
 /**
  * Register the promise types for the callback return types.
@@ -306,6 +368,9 @@ EMSCRIPTEN_BINDINGS(register_TestCallbackPromiseTypes)
     // Array of optional
     emscripten::register_type<TestCallbackPromiseOfContainerOfBindingsTestTypeOptional>("Promise<(BindingsTestType | undefined)[] & Disposable>");
 }
+
+EMSCRIPTEN_DECLARE_VAL_TYPE(TestCallbackPromiseOfStringResultTestType);
+EMSCRIPTEN_BINDINGS(register_TestCallbackPromiseOfStringResultTestType) { emscripten::register_type<TestCallbackPromiseOfStringResultTestType>("Promise<StringResultTestType>"); }
 
 EMSCRIPTEN_BINDINGS(CSPCallbacksTestTypeBindings)
 {
@@ -405,6 +470,16 @@ EMSCRIPTEN_BINDINGS(CSPCallbacksTestTypeBindings)
             "invokeStoredCallbackWithArgs(args)",
             +[](CallbacksBindingMechanismsTestType& self, csp::common::Array<BindingsTestType> valueContainerArg) {
                 self.InvokeStoredCallbackWithArgs(std::move(valueContainerArg));
+            })
+        .function(
+            "callbackFunctionStringResultSucceeded(callback)",
+            +[](CallbacksBindingMechanismsTestType& self, CallbackFunctionStringResultTestTypeJSCallback callback) {
+                self.CallbackFunctionStringResultSucceeded(ToNativeCallback(callback));
+            })
+        .function(
+            "callbackFunctionStringResultFailed(callback)",
+            +[](CallbacksBindingMechanismsTestType& self, CallbackFunctionStringResultTestTypeJSCallback callback) {
+                self.CallbackFunctionStringResultFailed(ToNativeCallback(callback));
             })
         // Async versions, returning promises
         .function(
@@ -516,8 +591,28 @@ EMSCRIPTEN_BINDINGS(CSPCallbacksTestTypeBindings)
                     [&](emscripten::val cb) { self.CallbackFunctionArrayOfSomeNullOpt(ToNativeCallback(cb.as<TestCallbackArrayOfOptionalJSCallback>())); });
             })
         .function(
-            "callbackFunctionMultiInputPrimitiveArgAsync(a, b)", +[](CallbacksBindingMechanismsTestType& self, int a, int b) {
+            "callbackFunctionMultiInputPrimitiveArgAsync(a, b)",
+            +[](CallbacksBindingMechanismsTestType& self, int a, int b) {
                 return Promisify<TestCallbackPromiseOfNumber>(
                     [&](emscripten::val cb) { self.CallbackFunctionMultiInputPrimitiveArg(a, b, ToNativeCallback(cb.as<TestCallbackPrimitiveArgJSCallback>())); });
+            })
+        .function(
+            "callbackFunctionStringResultSucceededAsync",
+            +[](CallbacksBindingMechanismsTestType& self) {
+                return Promisify<TestCallbackPromiseOfStringResultTestType>(
+                    [&](emscripten::val cb) { self.CallbackFunctionStringResultSucceeded(ToNativeCallback(cb.as<CallbackFunctionStringResultTestTypeJSCallback>())); });
+            })
+        .function(
+            "callbackFunctionStringResultFailedAsync",
+            +[](CallbacksBindingMechanismsTestType& self) {
+                return Promisify<TestCallbackPromiseOfStringResultTestType>(
+                    [&](emscripten::val cb) { self.CallbackFunctionStringResultFailed(ToNativeCallback(cb.as<CallbackFunctionStringResultTestTypeJSCallback>())); });
+            })
+        .function(
+            "callbackFunctionStringResultProgressAsync(progressCallback)",
+            +[](CallbacksBindingMechanismsTestType& self, TestCallbackProgressCallbackTypeJSCallback progressCallback) {
+                return Promisify<TestCallbackPromiseOfStringResultTestType>(
+                    [&](emscripten::val cb) { self.CallbackFunctionStringResultProgress(ToNativeCallback(cb.as<CallbackFunctionStringResultTestTypeJSCallback>())); },
+                    progressCallback);
             });
 }
