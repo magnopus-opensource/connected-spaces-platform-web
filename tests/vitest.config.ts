@@ -49,7 +49,11 @@ export function makeConfig({ debug = false } = {}) {
               }
             : {}
         ),
-        instances: [{ browser: 'chromium' as const }, { browser: 'webkit' as const }]
+        instances: [
+          { browser: 'chromium' as const },
+          { browser: 'webkit' as const },
+          { browser: 'firefox' as const }
+        ]
       },
       typecheck: {
         include: ['**/*.test-d.ts'],

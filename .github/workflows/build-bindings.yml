@@ -112,7 +112,7 @@ jobs:
       - name: Install Playwright browsers
         shell: bash
         working-directory: ./tests
-        run: npx playwright install chromium webkit
+        run: npx playwright install chromium webkit firefox
 
       - name: Test (Chromium)
         shell: bash
@@ -123,6 +123,11 @@ jobs:
         shell: bash
         working-directory: ./tests
         run: npm run test:webkit
+
+      - name: Test (Firefox)
+        shell: bash
+        working-directory: ./tests
+        run: npm run test:firefox
 
       - name: Package install dir
         shell: pwsh
