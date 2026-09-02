@@ -767,12 +767,12 @@ describe('CSPFoundation', () => {
     expect(() => {
       let nonOwning = helper.getSingleFullTypeAsPointer();
       nonOwning?.delete();
-    }).toThrow('nonOwning?.delete is not a function');
+    }).toThrow();
 
     expect(() => {
       let nonOwning = helper.getSingleFullTypeAsPointer();
       nonOwning?.deleteLater();
-    }).toThrow('nonOwning?.deleteLater is not a function');
+    }).toThrow();
   });
 
   it('Optional of non-owning pointer has undefined ownership behaviours', () => {
@@ -793,11 +793,11 @@ describe('CSPFoundation', () => {
     expect(() => {
       let nonOwning = helper.getSingleFullTypeAsPointer();
       nonOwning?.delete();
-    }).toThrow('nonOwning?.delete is not a function');
+    }).toThrow();
 
     expect(() => {
       let nonOwning = helper.getSingleFullTypeAsPointer();
       nonOwning?.deleteLater();
-    }).toThrow('nonOwning?.deleteLater is not a function');
+    }).toThrow();
   });
 });

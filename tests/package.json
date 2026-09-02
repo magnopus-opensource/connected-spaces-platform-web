@@ -6,6 +6,7 @@
     "test": "npm run typecheck && npm run lint && npm run test:chromium",
     "test:chromium": "vitest run --typecheck --browser=chromium && vitest run --browser=chromium",
     "test:webkit": "vitest run --typecheck --browser=webkit && vitest run --browser=webkit",
+    "test:firefox": "vitest run --typecheck --browser=firefox && vitest run --browser=firefox",
     "test:watch": "vitest",
     "test:debug": "vitest --config vitest.debug.config.ts --no-file-parallelism",
     "test:types": "vitest run --typecheck",
