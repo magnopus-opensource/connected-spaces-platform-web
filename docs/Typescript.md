@@ -28,4 +28,36 @@ The [`index.d.ts`](../src/type-overlays/index.d.ts) file is what ultimately expo
 To add new type overlays for C++ bindings:
 
 1. Create a new `.d.ts` file in the `type-overlays` folder with a new interface for the custom types. This file should have the same name as the corresponding C++ source file.
-1. In the `index.d.ts` import the newly created `.d.ts` file and add the interface to the union type, following the instructions in that file.
+1. In the `index.d.ts` import the newly created `.d.ts` file and add the interface to the `TypeOverrides` union type, following the instructions in that file.
+
+### Type Overlays for Exported JavaScript
+
+We can also use the same mechanism to expose TypeScript definitions for JavaScript code that is exposed by the library as part of its public interface.
+
+For example if we have function that is included in the module API via `addToLibrary`:
+
+```js
+function add(a, b) {
+  return a + b;
+}
+
+// Expose add in the public interface
+addToLibrary({
+  $add__postset: "Module['add'] = add;",
+  $add: add
+});
+```
+
+We can add a type overlay for the function in an `add.d.ts` file, located in the [`src/type-overlays`](../src/type-overlays) folder:
+
+```ts
+declare function add(a: number, b: number): number;
+
+export type { add };
+
+export interface AddOverrides {
+  readonly add: typeof add;
+}
+```
+
+Then in the [`index.d.ts`](../src/type-overlays/index.d.ts) file we can import and append the `AddOverrides` interface to the `TypeOverrides` union type. Note that we must also re-export the `add` type in this same file for it to be available to users via `import type` directives.
