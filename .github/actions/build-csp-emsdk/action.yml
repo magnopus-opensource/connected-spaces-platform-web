@@ -25,7 +25,7 @@ runs:
   steps:
 
     - name: Checkout connected-spaces-platform
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
       with:
         repository: magnopus-opensource/connected-spaces-platform
         path: CSP
@@ -46,7 +46,7 @@ runs:
     # action so a change to build flags here invalidates the cache.
     - name: Cache CSP install (restore)
       id: csp-install-cache
-      uses: actions/cache/restore@v4
+      uses: actions/cache/restore@v6
       with:
         path: CSP/install
         key: csp-install-emsdk-${{ inputs.build_type }}-${{ steps.csp-sha.outputs.sha }}-${{ hashFiles('.github/actions/build-csp-emsdk/action.yml') }}
@@ -122,7 +122,7 @@ runs:
     # cannot poison the cache with a partial install tree.
     - name: Cache CSP install (save)
       if: success() && steps.csp-install-cache.outputs.cache-hit != 'true'
-      uses: actions/cache/save@v4
+      uses: actions/cache/save@v6
       with:
         path: CSP/install
         key: csp-install-emsdk-${{ inputs.build_type }}-${{ steps.csp-sha.outputs.sha }}-${{ hashFiles('.github/actions/build-csp-emsdk/action.yml') }}
