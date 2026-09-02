@@ -49,6 +49,7 @@ namespace {
  * parameter. In this case the promise will resolve if the result is successful, and reject if the
  * result is a failure. An optional progress callback can also be provided to Promisify which will
  * be called with progress updates if the C++ function reports in-progress results.
+ * For non-ResultBase values, the promise will be resolved with the callback parameter.
  *
  * The JS callback that the bound C++ function ultimately calls (`jsCallback`) will perform an
  * additional clone of the callback argument before resolving the promise. This is required because
