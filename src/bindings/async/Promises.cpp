@@ -4,7 +4,7 @@
 
 // Declare the JavaScript symbols that the JS code in this file depends on.
 // We need to do this to ensure the dependencies are included in the output JS file.
-EM_JS_DEPS(make_promise_with_cloning_callback_deps, "$CspRequestError");
+EM_JS_DEPS(make_promise_with_cloning_callback_deps, "$CspRequestError,$attachDisposerToContainer");
 
 /*
  * Create a JavaScript promise along with a callback used to resolve it with a value.
@@ -32,29 +32,20 @@ EM_JS(emscripten::EM_VAL, make_promise_with_cloning_callback, (emscripten::EM_VA
     // used for the standard returns for containers from C++ functions. This allows container
     // arguments to be used with "using" in JavaScript in the same way as other bound types.
     const cloneContainer = (arg) => {
+        let cloned = null;
         if (Array.isArray(arg)) {
-            const cloned = Module['cloneArray'](arg);
-
-            Object.defineProperty(cloned, Symbol.dispose, {
-                value : Module['disposeArray'].bind(undefined, cloned),
-                enumerable : false,
-            });
-
-            return cloned;
+            cloned = Module['cloneArray'](arg);
+        } else if (arg instanceof Map) {
+            cloned = Module['cloneMap'](arg);
         }
 
-        if (arg instanceof Map) {
-            const cloned = Module['cloneMap'](arg);
-
-            Object.defineProperty(cloned, Symbol.dispose, {
-                value : Module['disposeMap'].bind(undefined, cloned),
-                enumerable : false,
-            });
-
-            return cloned;
+         if (!cloned) {
+            console.warn('Attempting to clone inappropriate or non-container.');
+            return null;
         }
 
-        return null;
+        attachDisposerToContainer(cloned);
+        return cloned;
     };
 
     const cloneArg = (arg) => {
