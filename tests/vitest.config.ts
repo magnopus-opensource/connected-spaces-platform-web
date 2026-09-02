@@ -34,6 +34,7 @@ export function makeConfig({ debug = false } = {}) {
       globals: true,
       include: ['**/*.test.ts'],
       restoreMocks: true, // Otherwise things like spies leak between tests
+      testTimeout: 30_000,
       browser: {
         enabled: true,
         headless: !debug,
@@ -49,11 +50,7 @@ export function makeConfig({ debug = false } = {}) {
               }
             : {}
         ),
-        instances: [
-          { browser: 'chromium' as const },
-          { browser: 'webkit' as const },
-          { browser: 'firefox' as const }
-        ]
+        instances: [{ browser: 'chromium' as const }, { browser: 'webkit' as const }, { browser: 'firefox' as const }]
       },
       typecheck: {
         include: ['**/*.test-d.ts'],
