@@ -40,4 +40,11 @@ void DisposeMap(emscripten::val map);
  */
 void DisposeOptionalNoThrow(emscripten::val opt) noexcept;
 
+/*
+ * The code to actually attach the disposal symbols is defined in JS (in js-library.js)
+ * It's only containers, because those are the only things we need to explicitly attach disposal to, embind does it for us for regular handles.
+ * We could do this through the C++ embind API, but doing it this way avoids the duplication
+ */
+extern "C" emscripten::EM_VAL attach_disposer_to_container(emscripten::EM_VAL container);
+
 }

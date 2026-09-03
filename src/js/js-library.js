@@ -41,3 +41,31 @@ addToLibrary({
   $CspRequestError__postset: "Module['CspRequestError'] = CspRequestError;",
   $CspRequestError: CspRequestError
 });
+
+/*
+ * As we add disposability to containers in both JS and C++, make a util function here that we can use to do it in both places.
+ * Only Arrays, List and Maps need explicit disposal, and Arrays and Lists are the same, both use ArrayDispose.
+ */
+addToLibrary({
+  $attachDisposerToContainer: (target) => {
+    let disposerFunc = null;
+
+    if (Array.isArray(target)) {
+      disposerFunc = Module['disposeArray'];
+    } else if (target instanceof Map) {
+      disposerFunc = Module['disposeMap'];
+    }
+
+    if (!disposerFunc) {
+      console.warn('Attempting to attach disposer to inappropriate or non-container.');
+      return target;
+    }
+
+    Object.defineProperty(target, Symbol.dispose, {
+      value: disposerFunc.bind(undefined, target),
+      enumerable: false
+    });
+
+    return target;
+  }
+});

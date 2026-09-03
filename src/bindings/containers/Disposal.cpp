@@ -184,3 +184,6 @@ EMSCRIPTEN_BINDINGS(CSPDisposal)
     emscripten::function("disposeArray", &bindings::containers::DisposeArray);
     emscripten::function("disposeMap", &bindings::containers::DisposeMap);
 }
+
+EM_JS_DEPS(AttachDisposerToContainerDeps, "$attachDisposerToContainer");
+EM_JS(emscripten::EM_VAL, attach_disposer_to_container, (emscripten::EM_VAL container), { attachDisposerToContainer(Emval.toValue(container)); });
