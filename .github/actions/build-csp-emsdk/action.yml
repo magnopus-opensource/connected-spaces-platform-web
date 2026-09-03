@@ -51,7 +51,7 @@ runs:
         path: CSP/install
         key: csp-install-emsdk-${{ inputs.build_type }}-${{ steps.csp-sha.outputs.sha }}-${{ hashFiles('.github/actions/build-csp-emsdk/action.yml') }}
 
-    - uses: actions/setup-python@v5
+    - uses: actions/setup-python@v7
       if: steps.csp-install-cache.outputs.cache-hit != 'true'
       with:
         python-version: '3.x'
