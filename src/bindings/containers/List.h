@@ -2,6 +2,7 @@
 #include "../utils/Handles.h"
 #include "../utils/JSDisposable.h"
 #include "CSP/Common/List.h"
+#include "Disposal.h"
 #include "emscripten/bind.h"
 #include "emscripten/val.h"
 #include <optional>
@@ -101,15 +102,7 @@ template <typename T> struct BindingType<bindings::utils::JSDisposable<csp::comm
         }
 
         // Attach [Symbol.dispose] so JS `using` releases bound handles at scope exit.
-        static const val symbolDispose = val::global("Symbol")["dispose"];
-        static const val disposeArrayFn = val::module_property("disposeArray");
-
-        // Bind our disposal function with the new array arg to the arrays Symbol.dispose slot.
-        // We define it as a non-enumerable property using a descriptor.
-        val descriptor = val::object();
-        descriptor.set("value", disposeArrayFn.call<val>("bind", val::undefined(), newJSArray));
-        descriptor.set("enumerable", false);
-        val::global("Object").call<void>("defineProperty", newJSArray, symbolDispose, descriptor);
+        bindings::containers::attach_disposer_to_container(newJSArray.as_handle());
 
         return ValBinding::toWireType(newJSArray, rvp::default_tag { });
     }

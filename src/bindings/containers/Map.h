@@ -3,6 +3,7 @@
 #include "../utils/JSDisposable.h"
 #include "CSP/Common/Map.h"
 #include "CSP/Common/String.h"
+#include "Disposal.h"
 #include "emscripten/bind.h"
 #include "emscripten/val.h"
 #include <optional>
@@ -139,15 +140,7 @@ template <typename Key, typename Value> struct BindingType<bindings::utils::JSDi
         }
 
         // Attach [Symbol.dispose] so JS `using` releases bound handles at scope exit.
-        static const val symbolDispose = val::global("Symbol")["dispose"];
-        static const val disposeMapFn = val::module_property("disposeMap");
-
-        // Bind our disposal function with the new array arg to the arrays Symbol.dispose slot.
-        // We define it as a non-enumerable property using a descriptor.
-        val descriptor = val::object();
-        descriptor.set("value", disposeMapFn.call<val>("bind", val::undefined(), newJSMap));
-        descriptor.set("enumerable", false);
-        val::global("Object").call<void>("defineProperty", newJSMap, symbolDispose, descriptor);
+        bindings::containers::attach_disposer_to_container(newJSMap.as_handle());
 
         return ValBinding::toWireType(newJSMap, rvp::default_tag { });
     }
