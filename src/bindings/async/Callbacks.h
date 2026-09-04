@@ -189,5 +189,5 @@ inline auto AdaptedRAIINativeCallback(emscripten::val& cb)
 
 #define MAKE_CALLBACK(FullyQualifiedCppCallbackType, EmbindCallbackType, TypescriptSig)                                                                                            \
     EMSCRIPTEN_DECLARE_VAL_TYPE(EmbindCallbackType);                                                                                                                               \
-    EMSCRIPTEN_BINDINGS(register_##EmbindCallbackType) { emscripten::register_type<EmbindCallbackType>(#EmbindCallbackType, TypescriptSig); }                                      \
+    EMSCRIPTEN_BINDINGS(register_##EmbindCallbackType) { emscripten::register_type<EmbindCallbackType>(TypescriptSig); }                                                           \
     inline FullyQualifiedCppCallbackType ToNativeCallback(EmbindCallbackType cb) { return AdaptedRAIINativeCallback(cb); }
