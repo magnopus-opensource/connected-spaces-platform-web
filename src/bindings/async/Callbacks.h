@@ -73,7 +73,7 @@ template <typename Arg> inline bindings::utils::RAIIVal MakeRAIIVal(Arg&& arg)
     } else if constexpr (std::is_pointer_v<DecayedArgT>) {
         /* Pointer (thus non owning), no auto disposal */
         return RAIIVal { bindings::utils::NonOwningVal(std::forward<Arg>(arg)), RAIIVal::DisposePolicy::NoDisposal };
-    } else if constexpr (std::is_arithmetic_v<DecayedArgT> || std::is_same_v<DecayedArgT, csp::common::String>) {
+    } else if constexpr (bindings::utils::RequiresNoDisposal<DecayedArgT>) {
         /* Primitive arg, no auto disposal, and no need for non-owning, would be non-sensical.*/
         return RAIIVal { emscripten::val(std::forward<Arg>(arg)), RAIIVal::DisposePolicy::NoDisposal };
     } else {
