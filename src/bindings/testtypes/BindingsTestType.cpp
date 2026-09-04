@@ -145,7 +145,6 @@ EMSCRIPTEN_BINDINGS(CSPTestTypeBindings)
     emscripten::register_type<csp::common::Map<int, csp::common::Array<BindingsTestType>>>("Map<number, BindingsTestType[]>");
     emscripten::register_type<csp::common::Map<int, csp::common::Array<BindingsTestType*>>>("Map<number, (BindingsTestType[] | null)>");
     emscripten::register_type<csp::common::Map<csp::common::String, int>>("Map<string, number>");
-    emscripten::register_type<csp::common::Map<csp::common::String, csp::common::String>>("Map<string, string>");
 
     /* Return types, allows embinds machinery to emit a different typescript signature for container returns, meaning we can use `using` in a
      * type-checked manner. You need to remember to convert to these types in the returning methods, but you don't need to worry about it for

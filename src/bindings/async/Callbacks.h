@@ -150,7 +150,7 @@ inline auto AdaptedRAIINativeCallback(emscripten::val& cb)
                 std::array<bindings::utils::RAIIVal, sizeof...(args)> raiiArgs = { MakeRAIIVal(std::forward<decltype(args)>(args))... };
 
                 /* Call the JS callback with the argument objects. We provide an index sequence {0,1,2,3} so we can index into the raiiArgs std::array variadically */
-                InvokeRAIIGuardedCallback(cb, raiiArgs, std::make_index_sequence<sizeof...(args)> {});
+                InvokeRAIIGuardedCallback(cb, raiiArgs, std::make_index_sequence<sizeof...(args)> { });
                 /* Args falls out of scope, disposal occurs according to disposal policy */
             }
         };

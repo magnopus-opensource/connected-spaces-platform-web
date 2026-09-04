@@ -8,6 +8,22 @@ add_executable(connected-spaces-platform-bindings
     Bindings.cpp
     src/bindings/csp/Common/SharedEnums.cpp
     src/bindings/csp/Systems/WebService.cpp
+    src/bindings/csp/Common/Vector.cpp
+    src/bindings/csp/Common/ReplicatedValue.cpp
+    src/bindings/csp/Common/Settings.cpp
+    src/bindings/csp/Common/LoginState.cpp
+    src/bindings/csp/Common/CancellationToken.cpp
+    src/bindings/csp/Common/NetworkEventData.cpp
+    src/bindings/csp/Common/MimeTypeHelper.cpp
+    src/bindings/csp/Common/Interfaces/IJSScriptRunner.cpp
+    src/bindings/csp/Common/Interfaces/IRealtimeEngine.cpp
+    src/bindings/csp/Common/Systems/Log/LogLevels.cpp
+    src/bindings/csp/Common/Systems/Log/LogSystem.cpp
+    src/bindings/csp/Multiplayer/SpaceEntity.cpp
+    src/bindings/csp/Multiplayer/SpaceTransform.cpp
+    src/bindings/csp/Multiplayer/Conversation/Conversation.cpp
+    src/bindings/csp/Systems/Assets/Asset.cpp
+    src/bindings/csp/Systems/Spaces/UserRoles.cpp
     src/bindings/testtypes/BindingsTestType.cpp
     src/bindings/testtypes/TestContainerBindings.cpp
     src/bindings/testtypes/TestCallbackBindings.cpp
