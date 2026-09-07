@@ -1,7 +1,6 @@
 #include "../utils/Handles.h"
 #include "emscripten/bind.h"
 #include "emscripten/val.h"
-#include <iostream>
 
 namespace {
 
