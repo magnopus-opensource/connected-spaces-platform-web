@@ -84,7 +84,7 @@ EMSCRIPTEN_BINDINGS(CSPRealtimeEngine)
             +[](const csp::common::IRealtimeEngine& self, csp::multiplayer::SpaceEntity* spaceEntity) { return self.IsEntityModifiable(spaceEntity); },
             emscripten::allow_raw_pointers())
         .function(
-            "createAvatarAsync(name, userId, spaceTransform, isVisible, avatarState, avatarId, avatarPlayMode, locomotionModel)",
+            "createAvatar(name, userId, spaceTransform, isVisible, avatarState, avatarId, avatarPlayMode, locomotionModel)",
             +[](csp::common::IRealtimeEngine& self, const csp::common::String& name, const csp::common::String& userId, const csp::multiplayer::SpaceTransform& spaceTransform,
                  bool isVisible, csp::multiplayer::AvatarState avatarState, const csp::common::String& avatarId, csp::multiplayer::AvatarPlayMode avatarPlayMode,
                  csp::multiplayer::LocomotionModel locomotionModel) {
@@ -94,14 +94,14 @@ EMSCRIPTEN_BINDINGS(CSPRealtimeEngine)
                 });
             })
         .function(
-            "createEntityAsync(name, spaceTransform, parentId)",
+            "createEntity(name, spaceTransform, parentId)",
             +[](csp::common::IRealtimeEngine& self, const csp::common::String& name, const csp::multiplayer::SpaceTransform& spaceTransform,
                  const csp::common::Optional<uint64_t>& parentId) {
                 return Promisify<PromiseOfSpaceEntityPointer>(
                     [&](emscripten::val cb) { self.CreateEntity(name, spaceTransform, parentId, ToNativeCallback(cb.as<EntityCreatedCallback>())); });
             })
         .function(
-            "destroyEntityAsync(entity)",
+            "destroyEntity(entity)",
             +[](csp::common::IRealtimeEngine& self, csp::multiplayer::SpaceEntity* entity) {
                 return Promisify<PromiseOfBoolean>([&](emscripten::val cb) { self.DestroyEntity(entity, ToNativeCallback(cb.as<BooleanCallback>())); });
             },

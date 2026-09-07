@@ -132,15 +132,13 @@ void CppFunctionWithCallback(std::function<void(int)> callback);
 We may bind it as an async function in JavaScript, which will be presented as follows with TypeScript:
 
 ```js
-function jsFunctionWithCallbackAsync(): Promise<number>
+function jsFunctionWithCallback(): Promise<number>
 ```
-
-This can be done in addition to or instead of binding it as a function taking a callback in JavaScript as described above.
 
 Conceptually, the implementation looks something like this:
 
 ```cpp
-void jsFunctionWithCallbackAsync() {
+void jsFunctionWithCallback() {
   emscripten::val promise, resolve = createPromise();
 
   auto callback = [](int argument) {
@@ -158,15 +156,21 @@ Instead of providing a callback from the JavaScript side, the async version crea
 This async version of the function is used as any other function returning a promise in JavaScript, either with `await` or a `then()` function.
 
 ```js
-const result = await jsFunctionWithCallbackAsync();
+const result = await jsFunctionWithCallback();
 // Do something with result (number)
 
 // or
 
-jsFunctionWithCallbackAsync().then((result) => {
+jsFunctionWithCallback().then((result) => {
   // Do something with result (number)
 });
 ```
+
+> [!NOTE]
+>
+> One can bind a callback triggering function as a promise, a function taking a JS callback, or both!
+>
+> Each embind symbol must have its own name. Therefore, if you choose to expose an async method as both a callback and a promise, you most likely want to differentiate by calling the promise version `MyMethodAsync`. At time of writing however, we never expose both formulations.
 
 ### Promise Fulfillment Values
 
@@ -176,7 +180,7 @@ This can done easily and simply with the `await` syntax and the `using` keyword,
 
 ```js
 {
-  using result = await jsFunctionReturningDisposableAsync();
+  using result = await jsFunctionReturningDisposable();
   ...
   // result disposed on leaving scope
 }
@@ -185,7 +189,7 @@ This can done easily and simply with the `await` syntax and the `using` keyword,
 Disposing the fulfillment value becomes slightly more awkward when using `then()`, requiring either rebinding the variable, calling `delete` or `Symbol.dispose` manually, or using a `DisposableStack` if the variable is lifted out of the `then` function. Callers must be especially attentive in this case to avoid leaking.
 
 ```js
-jsFunctionReturningDisposableAsync().then((result) => {
+jsFunctionReturningDisposable().then((result) => {
   // Rebind result to dispose on leaving scope
   using disposableResult = result;
   ...
@@ -201,7 +205,7 @@ However, the fact that no automatic disposal happens implies there is no need to
 ```js
 let liftedResult;
 ...
-jsFunctionReturningDisposableAsync().then((result) => {
+jsFunctionReturningDisposable().then((result) => {
   // Lift result out of function - no clone needed
   liftedResult = result;
   ...

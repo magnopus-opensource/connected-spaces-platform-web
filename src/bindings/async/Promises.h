@@ -19,12 +19,12 @@ namespace {
  *
  * Promisify is used to turn it into a promise-returning function on the JavaScript side:
  *
- *   function funcAsync(): Promise<number>;
+ *   function func(): Promise<number>;
  *
  * Example usage with the above C++ function:
  *
  *   EMSCRIPTEN_BINDINGS(...) {
- *     emscripten::function("funcAsync", +[]()
+ *     emscripten::function("func", +[]()
  *     {
  *       return Promisify<PromiseNumberValType>(
  *         [](emscripten::val cb) { func(ToNativeCallback(cb.as<FuncCallbackJSType>())) }
