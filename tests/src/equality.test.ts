@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { loadCSP } from '../loadModule';
-import type { MainModule } from 'connected-spaces-platform-bindings';
+import type { MainModule, Vector3 } from 'connected-spaces-platform-bindings';
 
 /*
  * Exercises the C++-side `elementEquals` utility bound from Equality.cpp.
@@ -93,6 +93,9 @@ describe('equality', () => {
   });
 
   it('Bound object is not equal to a plain JS object with identical properties', () => {
+    // This is an inappropriate check, will warn, sink it so it doesn't spam the log.
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
     using bound = csp.BindingsTestType.create(1, 'one');
     const shaped = { value: 1, name: 'one' };
     expect(csp.elementEquals(bound, shaped)).toBe(false);
@@ -101,6 +104,8 @@ describe('equality', () => {
   /* JS Objects */
 
   it('Distinct JS objects with identical shape are not equal', () => {
+    // This is an inappropriate check, will warn, sink it so it doesn't spam the log.
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     expect(csp.elementEquals({ x: 1 }, { x: 1 })).toBe(false);
   });
 
@@ -521,5 +526,19 @@ describe('equality', () => {
 
     expect(csp.optionalEquals(elem1, elem1)).toBe(true);
     expect(csp.optionalEquals(elem1, elem2)).toBe(true);
+  });
+
+  it('Value bound CSP object equality warning', () => {
+    const elem1: Vector3 = { x: 1, y: 2, z: 3 };
+    const elem2: Vector3 = { x: 3, y: 2, z: 1 };
+
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    csp.elementEquals(elem1, elem2);
+
+    expect(warnSpy).toHaveBeenCalledTimes(1);
+    expect(warnSpy.mock.calls[0]?.[0]).toContain(
+      'Inappropriate use of csp.elementEquals attempting to compare non-bound handles.'
+    );
   });
 });

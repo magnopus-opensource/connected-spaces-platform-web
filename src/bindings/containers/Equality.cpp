@@ -1,6 +1,7 @@
 #include "../utils/Handles.h"
 #include "emscripten/bind.h"
 #include "emscripten/val.h"
+#include <iostream>
 
 namespace {
 
@@ -27,7 +28,7 @@ bool ElementEquals(emscripten::val a, emscripten::val b)
     const std::string typeA = a.typeOf().as<std::string>();
     const std::string typeB = b.typeOf().as<std::string>();
 
-    // Mixed type can't be equal. (is the string comparison neccesary?)
+    // Mixed type can't be equal. (is the string comparison necessary?)
     if (typeA != typeB) {
         return false;
     }
@@ -56,6 +57,8 @@ bool ElementEquals(emscripten::val a, emscripten::val b)
     // Beyond this point we're only making meaningful claims for bound C++ objects.
     // This check is arguably true by definition of having made it this far, but check anyway.
     if (!bindings::utils::IsBoundHandle(a) || !bindings::utils::IsBoundHandle(b)) {
+        // This branch is hit if you try to compare value_objects. Warrants further logging, since these are CSP objects _technically_.
+        emscripten::val::global("console").call<void>("warn", std::string { "Inappropriate use of csp.elementEquals attempting to compare non-bound handles." });
         return false;
     }
 
@@ -161,18 +164,19 @@ bool MapEquals(emscripten::val a, emscripten::val b)
     return true;
 }
 
-bool OptionalEquals(emscripten::val a, emscripten::val b) {
-      // Early out reference equality and type checks.
-      // a will equal b if both are undefined
-      if (a.strictlyEquals(b)){
+bool OptionalEquals(emscripten::val a, emscripten::val b)
+{
+    // Early out reference equality and type checks.
+    // a will equal b if both are undefined
+    if (a.strictlyEquals(b)) {
         return true;
-      }
+    }
 
-      if (a.isUndefined() != b.isUndefined()) {
+    if (a.isUndefined() != b.isUndefined()) {
         return false;
-      }
+    }
 
-      return ElementEquals(a, b);
+    return ElementEquals(a, b);
 }
 
 }
