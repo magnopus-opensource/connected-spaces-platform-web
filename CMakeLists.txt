@@ -6,7 +6,10 @@ project(ConnectedSpacesPlatformWeb VERSION 1.0
 
 add_executable(connected-spaces-platform-bindings
     Bindings.cpp
-    src/bindings/csp/SharedTypeBindings.cpp
+    src/bindings/csp/ContainerDeclarations.cpp
+    src/bindings/csp/CallbackDeclarations.cpp
+    src/bindings/csp/PromiseDeclarations.cpp
+    src/bindings/csp/PointerDeclarations.cpp
     src/bindings/csp/Common/SharedEnums.cpp
     src/bindings/csp/Systems/WebService.cpp
     src/bindings/csp/Common/Vector.cpp

@@ -1,6 +1,5 @@
-#include "../../../../async/Callbacks.h"
 #include "../../../../containers/String.h"
-#include "../../../SharedTypeBindings.h"
+#include "../../../CallbackDeclarations.h"
 
 #include "CSP/Common/String.h"
 #include "CSP/Common/Systems/Log/LogLevels.h"
@@ -9,9 +8,6 @@
 #include "emscripten/bind.h"
 #include <functional>
 #include <utility>
-
-MAKE_CALLBACK(csp::common::LogSystem::LogCallbackHandler, LogCallback, "(level: LogLevel, message: string) => void")
-MAKE_CALLBACK(csp::common::LogSystem::EventCallbackHandler, StringCallback, "(value: string) => void")
 
 EMSCRIPTEN_BINDINGS(CSPLogSystem)
 {

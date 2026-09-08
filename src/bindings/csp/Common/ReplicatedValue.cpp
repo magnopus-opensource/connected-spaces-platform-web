@@ -22,9 +22,6 @@ EMSCRIPTEN_BINDINGS(CSPReplicatedValue)
         .value("Vector2", csp::common::ReplicatedValueType::Vector2)
         .value("StringMap", csp::common::ReplicatedValueType::StringMap);
 
-    emscripten::register_type<csp::common::Map<csp::common::String, csp::common::ReplicatedValue>>("Map<string, ReplicatedValue>");
-    emscripten::register_type<bindings::utils::JSDisposable<csp::common::Map<csp::common::String, csp::common::ReplicatedValue>>>("(Map<string, ReplicatedValue> & Disposable)");
-
     emscripten::class_<csp::common::ReplicatedValue>("ReplicatedValue")
         .class_function(
             "create", +[]() { return csp::common::ReplicatedValue(); })

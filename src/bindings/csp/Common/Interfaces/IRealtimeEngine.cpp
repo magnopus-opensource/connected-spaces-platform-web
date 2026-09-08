@@ -1,11 +1,11 @@
-#include "../../../async/Callbacks.h"
 #include "../../../async/Promises.h"
 #include "../../../containers/List.h"
 #include "../../../containers/Optional.h"
 #include "../../../containers/String.h"
 #include "../../../utils/Handles.h"
-#include "../../Multiplayer/SpaceEntity.h"
-#include "../../SharedTypeBindings.h"
+#include "../../CallbackDeclarations.h"
+#include "../../PromiseDeclarations.h"
+#include "../../PointerDeclarations.h"
 
 #include "CSP/Common/Interfaces/IRealtimeEngine.h"
 #include "CSP/Common/List.h"
@@ -19,13 +19,8 @@
 #include "emscripten/val.h"
 #include <cstdint>
 
-MAKE_CALLBACK(csp::multiplayer::EntityCreatedCallback, EntityCreatedCallback, "(entity: SpaceEntity | null) => void")
-MAKE_CALLBACK(csp::common::EntityFetchCompleteCallback, EntityFetchCompleteCallback, "(entityCount: number) => void")
-
 EMSCRIPTEN_BINDINGS(CSPRealtimeEngine)
 {
-    emscripten::register_type<csp::common::List<csp::multiplayer::SpaceEntity*>>("(SpaceEntity | null)[]");
-
     emscripten::enum_<csp::common::RealtimeEngineType>("RealtimeEngineType", emscripten::enum_value_type::number)
         .value("Online", csp::common::RealtimeEngineType::Online)
         .value("Offline", csp::common::RealtimeEngineType::Offline);

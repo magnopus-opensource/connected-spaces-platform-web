@@ -12,12 +12,6 @@
 
 EMSCRIPTEN_BINDINGS(CSPLoginState)
 {
-    emscripten::register_type<csp::common::List<csp::common::ApplicationSettings>>("ApplicationSettings[]");
-    emscripten::register_type<bindings::utils::JSDisposable<csp::common::List<csp::common::ApplicationSettings>>>("(ApplicationSettings[] & Disposable)");
-
-    emscripten::register_type<csp::common::List<csp::common::SettingsCollection>>("SettingsCollection[]");
-    emscripten::register_type<bindings::utils::JSDisposable<csp::common::List<csp::common::SettingsCollection>>>("(SettingsCollection[] & Disposable)");
-
     emscripten::class_<csp::common::LoginState>("LoginState")
         .class_function(
             "create", +[]() { return csp::common::LoginState(); })

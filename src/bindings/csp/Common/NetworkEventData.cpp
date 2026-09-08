@@ -36,11 +36,6 @@ EMSCRIPTEN_BINDINGS(CSPNetworkEventData)
         .value("Default", csp::common::ESequenceType::Default)
         .value("Hotspot", csp::common::ESequenceType::Hotspot);
 
-    emscripten::register_type<csp::common::Array<csp::common::ReplicatedValue>>("ReplicatedValue[]");
-    emscripten::register_type<bindings::utils::JSDisposable<csp::common::Array<csp::common::ReplicatedValue>>>("(ReplicatedValue[] & Disposable)");
-
-    emscripten::register_type<csp::common::Array<csp::systems::SpaceUserRole>>("SpaceUserRole[]");
-
     emscripten::class_<csp::common::NetworkEventData>("NetworkEventData")
         .class_function(
             "create", +[]() { return csp::common::NetworkEventData(); })

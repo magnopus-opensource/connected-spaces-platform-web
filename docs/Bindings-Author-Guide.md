@@ -10,6 +10,17 @@ For a quick summary of rules for CSP bindings, see [CSP Binding Rules](#csp-bind
 
 The file structure of the bindings source files mirrors that of the headers in the CSP source tree. This is to easily locate the bindings corresponding to a given CSP type: simply follow the same relative path as the CSP header file in the [/src/bindings/csp](../src/bindings/csp) folder to locate the `.cpp` file with the binding.
 
+> [!NOTE]
+>
+> Certain repetitive types that all need the same sort of bindings are listed together in manifest files. This is just for organization, as listing them where they are declared in the CSP source tree is somewhat haphazard.
+>
+> These are:
+>
+> - [Callbacks](../src/bindings/csp/CallbackDeclarations.cpp)
+> - [Containers](../src/bindings/csp/ContainerDeclarations.cpp)
+> - [Pointers](../src/bindings/csp/PointerDeclarations.cpp)
+> - [Promises](../src/bindings/csp/PromiseDeclarations.cpp)
+
 ## Enums
 
 Enums are bound using the `number` style (`emscripten::enum_value_type::number`) as follows:
