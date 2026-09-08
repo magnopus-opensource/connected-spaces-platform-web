@@ -10,6 +10,11 @@
 #include "emscripten/val.h"
 #include <atomic>
 #include <string>
+
+namespace TestEnumNamespace {
+enum class TestEnum { First = 0, Second = 1, Third = 300 };
+}
+
 /*
  * A nonsense, instrumentable C++ object that we can bind and test mechanisms with.
  */
