@@ -150,7 +150,7 @@ inline auto AdaptedRAIINativeCallback(emscripten::val& cb)
                 std::array<bindings::utils::RAIIVal, sizeof...(args)> raiiArgs = { MakeRAIIVal(std::forward<decltype(args)>(args))... };
 
                 /* Call the JS callback with the argument objects. We provide an index sequence {0,1,2,3} so we can index into the raiiArgs std::array variadically */
-                InvokeRAIIGuardedCallback(cb, raiiArgs, std::make_index_sequence<sizeof...(args)> { });
+                InvokeRAIIGuardedCallback(cb, raiiArgs, std::make_index_sequence<sizeof...(args)> {});
                 /* Args falls out of scope, disposal occurs according to disposal policy */
             }
         };
@@ -187,7 +187,17 @@ inline auto AdaptedRAIINativeCallback(emscripten::val& cb)
  * TypescriptSig: A string representing the typescript signiature, for the no-arg case, it's just "() => void", a single array callback arg might look like "(BindingsTestType[]) => void"
  */
 
-#define MAKE_CALLBACK(FullyQualifiedCppCallbackType, EmbindCallbackType, TypescriptSig)                                                                                            \
+// For use in a header file, to declare callback used in multiple TUs.
+#define DECLARE_CALLBACK(FullyQualifiedCppCallbackType, EmbindCallbackType)                                                                                                        \
     EMSCRIPTEN_DECLARE_VAL_TYPE(EmbindCallbackType);                                                                                                                               \
+    FullyQualifiedCppCallbackType ToNativeCallback(EmbindCallbackType cb);
+
+// For use in a source file, when having used DECLARE_CALLBACK.
+#define DEFINE_CALLBACK(FullyQualifiedCppCallbackType, EmbindCallbackType, TypescriptSig)                                                                                          \
     EMSCRIPTEN_BINDINGS(register_##EmbindCallbackType) { emscripten::register_type<EmbindCallbackType>(TypescriptSig); }                                                           \
-    inline FullyQualifiedCppCallbackType ToNativeCallback(EmbindCallbackType cb) { return AdaptedRAIINativeCallback(cb); }
+    FullyQualifiedCppCallbackType ToNativeCallback(EmbindCallbackType cb) { return AdaptedRAIINativeCallback(cb); }
+
+// For use in a source file, for callbacks used in a single TU.
+#define MAKE_CALLBACK(FullyQualifiedCppCallbackType, EmbindCallbackType, TypescriptSig)                                                                                            \
+    DECLARE_CALLBACK(FullyQualifiedCppCallbackType, EmbindCallbackType)                                                                                                            \
+    DEFINE_CALLBACK(FullyQualifiedCppCallbackType, EmbindCallbackType, TypescriptSig)

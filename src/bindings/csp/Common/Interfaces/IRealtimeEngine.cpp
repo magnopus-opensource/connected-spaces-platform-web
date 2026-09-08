@@ -20,7 +20,6 @@
 #include <cstdint>
 
 MAKE_CALLBACK(csp::multiplayer::EntityCreatedCallback, EntityCreatedCallback, "(entity: SpaceEntity | null) => void")
-MAKE_CALLBACK(csp::multiplayer::CallbackHandler, BooleanCallback, "(success: boolean) => void")
 MAKE_CALLBACK(csp::common::EntityFetchCompleteCallback, EntityFetchCompleteCallback, "(entityCount: number) => void")
 
 EMSCRIPTEN_BINDINGS(CSPRealtimeEngine)

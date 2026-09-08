@@ -1,5 +1,6 @@
 #include "../../../../async/Callbacks.h"
 #include "../../../../containers/String.h"
+#include "../../../SharedTypeBindings.h"
 
 #include "CSP/Common/String.h"
 #include "CSP/Common/Systems/Log/LogLevels.h"
@@ -11,7 +12,6 @@
 
 MAKE_CALLBACK(csp::common::LogSystem::LogCallbackHandler, LogCallback, "(level: LogLevel, message: string) => void")
 MAKE_CALLBACK(csp::common::LogSystem::EventCallbackHandler, StringCallback, "(value: string) => void")
-MAKE_CALLBACK(std::function<void()>, EndMarkerCallback, "() => void")
 
 EMSCRIPTEN_BINDINGS(CSPLogSystem)
 {
@@ -28,7 +28,7 @@ EMSCRIPTEN_BINDINGS(CSPLogSystem)
             "setBeginMarkerCallback(callback)", +[](csp::common::LogSystem& self, StringCallback callback) { self.SetBeginMarkerCallback(ToNativeCallback(callback)); })
         .function(
             "setEndMarkerCallback(callback)",
-            +[](csp::common::LogSystem& self, EndMarkerCallback callback) {
+            +[](csp::common::LogSystem& self, VoidCallback callback) {
                 // Underlying CSP api is weird cause of legacy wrapper gen constraints. Redundant arg can be deleted once wrapper gen migration is over.
                 std::function<void()> native = ToNativeCallback(callback);
                 self.SetEndMarkerCallback([native = std::move(native)](void*) { native(); });

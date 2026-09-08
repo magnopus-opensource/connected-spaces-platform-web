@@ -26,3 +26,6 @@ EMSCRIPTEN_BINDINGS(CSPTypes)
     emscripten::register_type<PromiseOfBoolean>("Promise<boolean>");
     emscripten::register_type<PromiseOfSpaceEntityPointer>("Promise<SpaceEntity | null>");
 }
+
+DEFINE_CALLBACK(std::function<void()>, VoidCallback, "() => void")
+DEFINE_CALLBACK(csp::multiplayer::CallbackHandler, BooleanCallback, "(success: boolean) => void")
