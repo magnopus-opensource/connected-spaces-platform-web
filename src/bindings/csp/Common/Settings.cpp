@@ -1,16 +1,12 @@
 #include "../../containers/Map.h"
 #include "../../containers/String.h"
 
-#include "CSP/Common/Map.h"
 #include "CSP/Common/Settings.h"
-#include "CSP/Common/String.h"
 
 #include "emscripten/bind.h"
 
 EMSCRIPTEN_BINDINGS(CSPSettings)
 {
-    emscripten::register_type<csp::common::Map<csp::common::String, csp::common::String>>("Map<string, string>");
-
     emscripten::class_<csp::common::ApplicationSettings>("ApplicationSettings")
         .class_function(
             "create", +[]() { return csp::common::ApplicationSettings(); })

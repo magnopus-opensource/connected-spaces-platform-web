@@ -5,6 +5,7 @@
 #include "../../../containers/String.h"
 #include "../../../utils/Handles.h"
 #include "../../Multiplayer/SpaceEntity.h"
+#include "../../SharedTypeBindings.h"
 
 #include "CSP/Common/Interfaces/IRealtimeEngine.h"
 #include "CSP/Common/List.h"
@@ -22,16 +23,8 @@ MAKE_CALLBACK(csp::multiplayer::EntityCreatedCallback, EntityCreatedCallback, "(
 MAKE_CALLBACK(csp::multiplayer::CallbackHandler, BooleanCallback, "(success: boolean) => void")
 MAKE_CALLBACK(csp::common::EntityFetchCompleteCallback, EntityFetchCompleteCallback, "(entityCount: number) => void")
 
-EMSCRIPTEN_DECLARE_VAL_TYPE(PromiseOfSpaceEntityPointer);
-EMSCRIPTEN_DECLARE_VAL_TYPE(PromiseOfBoolean);
-
 EMSCRIPTEN_BINDINGS(CSPRealtimeEngine)
 {
-    emscripten::register_type<PromiseOfSpaceEntityPointer>("Promise<SpaceEntity | null>");
-    emscripten::register_type<PromiseOfBoolean>("Promise<boolean>");
-
-    emscripten::register_optional<uint64_t>();
-
     emscripten::register_type<csp::common::List<csp::multiplayer::SpaceEntity*>>("(SpaceEntity | null)[]");
 
     emscripten::enum_<csp::common::RealtimeEngineType>("RealtimeEngineType", emscripten::enum_value_type::number)
@@ -71,13 +64,13 @@ EMSCRIPTEN_BINDINGS(CSPRealtimeEngine)
             "getAllEntities",
             +[](const csp::common::IRealtimeEngine& self) {
                 const csp::common::List<csp::multiplayer::SpaceEntity*>* entities = self.GetAllEntities();
-                return entities != nullptr ? *entities : csp::common::List<csp::multiplayer::SpaceEntity*> { };
+                return entities != nullptr ? *entities : csp::common::List<csp::multiplayer::SpaceEntity*> {};
             })
         .function(
             "getRootHierarchyEntities",
             +[](const csp::common::IRealtimeEngine& self) {
                 const csp::common::List<csp::multiplayer::SpaceEntity*>* entities = self.GetRootHierarchyEntities();
-                return entities != nullptr ? *entities : csp::common::List<csp::multiplayer::SpaceEntity*> { };
+                return entities != nullptr ? *entities : csp::common::List<csp::multiplayer::SpaceEntity*> {};
             })
         .function(
             "isEntityModifiable(spaceEntity)",

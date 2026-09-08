@@ -6,6 +6,7 @@ project(ConnectedSpacesPlatformWeb VERSION 1.0
 
 add_executable(connected-spaces-platform-bindings
     Bindings.cpp
+    src/bindings/csp/SharedTypeBindings.cpp
     src/bindings/csp/Common/SharedEnums.cpp
     src/bindings/csp/Systems/WebService.cpp
     src/bindings/csp/Common/Vector.cpp
@@ -14,7 +15,6 @@ add_executable(connected-spaces-platform-bindings
     src/bindings/csp/Common/LoginState.cpp
     src/bindings/csp/Common/CancellationToken.cpp
     src/bindings/csp/Common/NetworkEventData.cpp
-    src/bindings/csp/Common/MimeTypeHelper.cpp
     src/bindings/csp/Common/Interfaces/IJSScriptRunner.cpp
     src/bindings/csp/Common/Interfaces/IRealtimeEngine.cpp
     src/bindings/csp/Common/Systems/Log/LogLevels.cpp
