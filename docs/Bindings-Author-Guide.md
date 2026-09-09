@@ -218,7 +218,28 @@ Doing this makes it impossible for the user to dispose/delete the pointer.
 ### Unbound Types
 
 The following CSP types and functions are purposefully not bound.
+If you read through the CSP sources, you'll likely find more unbound symbols than this. This is because visibility used to be controlled via
+`CSP_NO_EXPORT` macro symbols for the prior wrapper generator. This probably does not exist any more at time of reading.
+The below lists are more for explicit editorial decisions made for the web bindings.
 
 Namespace `Common`:
 
 - `MimeTypeHelper`, `MimeTypes` and `FileExtensions`
+
+Namespace `Multiplayer`:
+
+- `EntityScript::Bind`, no need for it, and is confusing in a JS context.
+- All Component interfaces, their properties are flattened into the regular component
+  - `IAudioControlComponent`
+  - `IEnableableComponent`
+  - `IExternalResourceComponent`
+  - `IPositionComponent`
+  - `IRenderBehaviourComponent`
+  - `IRotationComponent`
+  - `IScaleComponent`
+  - `IShadowCasterComponent`
+  - `IThirdPartyComponentRef`
+  - `ITransformComponent`
+  - `IVisibleComponent`.
+- All `Component` constructors, they all are owned by `SpaceEntity` and should not be constructed individually.
+- All `SpaceEntity` constructors, for the same reason, they are all owned by `RealtimeEngine`

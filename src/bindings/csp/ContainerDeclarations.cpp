@@ -12,7 +12,13 @@
 #include "CSP/Common/ReplicatedValue.h"
 #include "CSP/Common/Settings.h"
 #include "CSP/Common/String.h"
+#include "CSP/Common/Vector.h"
+#include "CSP/Multiplayer/ComponentBase.h"
+#include "CSP/Multiplayer/Conversation/Conversation.h"
+#include "CSP/Multiplayer/NetworkEventBus.h"
+#include "CSP/Multiplayer/PatchTypes.h"
 #include "CSP/Multiplayer/SpaceEntity.h"
+#include "CSP/Systems/Assets/Asset.h"
 #include "CSP/Systems/Spaces/UserRoles.h"
 
 #include "emscripten/bind.h"
@@ -36,6 +42,8 @@ EMSCRIPTEN_BINDINGS(CSPContainerDeclarations)
     emscripten::register_type<bindings::utils::JSDisposable<csp::common::List<csp::common::ApplicationSettings>>>("(ApplicationSettings[] & Disposable)");
     emscripten::register_type<csp::common::List<csp::common::SettingsCollection>>("SettingsCollection[]");
     emscripten::register_type<bindings::utils::JSDisposable<csp::common::List<csp::common::SettingsCollection>>>("(SettingsCollection[] & Disposable)");
+    emscripten::register_type<csp::common::List<csp::common::String>>("string[]");
+    emscripten::register_type<csp::common::List<csp::common::Vector3>>("Vector3[]");
 
     // Array
     emscripten::register_type<csp::common::Array<csp::common::ReplicatedValue>>("ReplicatedValue[]");
@@ -47,6 +55,7 @@ EMSCRIPTEN_BINDINGS(CSPContainerDeclarations)
     emscripten::register_type<bindings::utils::JSDisposable<csp::common::Map<csp::common::String, csp::common::ReplicatedValue>>>("(Map<string, ReplicatedValue> & Disposable)");
 
     // Optional
+    emscripten::register_optional<int>();
     emscripten::register_optional<uint64_t>();
 
     /* Multiplayer*/
@@ -54,7 +63,15 @@ EMSCRIPTEN_BINDINGS(CSPContainerDeclarations)
     // List
     emscripten::register_type<csp::common::List<csp::multiplayer::SpaceEntity*>>("(SpaceEntity | null)[]");
     // Array
+    emscripten::register_type<csp::common::Array<csp::multiplayer::ComponentUpdateInfo>>("ComponentUpdateInfo[]");
+    emscripten::register_type<csp::common::Array<csp::multiplayer::MessageInfo>>("MessageInfo[]");
+    emscripten::register_type<bindings::utils::JSDisposable<csp::common::Array<csp::multiplayer::MessageInfo>>>("(MessageInfo[] & Disposable)");
+    emscripten::register_type<csp::common::Array<csp::multiplayer::NetworkEventRegistration>>("NetworkEventRegistration[]");
+    emscripten::register_type<bindings::utils::JSDisposable<csp::common::Array<csp::multiplayer::NetworkEventRegistration>>>("(NetworkEventRegistration[] & Disposable)");
     // Map
+    emscripten::register_type<csp::common::Map<uint32_t, csp::common::ReplicatedValue>>("Map<number, ReplicatedValue>");
+    emscripten::register_type<bindings::utils::JSDisposable<csp::common::Map<uint32_t, csp::common::ReplicatedValue>>>("(Map<number, ReplicatedValue> & Disposable)");
+    emscripten::register_type<csp::common::Map<uint16_t, csp::multiplayer::ComponentBase*>>("Map<number, (ComponentBase | null)>");
     // Optional
 
     /* Systems */
@@ -63,5 +80,7 @@ EMSCRIPTEN_BINDINGS(CSPContainerDeclarations)
     // Array
     emscripten::register_type<csp::common::Array<csp::systems::SpaceUserRole>>("SpaceUserRole[]");
     // Map
+    emscripten::register_type<csp::common::Map<csp::common::String, csp::systems::Asset>>("Map<string, Asset>");
+    emscripten::register_type<bindings::utils::JSDisposable<csp::common::Map<csp::common::String, csp::systems::Asset>>>("(Map<string, Asset> & Disposable)");
     // Optional
 }

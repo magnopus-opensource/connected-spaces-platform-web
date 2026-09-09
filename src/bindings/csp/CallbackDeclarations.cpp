@@ -25,3 +25,28 @@ DEFINE_CALLBACK(csp::common::LogSystem::LogCallbackHandler, LogCallback, "(level
 /* Multiplayer */
 DEFINE_CALLBACK(csp::multiplayer::EntityCreatedCallback, EntityCreatedCallback, "(entity: SpaceEntity | null) => void")
 DEFINE_CALLBACK(csp::multiplayer::CallbackHandler, BooleanCallback, "(success: boolean) => void")
+DEFINE_CALLBACK(
+    csp::multiplayer::ComponentBase::EntityActionHandler, EntityActionHandlerCallback, "(component: ComponentBase | null, action: string, actionParams: string) => void")
+DEFINE_CALLBACK(
+    csp::multiplayer::SpaceEntity::UpdateCallback, SpaceEntityUpdateCallback, "(entity: SpaceEntity | null, updateFlags: number, componentUpdates: ComponentUpdateInfo[]) => void")
+DEFINE_CALLBACK(csp::multiplayer::MultiplayerConnection::ErrorCodeCallbackHandler, ErrorCodeCallback, "(errorCode: ErrorCode) => void")
+DEFINE_CALLBACK(csp::multiplayer::MultiplayerConnection::ConnectionCallbackHandler, ConnectionStatusCallback, "(status: string) => void")
+DEFINE_CALLBACK(csp::multiplayer::OnlineRealtimeEngine::ScopeLeaderCallback, ScopeLeaderCallback, "(scopeId: string, userId: string) => void")
+DEFINE_CALLBACK(csp::multiplayer::CustomNetworkEventCallback, CustomNetworkEventCallback, "(networkEventData: NetworkEventData) => void")
+DEFINE_CALLBACK(
+    csp::multiplayer::AccessControlChangedEventCallback, AccessControlChangedEventCallback, "(accessControlChangedEventData: AccessControlChangedNetworkEventData) => void")
+DEFINE_CALLBACK(
+    csp::multiplayer::AssetDetailBlobChangedEventCallback, AssetDetailBlobChangedEventCallback, "(assetDetailBlobChangedEventData: AssetDetailBlobChangedNetworkEventData) => void")
+DEFINE_CALLBACK(csp::multiplayer::AsyncCallCompletedEventCallback, AsyncCallCompletedEventCallback, "(asyncCallCompletedEventData: AsyncCallCompletedEventData) => void")
+DEFINE_CALLBACK(csp::multiplayer::ConversationEventCallback, ConversationEventCallback, "(conversationNetworkEventData: ConversationNetworkEventData) => void")
+DEFINE_CALLBACK(csp::multiplayer::SequenceChangedEventCallback, SequenceChangedEventCallback, "(sequenceChangedEventData: SequenceChangedNetworkEventData) => void")
+DEFINE_CALLBACK(csp::multiplayer::MessageResultCallback, MessageResultCallback, "(result: MessageResult) => void")
+DEFINE_CALLBACK(csp::multiplayer::MessageCollectionResultCallback, MessageCollectionResultCallback, "(result: MessageCollectionResult) => void")
+DEFINE_CALLBACK(csp::multiplayer::ConversationResultCallback, ConversationResultCallback, "(result: ConversationResult) => void")
+DEFINE_CALLBACK(csp::multiplayer::NumberOfRepliesResultCallback, NumberOfRepliesResultCallback, "(result: NumberOfRepliesResult) => void")
+DEFINE_CALLBACK(csp::multiplayer::AnnotationResultCallback, AnnotationResultCallback, "(result: AnnotationResult) => void")
+DEFINE_CALLBACK(csp::multiplayer::AnnotationThumbnailCollectionResultCallback, AnnotationThumbnailCollectionResultCallback, "(result: AnnotationThumbnailCollectionResult) => void")
+
+/* Systems */
+DEFINE_CALLBACK(csp::systems::NullResultCallback, NullResultCallback, "(result: NullResult) => void")
+DEFINE_CALLBACK(csp::systems::StringResultCallback, StringResultCallback, "(result: StringResult) => void")
