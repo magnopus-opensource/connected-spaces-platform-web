@@ -66,6 +66,30 @@ describeOnAndOffThread('Awaitable Callbacks', (offThread, modeLabel) => {
     expect(thenCallbackCalled).toBe(true);
   });
 
+  it(`Await enum result (${modeLabel})`, async () => {
+    using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
+
+    const result = await helper.callbackFunctionEnumArgAsync();
+
+    expect(result).toBe(csp.TestEnum.Third);
+  });
+
+  it(`Enum result with promise (${modeLabel})`, async () => {
+    using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
+
+    let thenCallbackCalled = false;
+
+    const resultPromise = helper.callbackFunctionEnumArgAsync().then((value) => {
+      thenCallbackCalled = true;
+
+      expect(value).toBe(csp.TestEnum.Third);
+    });
+
+    await resultPromise;
+
+    expect(thenCallbackCalled).toBe(true);
+  });
+
   it(`Await value type result (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 

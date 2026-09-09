@@ -47,7 +47,7 @@ There are two specificities to be aware of.
 
 - Currently, `csp::common::Map` is based on `std::map`, which is ordered by strict-weak ordering of the key value. This is not the case for JS maps, which are insertion-ordered. In cases of equality, we do not enforce an ordering guarantee, so maps constructed in JS will compare equal (when using the csp utilities) to C++ maps even if out of order. However, order will be preserved when getting a map back from C++ as a return. This will almost never matter.
 
-- Whilst the values of a map may be bound to any type, as either a value or pointer type, the keys are more limiting. In order to play nice with JS/TS identity comparison, important for maps to function semantically, keys must be bindable as JS primitives. Effectively an integral or string type. This also allows us not to worry about allocation and disposal in keys, which is nice.
+- Whilst the values of a map may be bound to any type, as either a value or pointer type, the keys are more limiting. In order to play nice with JS/TS identity comparison, important for maps to function semantically, keys must be bindable as JS primitives. Effectively an integral, enum, or string type. This also allows us not to worry about allocation and disposal in keys, which is nice.
 
 ## Optional
 

@@ -134,4 +134,18 @@ describe('Map bindings', () => {
     // Ensure that the round-tripped map is deeply equal to the original using the Vitest matcher.
     expect(roundTripMap).toStrictEqual(newMap);
   });
+
+  it('Map round trip enum keys and values', () => {
+    using helper = csp.ContainerBindingMechanismsTestType.create();
+    const newMap = new Map([
+      [csp.TestEnum.First, csp.TestEnum.Third],
+      [csp.TestEnum.Third, csp.TestEnum.Second]
+    ]);
+
+    helper.setMapEnumTypeByValue(newMap);
+    const roundTrip = helper.getMapEnumTypeByValue();
+
+    expect(csp.mapEquals(newMap, roundTrip)).toBe(true);
+    expect(roundTrip.get(csp.TestEnum.Third)).toBe(csp.TestEnum.Second);
+  });
 });

@@ -86,6 +86,12 @@ public:
     void SetMapFullTypeByValue(csp::common::Map<int, BindingsTestType> value) { m_mapFullType = std::move(value); }
     void SetMapFullTypeByConstRef(const csp::common::Map<int, BindingsTestType>& value) { m_mapFullType = value; }
 
+    // Map<TestEnum, TestEnum>
+    csp::common::Map<TestEnumNamespace::TestEnum, TestEnumNamespace::TestEnum> GetMapEnumTypeByValue() const { return m_mapEnumType; }
+    const csp::common::Map<TestEnumNamespace::TestEnum, TestEnumNamespace::TestEnum>& GetMapEnumTypeByConstRef() const { return m_mapEnumType; }
+    void SetMapEnumTypeByValue(csp::common::Map<TestEnumNamespace::TestEnum, TestEnumNamespace::TestEnum> value) { m_mapEnumType = std::move(value); }
+    void SetMapEnumTypeByConstRef(const csp::common::Map<TestEnumNamespace::TestEnum, TestEnumNamespace::TestEnum>& value) { m_mapEnumType = value; }
+
     // Map<String, int>
     csp::common::Map<csp::common::String, int> GetMapStringIntByValue() const { return m_mapStringInt; }
     const csp::common::Map<csp::common::String, int>& GetMapStringIntByConstRef() const { return m_mapStringInt; }
@@ -176,6 +182,7 @@ private:
     csp::common::List<csp::common::Optional<BindingsTestType>> m_listOfOptionalFullType;
     csp::common::Map<int, int> m_mapBasicType;
     csp::common::Map<int, BindingsTestType> m_mapFullType;
+    csp::common::Map<TestEnumNamespace::TestEnum, TestEnumNamespace::TestEnum> m_mapEnumType;
     csp::common::Map<csp::common::String, int> m_mapStringInt;
     csp::common::Map<csp::common::String, csp::common::String> m_mapStringString;
     csp::common::Optional<int> m_optionalBasicType;
@@ -317,6 +324,18 @@ EMSCRIPTEN_BINDINGS(CSPContainerTestTypeBindings)
         .function("getCspStringByConstRef", &ContainerBindingMechanismsTestType::GetCspStringByConstRef)
         .function("setCspStringByValue(value)", &ContainerBindingMechanismsTestType::SetCspStringByValue)
         .function("setCspStringByConstRef(value)", &ContainerBindingMechanismsTestType::SetCspStringByConstRef)
+        .function(
+            "getMapEnumTypeByValue",
+            +[](const ContainerBindingMechanismsTestType& self) {
+                return csp::common::Map<TestEnumNamespace::TestEnum, TestEnumNamespace::TestEnum> { self.GetMapEnumTypeByValue() };
+            })
+        .function(
+            "getMapEnumTypeByConstRef",
+            +[](const ContainerBindingMechanismsTestType& self) {
+                return csp::common::Map<TestEnumNamespace::TestEnum, TestEnumNamespace::TestEnum> { self.GetMapEnumTypeByConstRef() };
+            })
+        .function("setMapEnumTypeByValue(value)", &ContainerBindingMechanismsTestType::SetMapEnumTypeByValue)
+        .function("setMapEnumTypeByConstRef(value)", &ContainerBindingMechanismsTestType::SetMapEnumTypeByConstRef)
         .function("getOptionalBasicTypeByValue", &ContainerBindingMechanismsTestType::GetOptionalBasicTypeByValue)
         .function("getOptionalBasicTypeByConstRef", &ContainerBindingMechanismsTestType::GetOptionalBasicTypeByConstRef)
         .function("setOptionalBasicTypeByValue(value)", &ContainerBindingMechanismsTestType::SetOptionalBasicTypeByValue)

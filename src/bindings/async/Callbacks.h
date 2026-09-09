@@ -73,7 +73,7 @@ template <typename Arg> inline bindings::utils::RAIIVal MakeRAIIVal(Arg&& arg)
     } else if constexpr (std::is_pointer_v<DecayedArgT>) {
         /* Pointer (thus non owning), no auto disposal */
         return RAIIVal { bindings::utils::NonOwningVal(std::forward<Arg>(arg)), RAIIVal::DisposePolicy::NoDisposal };
-    } else if constexpr (std::is_arithmetic_v<DecayedArgT> || std::is_same_v<DecayedArgT, csp::common::String>) {
+    } else if constexpr (bindings::utils::RequiresNoDisposal<DecayedArgT>) {
         /* Primitive arg, no auto disposal, and no need for non-owning, would be non-sensical.*/
         return RAIIVal { emscripten::val(std::forward<Arg>(arg)), RAIIVal::DisposePolicy::NoDisposal };
     } else {
@@ -187,7 +187,17 @@ inline auto AdaptedRAIINativeCallback(emscripten::val& cb)
  * TypescriptSig: A string representing the typescript signiature, for the no-arg case, it's just "() => void", a single array callback arg might look like "(BindingsTestType[]) => void"
  */
 
-#define MAKE_CALLBACK(FullyQualifiedCppCallbackType, EmbindCallbackType, TypescriptSig)                                                                                            \
+// For use in a header file, to declare callback used in multiple TUs.
+#define DECLARE_CALLBACK(FullyQualifiedCppCallbackType, EmbindCallbackType)                                                                                                        \
     EMSCRIPTEN_DECLARE_VAL_TYPE(EmbindCallbackType);                                                                                                                               \
-    EMSCRIPTEN_BINDINGS(register_##EmbindCallbackType) { emscripten::register_type<EmbindCallbackType>(#EmbindCallbackType, TypescriptSig); }                                      \
-    inline FullyQualifiedCppCallbackType ToNativeCallback(EmbindCallbackType cb) { return AdaptedRAIINativeCallback(cb); }
+    FullyQualifiedCppCallbackType ToNativeCallback(EmbindCallbackType cb);
+
+// For use in a source file, when having used DECLARE_CALLBACK.
+#define DEFINE_CALLBACK(FullyQualifiedCppCallbackType, EmbindCallbackType, TypescriptSig)                                                                                          \
+    EMSCRIPTEN_BINDINGS(register_##EmbindCallbackType) { emscripten::register_type<EmbindCallbackType>(TypescriptSig); }                                                           \
+    FullyQualifiedCppCallbackType ToNativeCallback(EmbindCallbackType cb) { return AdaptedRAIINativeCallback(cb); }
+
+// For use in a source file, for callbacks used in a single TU.
+#define MAKE_CALLBACK(FullyQualifiedCppCallbackType, EmbindCallbackType, TypescriptSig)                                                                                            \
+    DECLARE_CALLBACK(FullyQualifiedCppCallbackType, EmbindCallbackType)                                                                                                            \
+    DEFINE_CALLBACK(FullyQualifiedCppCallbackType, EmbindCallbackType, TypescriptSig)

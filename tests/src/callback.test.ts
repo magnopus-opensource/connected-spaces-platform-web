@@ -56,6 +56,19 @@ describeOnAndOffThread('Callbacks', (offThread, modeLabel) => {
     expect(callbackCalled).toBe(true);
   });
 
+  it(`Callback Enum Arg (${modeLabel})`, async () => {
+    using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
+
+    let callbackCalled = false;
+    helper.callbackFunctionEnumArg((enumArg) => {
+      callbackCalled = true;
+      expect(enumArg).toBe(csp.TestEnum.Third);
+    });
+
+    await untilCallbacksSettled(csp, () => callbackCalled);
+    expect(callbackCalled).toBe(true);
+  });
+
   it(`Callback Pointer Arg (${modeLabel})`, async () => {
     using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
 

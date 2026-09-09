@@ -47,6 +47,8 @@ typedef std::function<void()> TestCallbackNoArgs;
 
 typedef std::function<void(int primitiveArg)> TestCallbackPrimitiveArg;
 
+typedef std::function<void(TestEnumNamespace::TestEnum enumArg)> TestCallbackEnumArg;
+
 typedef std::function<void(BindingsTestType* pointerArg)> TestCallbackPointerArg;
 
 typedef std::function<void(BindingsTestType valueArg)> TestCallbackValueArg;
@@ -150,6 +152,10 @@ public:
     /* Dispatched on the calling thread, or on a detached thread, depending on m_offThread. */
     void CallbackFunctionNoArgs(TestCallbackNamespace::TestCallbackNoArgs callback) { m_offThread ? CallOffThread(callback) : CallOnThread(callback); }
     void CallbackFunctionPrimitiveArg(TestCallbackNamespace::TestCallbackPrimitiveArg callback) { m_offThread ? CallOffThread(callback, 10) : CallOnThread(callback, 10); }
+    void CallbackFunctionEnumArg(TestCallbackNamespace::TestCallbackEnumArg callback)
+    {
+        m_offThread ? CallOffThread(callback, TestEnumNamespace::TestEnum::Third) : CallOnThread(callback, TestEnumNamespace::TestEnum::Third);
+    }
     void CallbackFunctionPointerArg(TestCallbackNamespace::TestCallbackPointerArg callback)
     {
         m_offThread ? CallOffThread(callback, singleTypeOnePtr) : CallOnThread(callback, singleTypeOnePtr);
@@ -300,6 +306,7 @@ private:
  */
 MAKE_CALLBACK(TestCallbackNamespace::TestCallbackNoArgs, TestCallbackNoArgsJSCallback, "() => void")
 MAKE_CALLBACK(TestCallbackNamespace::TestCallbackPrimitiveArg, TestCallbackPrimitiveArgJSCallback, "(primitiveArg: number) => void")
+MAKE_CALLBACK(TestCallbackNamespace::TestCallbackEnumArg, TestCallbackEnumArgJSCallback, "(enumArg: TestEnum) => void")
 MAKE_CALLBACK(TestCallbackNamespace::TestCallbackPointerArg, TestCallbackPointerArgJSCallback, "(pointerArg: BindingsTestType | null) => void")
 MAKE_CALLBACK(TestCallbackNamespace::TestCallbackValueArg, TestCallbackValueArgJSCallback, "(valueArg: BindingsTestType) => void")
 MAKE_CALLBACK(TestCallbackNamespace::TestCallbackValueArgByConstRef, TestCallbackValueArgByConstRefJSCallback, "(valueArg: BindingsTestType) => void")
@@ -333,6 +340,7 @@ MAKE_CALLBACK(TestCallbackNamespace::TestCallbackProgressCallbackType, TestCallb
  */
 EMSCRIPTEN_DECLARE_VAL_TYPE(TestCallbackPromiseOfVoid);
 EMSCRIPTEN_DECLARE_VAL_TYPE(TestCallbackPromiseOfNumber);
+EMSCRIPTEN_DECLARE_VAL_TYPE(TestCallbackPromiseOfTestEnum);
 EMSCRIPTEN_DECLARE_VAL_TYPE(TestCallbackPromiseOfBindingsTestType);
 EMSCRIPTEN_DECLARE_VAL_TYPE(TestCallbackPromiseOfBindingsTestTypePointer);
 EMSCRIPTEN_DECLARE_VAL_TYPE(TestCallbackPromiseOfBindingsTestTypeOptional);
@@ -350,6 +358,8 @@ EMSCRIPTEN_BINDINGS(register_TestCallbackPromiseTypes)
     emscripten::register_type<TestCallbackPromiseOfVoid>("Promise<void>");
 
     emscripten::register_type<TestCallbackPromiseOfNumber>("Promise<number>");
+
+    emscripten::register_type<TestCallbackPromiseOfTestEnum>("Promise<TestEnum>");
 
     emscripten::register_type<TestCallbackPromiseOfBindingsTestType>("Promise<BindingsTestType>");
     emscripten::register_type<TestCallbackPromiseOfBindingsTestTypePointer>("Promise<BindingsTestType | null>");
@@ -387,6 +397,9 @@ EMSCRIPTEN_BINDINGS(CSPCallbacksTestTypeBindings)
         .function(
             "callbackFunctionPrimitiveArg(callback)",
             +[](CallbacksBindingMechanismsTestType& self, TestCallbackPrimitiveArgJSCallback callback) { self.CallbackFunctionPrimitiveArg(ToNativeCallback(callback)); })
+        .function(
+            "callbackFunctionEnumArg(callback)",
+            +[](CallbacksBindingMechanismsTestType& self, TestCallbackEnumArgJSCallback callback) { self.CallbackFunctionEnumArg(ToNativeCallback(callback)); })
         .function(
             "callbackFunctionPointerArg(callback)",
             +[](CallbacksBindingMechanismsTestType& self, TestCallbackPointerArgJSCallback callback) { self.CallbackFunctionPointerArg(ToNativeCallback(callback)); })
@@ -492,6 +505,12 @@ EMSCRIPTEN_BINDINGS(CSPCallbacksTestTypeBindings)
             +[](CallbacksBindingMechanismsTestType& self) {
                 return Promisify<TestCallbackPromiseOfNumber>(
                     [&](emscripten::val cb) { self.CallbackFunctionPrimitiveArg(ToNativeCallback(cb.as<TestCallbackPrimitiveArgJSCallback>())); });
+            })
+        .function(
+            "callbackFunctionEnumArgAsync",
+            +[](CallbacksBindingMechanismsTestType& self) {
+                return Promisify<TestCallbackPromiseOfTestEnum>(
+                    [&](emscripten::val cb) { self.CallbackFunctionEnumArg(ToNativeCallback(cb.as<TestCallbackEnumArgJSCallback>())); });
             })
         .function(
             "callbackFunctionPointerArgAsync",

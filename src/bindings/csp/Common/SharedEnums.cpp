@@ -116,4 +116,55 @@ EMSCRIPTEN_BINDINGS(CSPSharedEnums)
         .value("UserShopifyLimitReached", csp::systems::ERequestFailureReason::UserShopifyLimitReached)
         .value("UserTokenRefreshFailed", csp::systems::ERequestFailureReason::UserTokenRefreshFailed)
         .value("InvalidSequenceKey", csp::systems::ERequestFailureReason::InvalidSequenceKey);
+
+    emscripten::enum_<csp::common::ELoginState>("ELoginState", emscripten::enum_value_type::number)
+        .value("LoginRequested", csp::common::ELoginState::LoginRequested)
+        .value("LoggedIn", csp::common::ELoginState::LoggedIn)
+        .value("LogoutRequested", csp::common::ELoginState::LogoutRequested)
+        .value("LoggedOut", csp::common::ELoginState::LoggedOut)
+        .value("Error", csp::common::ELoginState::Error);
+
+    emscripten::enum_<csp::multiplayer::AvatarState>("AvatarState", emscripten::enum_value_type::number)
+        .value("Idle", csp::multiplayer::AvatarState::Idle)
+        .value("Walking", csp::multiplayer::AvatarState::Walking)
+        .value("Running", csp::multiplayer::AvatarState::Running)
+        .value("Flying", csp::multiplayer::AvatarState::Flying)
+        .value("Jumping", csp::multiplayer::AvatarState::Jumping)
+        .value("Falling", csp::multiplayer::AvatarState::Falling)
+        .value("Num", csp::multiplayer::AvatarState::Num);
+
+    emscripten::enum_<csp::multiplayer::AvatarPlayMode>("AvatarPlayMode", emscripten::enum_value_type::number)
+        .value("Default", csp::multiplayer::AvatarPlayMode::Default)
+        .value("AR", csp::multiplayer::AvatarPlayMode::AR)
+        .value("VR", csp::multiplayer::AvatarPlayMode::VR)
+        .value("Creator", csp::multiplayer::AvatarPlayMode::Creator)
+        .value("Num", csp::multiplayer::AvatarPlayMode::Num);
+
+    emscripten::enum_<csp::multiplayer::LocomotionModel>("LocomotionModel", emscripten::enum_value_type::number)
+        .value("Grounded", csp::multiplayer::LocomotionModel::Grounded)
+        .value("FreeCamera", csp::multiplayer::LocomotionModel::FreeCamera)
+        .value("Num", csp::multiplayer::LocomotionModel::Num);
+
+    emscripten::enum_<csp::multiplayer::ErrorCode>("ErrorCode", emscripten::enum_value_type::number)
+        .value("None", csp::multiplayer::ErrorCode::None)
+        .value("Unknown", csp::multiplayer::ErrorCode::Unknown)
+        .value("NotConnected", csp::multiplayer::ErrorCode::NotConnected)
+        .value("AlreadyConnected", csp::multiplayer::ErrorCode::AlreadyConnected)
+        .value("SpaceUserLimitExceeded", csp::multiplayer::ErrorCode::SpaceUserLimitExceeded);
+
+    emscripten::enum_<csp::multiplayer::ModifiableStatus>("ModifiableStatus", emscripten::enum_value_type::number)
+        .value("Modifiable", csp::multiplayer::ModifiableStatus::Modifiable)
+        .value("EntityLocked", csp::multiplayer::ModifiableStatus::EntityLocked)
+        .value("EntityNotOwnedAndUntransferable", csp::multiplayer::ModifiableStatus::EntityNotOwnedAndUntransferable);
+
+    emscripten::enum_<csp::multiplayer::StereoVideoType>("StereoVideoType", emscripten::enum_value_type::number)
+        .value("None", csp::multiplayer::StereoVideoType::None)
+        .value("SideBySide", csp::multiplayer::StereoVideoType::SideBySide)
+        .value("TopBottom", csp::multiplayer::StereoVideoType::TopBottom);
+
+    emscripten::enum_<csp::systems::EThirdPartyPlatform>("EThirdPartyPlatform", emscripten::enum_value_type::number)
+        .value("None", csp::systems::EThirdPartyPlatform::None)
+        .value("Unreal", csp::systems::EThirdPartyPlatform::Unreal)
+        .value("Unity", csp::systems::EThirdPartyPlatform::Unity)
+        .value("Web", csp::systems::EThirdPartyPlatform::Web);
 }

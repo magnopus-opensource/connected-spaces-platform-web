@@ -40,10 +40,8 @@ namespace bindings::containers {
  * Somewhat tangential, although the same root reasoning, we also don't bother
  * to do disposal cleanup of keys, as they should be primitives and thus not
  * have owning memory implications.
- *
- * Note this probably doesn't currently support enums, but could, just use std::is_enum if that becomes necessary.
  */
-template <typename K> struct IsValidMapKey : std::bool_constant<std::is_integral_v<K>> { };
+template <typename K> struct IsValidMapKey : std::bool_constant<std::is_integral_v<K> || std::is_enum_v<K>> { };
 // Exact match, which is almost always what you want for map keys (will reject cv-qualified references)
 template <> struct IsValidMapKey<csp::common::String> : std::true_type { };
 }
@@ -65,7 +63,7 @@ template <typename Key, typename Value> struct BindingType<csp::common::Map<Key,
     // Guards the parameter path. The return path (the JSDisposable specialization below) carries its own
     // copy of this assert, since binding a map return-only never instantiates this specialization.
     static_assert(bindings::containers::IsValidMapKey<Key>::value,
-        "csp::common::Map can only be bound with a primitive key type (an integral type, or csp::common::String). "
+        "csp::common::Map can only be bound with a primitive key type (an integral type, an enum, or csp::common::String). "
         "To allow a new primitive-like key, add an IsValidMapKey specialization.");
 
     using ValBinding = BindingType<val>;
@@ -120,7 +118,7 @@ template <typename Key, typename Value> struct BindingType<csp::common::Map<Key,
 template <typename Key, typename Value> struct BindingType<bindings::utils::JSDisposable<csp::common::Map<Key, Value>>> {
     // Guards the return path; see the parameter-path specialization above.
     static_assert(bindings::containers::IsValidMapKey<Key>::value,
-        "csp::common::Map can only be bound with a primitive key type (an integral type, or csp::common::String). "
+        "csp::common::Map can only be bound with a primitive key type (an integral type, an enum, or csp::common::String). "
         "To allow a new primitive-like key, add an IsValidMapKey specialization.");
 
     using ValBinding = BindingType<val>;
