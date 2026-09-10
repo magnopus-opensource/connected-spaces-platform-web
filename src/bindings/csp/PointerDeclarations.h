@@ -10,7 +10,6 @@
 EMSCRIPTEN_DECLARE_VAL_TYPE(CancellationTokenPointer);
 EMSCRIPTEN_DECLARE_VAL_TYPE(SpaceEntityPointer);
 EMSCRIPTEN_DECLARE_VAL_TYPE(ComponentBasePointer);
-EMSCRIPTEN_DECLARE_VAL_TYPE(ReplicatedValuePointer);
 EMSCRIPTEN_DECLARE_VAL_TYPE(MultiplayerConnectionPointer);
 EMSCRIPTEN_DECLARE_VAL_TYPE(NetworkEventBusPointer);
 EMSCRIPTEN_DECLARE_VAL_TYPE(OnlineRealtimeEnginePointer);

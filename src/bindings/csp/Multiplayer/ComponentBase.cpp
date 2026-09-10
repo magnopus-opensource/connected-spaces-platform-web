@@ -56,17 +56,19 @@ EMSCRIPTEN_BINDINGS(CSPComponentBase)
         .property("componentType", &csp::multiplayer::ComponentBase::GetComponentType)
         .property("typeId", &csp::multiplayer::ComponentBase::GetTypeId)
         .property("componentName", &csp::multiplayer::ComponentBase::GetComponentName, &csp::multiplayer::ComponentBase::SetComponentName)
+        // These property functions return "view" pointers, but we don't really care for the complexity, just copy they're not that big.
         .function(
             "getProperties",
-            +[](const csp::multiplayer::ComponentBase& self) {
-                const csp::common::Map<uint32_t, csp::common::ReplicatedValue>* properties = self.GetProperties();
-                csp::common::Map<uint32_t, csp::common::ReplicatedValue> propertiesCopy
-                    = properties != nullptr ? *properties : csp::common::Map<uint32_t, csp::common::ReplicatedValue> { };
-                return bindings::utils::JSDisposable<csp::common::Map<uint32_t, csp::common::ReplicatedValue>> { std::move(propertiesCopy) };
+            +[](const csp::multiplayer::ComponentBase& self) -> bindings::utils::JSDisposable<csp::common::Map<uint32_t, csp::common::ReplicatedValue>> {
+                return bindings::utils::JSDisposable<csp::common::Map<uint32_t, csp::common::ReplicatedValue>> { *self.GetProperties() };
             })
         .function(
             "getProperty(key)",
-            +[](const csp::multiplayer::ComponentBase& self, uint16_t key) { return bindings::utils::NonOwningVal<ReplicatedValuePointer>(self.GetProperty(key)); })
+            +[](const csp::multiplayer::ComponentBase& self, uint16_t key) -> csp::common::ReplicatedValue {
+                const auto* prop = self.GetProperty(key);
+                // Honestly paranoid, the CSP implementation as written today does guard against this anyway. The return value has no need to be a pointer ... it's odd.
+                return prop == nullptr ? csp::common::ReplicatedValue { } : *prop;
+            })
         .function("setProperty(key, value)", &csp::multiplayer::ComponentBase::SetProperty)
         .function(
             "getParent", +[](csp::multiplayer::ComponentBase& self) { return bindings::utils::NonOwningVal<SpaceEntityPointer>(self.GetParent()); })
