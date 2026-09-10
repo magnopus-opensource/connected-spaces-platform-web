@@ -214,6 +214,8 @@ Doing this makes it impossible for the user to dispose/delete the pointer.
 - Only getter functions returning types not requiring user disposal should be bound as properties
 - CSP `System` classes are bound without constructor functions, as they are not user-constructible
 - Pointers returned by the CSP bindings should be non-owning, i.e. owned by CSP and not user-disposed, with the exception of material pointers returned by the asset system
+- Component mixin interfaces such as `IEnableableComponent`, `IPositionComponent` etc. are not themselves bound. With the exception of `ComponentBase`, all methods available on concrete component classes should be flattened and bound for each component individually
+- `SpaceEntityUpdateFlags` is used as a bitmask so although the type is bound as an enum, arguments or return values using it, such as `updateFlags` in `SpaceEntityUpdateCallback`, are bound as `number` since values can be combinations of flags
 
 ### Unbound Types
 
@@ -229,7 +231,7 @@ Namespace `Common`:
 Namespace `Multiplayer`:
 
 - `EntityScript::Bind`, no need for it, and is confusing in a JS context.
-- All Component interfaces, their properties are flattened into the regular component
+- All component interfaces, their properties are flattened into the regular component:
   - `IAudioControlComponent`
   - `IEnableableComponent`
   - `IExternalResourceComponent`
