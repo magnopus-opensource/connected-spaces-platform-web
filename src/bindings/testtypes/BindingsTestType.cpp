@@ -118,10 +118,13 @@ EMSCRIPTEN_BINDINGS(CSPTestTypeBindings)
     emscripten::class_<BindingsTestType>("BindingsTestType")
         .class_function(
             "create(value, name)", +[](int value, std::string name) { return BindingsTestType(value, std::move(name)); })
+        .class_function(
+            "createOwningPointer(value, name)", +[](int value, std::string name) { return new BindingsTestType(value, std::move(name)); }, emscripten::allow_raw_pointers())
         .property("value", &BindingsTestType::GetValue, &BindingsTestType::SetValue)
         .property("name", &BindingsTestType::GetName, &BindingsTestType::SetName)
         .function("equals(other)", &BindingsTestType::operator==)
-        .class_function("aliveCount", +[] { return BindingsTestType::AliveCount.load(); });
+        .class_function(
+            "aliveCount", +[] { return BindingsTestType::AliveCount.load(); });
 
     //Register the named version of the non-owning pointer type, as we use it as a raw `val` via NonOwningVal.
     emscripten::register_type<BindingsTestTypePointer>("BindingsTestType | null");
