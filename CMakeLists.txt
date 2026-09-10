@@ -33,7 +33,6 @@ add_executable(connected-spaces-platform-bindings
     src/bindings/csp/Multiplayer/OfflineRealtimeEngine.cpp
     src/bindings/csp/Multiplayer/Script/EntityScript.cpp
     src/bindings/csp/Multiplayer/Conversation/Conversation.cpp
-    src/bindings/csp/Multiplayer/Components/Interfaces/IAudioControlComponent.cpp
     src/bindings/csp/Multiplayer/Components/BillBoardModeEnum.cpp
     src/bindings/csp/Multiplayer/Components/AIChatbotComponent.cpp
     src/bindings/csp/Multiplayer/Components/AnimatedModelSpaceComponent.cpp

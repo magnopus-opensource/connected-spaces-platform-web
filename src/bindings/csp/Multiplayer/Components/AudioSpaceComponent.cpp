@@ -8,6 +8,11 @@
 
 EMSCRIPTEN_BINDINGS(CSPAudioSpaceComponent)
 {
+    emscripten::enum_<csp::multiplayer::AudioType>("AudioType", emscripten::enum_value_type::number)
+        .value("Global", csp::multiplayer::AudioType::Global)
+        .value("Spatial", csp::multiplayer::AudioType::Spatial)
+        .value("Num", csp::multiplayer::AudioType::Num);
+
     emscripten::enum_<csp::multiplayer::AudioPlaybackState>("AudioPlaybackState", emscripten::enum_value_type::number)
         .value("Reset", csp::multiplayer::AudioPlaybackState::Reset)
         .value("Pause", csp::multiplayer::AudioPlaybackState::Pause)
