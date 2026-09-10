@@ -6,15 +6,11 @@
 
 #include "emscripten/bind.h"
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-
 EMSCRIPTEN_BINDINGS(CSPHotspotSpaceComponent)
 {
     emscripten::enum_<csp::multiplayer::HotspotPropertyKeys>("HotspotPropertyKeys", emscripten::enum_value_type::number)
         .value("Position", csp::multiplayer::HotspotPropertyKeys::Position)
         .value("Rotation", csp::multiplayer::HotspotPropertyKeys::Rotation)
-        .value("Name_DEPRECATED", csp::multiplayer::HotspotPropertyKeys::Name_DEPRECATED)
         .value("IsTeleportPoint", csp::multiplayer::HotspotPropertyKeys::IsTeleportPoint)
         .value("IsSpawnPoint", csp::multiplayer::HotspotPropertyKeys::IsSpawnPoint)
         .value("IsVisible", csp::multiplayer::HotspotPropertyKeys::IsVisible)
@@ -23,7 +19,6 @@ EMSCRIPTEN_BINDINGS(CSPHotspotSpaceComponent)
         .value("Num", csp::multiplayer::HotspotPropertyKeys::Num);
 
     emscripten::class_<csp::multiplayer::HotspotSpaceComponent, emscripten::base<csp::multiplayer::ComponentBase>>("HotspotSpaceComponent")
-        .property("name", &csp::multiplayer::HotspotSpaceComponent::GetName, &csp::multiplayer::HotspotSpaceComponent::SetName)
         .property("isTeleportPoint", &csp::multiplayer::HotspotSpaceComponent::GetIsTeleportPoint, &csp::multiplayer::HotspotSpaceComponent::SetIsTeleportPoint)
         .property("isSpawnPoint", &csp::multiplayer::HotspotSpaceComponent::GetIsSpawnPoint, &csp::multiplayer::HotspotSpaceComponent::SetIsSpawnPoint)
         .property("uniqueComponentId", &csp::multiplayer::HotspotSpaceComponent::GetUniqueComponentId)
@@ -33,5 +28,3 @@ EMSCRIPTEN_BINDINGS(CSPHotspotSpaceComponent)
         .property("isARVisible", &csp::multiplayer::HotspotSpaceComponent::GetIsARVisible, &csp::multiplayer::HotspotSpaceComponent::SetIsARVisible)
         .property("isVirtualVisible", &csp::multiplayer::HotspotSpaceComponent::GetIsVirtualVisible, &csp::multiplayer::HotspotSpaceComponent::SetIsVirtualVisible);
 }
-
-#pragma clang diagnostic pop

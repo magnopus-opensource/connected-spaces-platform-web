@@ -21,7 +21,6 @@ EMSCRIPTEN_BINDINGS(CSPAnimatedModelSpaceComponent)
         .value("Num", csp::multiplayer::AnimatedModelActions::Num);
 
     emscripten::enum_<csp::multiplayer::AnimatedModelPropertyKeys>("AnimatedModelPropertyKeys", emscripten::enum_value_type::number)
-        .value("Name_DEPRECATED", csp::multiplayer::AnimatedModelPropertyKeys::Name_DEPRECATED)
         .value("ExternalResourceAssetId", csp::multiplayer::AnimatedModelPropertyKeys::ExternalResourceAssetId)
         .value("ExternalResourceAssetCollectionId", csp::multiplayer::AnimatedModelPropertyKeys::ExternalResourceAssetCollectionId)
         .value("Position", csp::multiplayer::AnimatedModelPropertyKeys::Position)

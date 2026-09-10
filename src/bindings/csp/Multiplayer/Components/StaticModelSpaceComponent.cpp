@@ -14,7 +14,6 @@
 EMSCRIPTEN_BINDINGS(CSPStaticModelSpaceComponent)
 {
     emscripten::enum_<csp::multiplayer::StaticModelPropertyKeys>("StaticModelPropertyKeys", emscripten::enum_value_type::number)
-        .value("Name_DEPRECATED", csp::multiplayer::StaticModelPropertyKeys::Name_DEPRECATED)
         .value("ExternalResourceAssetId", csp::multiplayer::StaticModelPropertyKeys::ExternalResourceAssetId)
         .value("ExternalResourceAssetCollectionId", csp::multiplayer::StaticModelPropertyKeys::ExternalResourceAssetCollectionId)
         .value("Position", csp::multiplayer::StaticModelPropertyKeys::Position)

@@ -6,13 +6,9 @@
 
 #include "emscripten/bind.h"
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-
 EMSCRIPTEN_BINDINGS(CSPImageSpaceComponent)
 {
     emscripten::enum_<csp::multiplayer::ImagePropertyKeys>("ImagePropertyKeys", emscripten::enum_value_type::number)
-        .value("Name_DEPRECATED", csp::multiplayer::ImagePropertyKeys::Name_DEPRECATED)
         .value("ImageAssetId", csp::multiplayer::ImagePropertyKeys::ImageAssetId)
         .value("AssetCollectionId", csp::multiplayer::ImagePropertyKeys::AssetCollectionId)
         .value("Position", csp::multiplayer::ImagePropertyKeys::Position)
@@ -32,7 +28,6 @@ EMSCRIPTEN_BINDINGS(CSPImageSpaceComponent)
         .value("DoubleSidedReversed", csp::multiplayer::DisplayMode::DoubleSidedReversed);
 
     emscripten::class_<csp::multiplayer::ImageSpaceComponent, emscripten::base<csp::multiplayer::ComponentBase>>("ImageSpaceComponent")
-        .property("name", &csp::multiplayer::ImageSpaceComponent::GetName, &csp::multiplayer::ImageSpaceComponent::SetName)
         .property("imageAssetId", &csp::multiplayer::ImageSpaceComponent::GetImageAssetId, &csp::multiplayer::ImageSpaceComponent::SetImageAssetId)
         .property("assetCollectionId", &csp::multiplayer::ImageSpaceComponent::GetAssetCollectionId, &csp::multiplayer::ImageSpaceComponent::SetAssetCollectionId)
         .property("position", &csp::multiplayer::ImageSpaceComponent::GetPosition, &csp::multiplayer::ImageSpaceComponent::SetPosition)
@@ -46,5 +41,3 @@ EMSCRIPTEN_BINDINGS(CSPImageSpaceComponent)
         .property("isARVisible", &csp::multiplayer::ImageSpaceComponent::GetIsARVisible, &csp::multiplayer::ImageSpaceComponent::SetIsARVisible)
         .property("isVirtualVisible", &csp::multiplayer::ImageSpaceComponent::GetIsVirtualVisible, &csp::multiplayer::ImageSpaceComponent::SetIsVirtualVisible);
 }
-
-#pragma clang diagnostic pop

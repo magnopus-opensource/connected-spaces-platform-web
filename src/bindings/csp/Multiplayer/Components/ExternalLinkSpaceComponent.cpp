@@ -6,9 +6,6 @@
 
 #include "emscripten/bind.h"
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-
 EMSCRIPTEN_BINDINGS(CSPExternalLinkSpaceComponent)
 {
     emscripten::enum_<csp::multiplayer::ExternalLinkActions>("ExternalLinkActions", emscripten::enum_value_type::number)
@@ -16,7 +13,6 @@ EMSCRIPTEN_BINDINGS(CSPExternalLinkSpaceComponent)
         .value("Num", csp::multiplayer::ExternalLinkActions::Num);
 
     emscripten::enum_<csp::multiplayer::ExternalLinkPropertyKeys>("ExternalLinkPropertyKeys", emscripten::enum_value_type::number)
-        .value("Name_DEPRECATED", csp::multiplayer::ExternalLinkPropertyKeys::Name_DEPRECATED)
         .value("LinkUrl", csp::multiplayer::ExternalLinkPropertyKeys::LinkUrl)
         .value("Position", csp::multiplayer::ExternalLinkPropertyKeys::Position)
         .value("Rotation", csp::multiplayer::ExternalLinkPropertyKeys::Rotation)
@@ -29,7 +25,6 @@ EMSCRIPTEN_BINDINGS(CSPExternalLinkSpaceComponent)
         .value("Num", csp::multiplayer::ExternalLinkPropertyKeys::Num);
 
     emscripten::class_<csp::multiplayer::ExternalLinkSpaceComponent, emscripten::base<csp::multiplayer::ComponentBase>>("ExternalLinkSpaceComponent")
-        .property("name", &csp::multiplayer::ExternalLinkSpaceComponent::GetName, &csp::multiplayer::ExternalLinkSpaceComponent::SetName)
         .property("linkUrl", &csp::multiplayer::ExternalLinkSpaceComponent::GetLinkUrl, &csp::multiplayer::ExternalLinkSpaceComponent::SetLinkUrl)
         .property("displayText", &csp::multiplayer::ExternalLinkSpaceComponent::GetDisplayText, &csp::multiplayer::ExternalLinkSpaceComponent::SetDisplayText)
         .property("position", &csp::multiplayer::ExternalLinkSpaceComponent::GetPosition, &csp::multiplayer::ExternalLinkSpaceComponent::SetPosition)
@@ -41,5 +36,3 @@ EMSCRIPTEN_BINDINGS(CSPExternalLinkSpaceComponent)
         .property("isARVisible", &csp::multiplayer::ExternalLinkSpaceComponent::GetIsARVisible, &csp::multiplayer::ExternalLinkSpaceComponent::SetIsARVisible)
         .property("isVirtualVisible", &csp::multiplayer::ExternalLinkSpaceComponent::GetIsVirtualVisible, &csp::multiplayer::ExternalLinkSpaceComponent::SetIsVirtualVisible);
 }
-
-#pragma clang diagnostic pop

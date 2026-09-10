@@ -6,13 +6,9 @@
 
 #include "emscripten/bind.h"
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-
 EMSCRIPTEN_BINDINGS(CSPReflectionSpaceComponent)
 {
     emscripten::enum_<csp::multiplayer::ReflectionPropertyKeys>("ReflectionPropertyKeys", emscripten::enum_value_type::number)
-        .value("Name_DEPRECATED", csp::multiplayer::ReflectionPropertyKeys::Name_DEPRECATED)
         .value("ReflectionAssetId", csp::multiplayer::ReflectionPropertyKeys::ReflectionAssetId)
         .value("AssetCollectionId", csp::multiplayer::ReflectionPropertyKeys::AssetCollectionId)
         .value("Position", csp::multiplayer::ReflectionPropertyKeys::Position)
@@ -27,7 +23,6 @@ EMSCRIPTEN_BINDINGS(CSPReflectionSpaceComponent)
         .value("UnitBox", csp::multiplayer::ReflectionShape::UnitBox);
 
     emscripten::class_<csp::multiplayer::ReflectionSpaceComponent, emscripten::base<csp::multiplayer::ComponentBase>>("ReflectionSpaceComponent")
-        .property("name", &csp::multiplayer::ReflectionSpaceComponent::GetName, &csp::multiplayer::ReflectionSpaceComponent::SetName)
         .property("reflectionAssetId", &csp::multiplayer::ReflectionSpaceComponent::GetReflectionAssetId, &csp::multiplayer::ReflectionSpaceComponent::SetReflectionAssetId)
         .property("assetCollectionId", &csp::multiplayer::ReflectionSpaceComponent::GetAssetCollectionId, &csp::multiplayer::ReflectionSpaceComponent::SetAssetCollectionId)
         .property("position", &csp::multiplayer::ReflectionSpaceComponent::GetPosition, &csp::multiplayer::ReflectionSpaceComponent::SetPosition)
@@ -36,5 +31,3 @@ EMSCRIPTEN_BINDINGS(CSPReflectionSpaceComponent)
         .property("thirdPartyComponentRef", &csp::multiplayer::ReflectionSpaceComponent::GetThirdPartyComponentRef,
             &csp::multiplayer::ReflectionSpaceComponent::SetThirdPartyComponentRef);
 }
-
-#pragma clang diagnostic pop

@@ -7,9 +7,6 @@
 
 #include "emscripten/bind.h"
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-
 EMSCRIPTEN_BINDINGS(CSPVideoPlayerSpaceComponent)
 {
     emscripten::enum_<csp::multiplayer::VideoPlayerPlaybackState>("VideoPlayerPlaybackState", emscripten::enum_value_type::number)
@@ -30,7 +27,6 @@ EMSCRIPTEN_BINDINGS(CSPVideoPlayerSpaceComponent)
         .value("Num", csp::multiplayer::VideoPlayerSourceType::Num);
 
     emscripten::enum_<csp::multiplayer::VideoPlayerPropertyKeys>("VideoPlayerPropertyKeys", emscripten::enum_value_type::number)
-        .value("Name_DEPRECATED", csp::multiplayer::VideoPlayerPropertyKeys::Name_DEPRECATED)
         .value("VideoAssetId", csp::multiplayer::VideoPlayerPropertyKeys::VideoAssetId)
         .value("VideoAssetURL", csp::multiplayer::VideoPlayerPropertyKeys::VideoAssetURL)
         .value("AssetCollectionId", csp::multiplayer::VideoPlayerPropertyKeys::AssetCollectionId)
@@ -58,7 +54,6 @@ EMSCRIPTEN_BINDINGS(CSPVideoPlayerSpaceComponent)
         .value("Num", csp::multiplayer::VideoPlayerPropertyKeys::Num);
 
     emscripten::class_<csp::multiplayer::VideoPlayerSpaceComponent, emscripten::base<csp::multiplayer::ComponentBase>>("VideoPlayerSpaceComponent")
-        .property("name", &csp::multiplayer::VideoPlayerSpaceComponent::GetName, &csp::multiplayer::VideoPlayerSpaceComponent::SetName)
         .property("videoAssetId", &csp::multiplayer::VideoPlayerSpaceComponent::GetVideoAssetId, &csp::multiplayer::VideoPlayerSpaceComponent::SetVideoAssetId)
         .property("videoAssetURL", &csp::multiplayer::VideoPlayerSpaceComponent::GetVideoAssetURL, &csp::multiplayer::VideoPlayerSpaceComponent::SetVideoAssetURL)
         .property("assetCollectionId", &csp::multiplayer::VideoPlayerSpaceComponent::GetAssetCollectionId, &csp::multiplayer::VideoPlayerSpaceComponent::SetAssetCollectionId)
@@ -86,5 +81,3 @@ EMSCRIPTEN_BINDINGS(CSPVideoPlayerSpaceComponent)
         .property("isVirtualVisible", &csp::multiplayer::VideoPlayerSpaceComponent::GetIsVirtualVisible, &csp::multiplayer::VideoPlayerSpaceComponent::SetIsVirtualVisible)
         .property("isEnabled", &csp::multiplayer::VideoPlayerSpaceComponent::GetIsEnabled, &csp::multiplayer::VideoPlayerSpaceComponent::SetIsEnabled);
 }
-
-#pragma clang diagnostic pop

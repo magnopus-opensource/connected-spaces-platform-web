@@ -5,14 +5,11 @@
 #include "CSP/Multiplayer/Components/GaussianSplatSpaceComponent.h"
 
 #include "emscripten/bind.h"
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#include <CSP/Multiplayer/Components/Interfaces/IShadowCasterComponent.h>
 
 EMSCRIPTEN_BINDINGS(CSPGaussianSplatSpaceComponent)
 {
     emscripten::enum_<csp::multiplayer::GaussianSplatPropertyKeys>("GaussianSplatPropertyKeys", emscripten::enum_value_type::number)
-        .value("Name_DEPRECATED", csp::multiplayer::GaussianSplatPropertyKeys::Name_DEPRECATED)
         .value("ExternalResourceAssetId", csp::multiplayer::GaussianSplatPropertyKeys::ExternalResourceAssetId)
         .value("ExternalResourceAssetCollectionId", csp::multiplayer::GaussianSplatPropertyKeys::ExternalResourceAssetCollectionId)
         .value("Position", csp::multiplayer::GaussianSplatPropertyKeys::Position)
@@ -37,8 +34,7 @@ EMSCRIPTEN_BINDINGS(CSPGaussianSplatSpaceComponent)
         .property("isVisible", &csp::multiplayer::GaussianSplatSpaceComponent::GetIsVisible, &csp::multiplayer::GaussianSplatSpaceComponent::SetIsVisible)
         .property("isARVisible", &csp::multiplayer::GaussianSplatSpaceComponent::GetIsARVisible, &csp::multiplayer::GaussianSplatSpaceComponent::SetIsARVisible)
         .property("isVirtualVisible", &csp::multiplayer::GaussianSplatSpaceComponent::GetIsVirtualVisible, &csp::multiplayer::GaussianSplatSpaceComponent::SetIsVirtualVisible)
-        .property("isShadowCaster", &csp::multiplayer::GaussianSplatSpaceComponent::GetIsShadowCaster, &csp::multiplayer::GaussianSplatSpaceComponent::SetIsShadowCaster)
+        // This calls through the the underlying interface specifically because the concrete type has shadowing methods (deprecated) of the same name
+        .property("isShadowCaster", &csp::multiplayer::IShadowCasterComponent::GetIsShadowCaster, &csp::multiplayer::IShadowCasterComponent::SetIsShadowCaster)
         .property("tint", &csp::multiplayer::GaussianSplatSpaceComponent::GetTint, &csp::multiplayer::GaussianSplatSpaceComponent::SetTint);
 }
-
-#pragma clang diagnostic pop
