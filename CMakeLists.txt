@@ -22,9 +22,45 @@ add_executable(connected-spaces-platform-bindings
     src/bindings/csp/Common/Interfaces/IRealtimeEngine.cpp
     src/bindings/csp/Common/Systems/Log/LogLevels.cpp
     src/bindings/csp/Common/Systems/Log/LogSystem.cpp
+    src/bindings/csp/Multiplayer/PatchTypes.cpp
+    src/bindings/csp/Multiplayer/ComponentBase.cpp
     src/bindings/csp/Multiplayer/SpaceEntity.cpp
     src/bindings/csp/Multiplayer/SpaceTransform.cpp
+    src/bindings/csp/Multiplayer/CSPSceneDescription.cpp
+    src/bindings/csp/Multiplayer/MultiPlayerConnection.cpp
+    src/bindings/csp/Multiplayer/NetworkEventBus.cpp
+    src/bindings/csp/Multiplayer/OnlineRealtimeEngine.cpp
+    src/bindings/csp/Multiplayer/OfflineRealtimeEngine.cpp
+    src/bindings/csp/Multiplayer/Script/EntityScript.cpp
     src/bindings/csp/Multiplayer/Conversation/Conversation.cpp
+    src/bindings/csp/Multiplayer/Components/BillBoardModeEnum.cpp
+    src/bindings/csp/Multiplayer/Components/AIChatbotComponent.cpp
+    src/bindings/csp/Multiplayer/Components/AnimatedModelSpaceComponent.cpp
+    src/bindings/csp/Multiplayer/Components/AudioSpaceComponent.cpp
+    src/bindings/csp/Multiplayer/Components/AvatarSpaceComponent.cpp
+    src/bindings/csp/Multiplayer/Components/ButtonSpaceComponent.cpp
+    src/bindings/csp/Multiplayer/Components/CinematicCameraSpaceComponent.cpp
+    src/bindings/csp/Multiplayer/Components/CollisionSpaceComponent.cpp
+    src/bindings/csp/Multiplayer/Components/ConversationSpaceComponent.cpp
+    src/bindings/csp/Multiplayer/Components/CustomSpaceComponent.cpp
+    src/bindings/csp/Multiplayer/Components/ECommerceSpaceComponent.cpp
+    src/bindings/csp/Multiplayer/Components/ExternalLinkSpaceComponent.cpp
+    src/bindings/csp/Multiplayer/Components/FiducialMarkerSpaceComponent.cpp
+    src/bindings/csp/Multiplayer/Components/FogSpaceComponent.cpp
+    src/bindings/csp/Multiplayer/Components/GaussianSplatSpaceComponent.cpp
+    src/bindings/csp/Multiplayer/Components/HotspotSpaceComponent.cpp
+    src/bindings/csp/Multiplayer/Components/ImageSpaceComponent.cpp
+    src/bindings/csp/Multiplayer/Components/LightSpaceComponent.cpp
+    src/bindings/csp/Multiplayer/Components/PortalSpaceComponent.cpp
+    src/bindings/csp/Multiplayer/Components/ReflectionSpaceComponent.cpp
+    src/bindings/csp/Multiplayer/Components/ScreenSharingSpaceComponent.cpp
+    src/bindings/csp/Multiplayer/Components/ScriptSpaceComponent.cpp
+    src/bindings/csp/Multiplayer/Components/SplineSpaceComponent.cpp
+    src/bindings/csp/Multiplayer/Components/StaticModelSpaceComponent.cpp
+    src/bindings/csp/Multiplayer/Components/TextSpaceComponent.cpp
+    src/bindings/csp/Multiplayer/Components/VideoPlayerSpaceComponent.cpp
+    src/bindings/csp/Systems/SystemsManager.cpp
+    src/bindings/csp/Systems/SystemsResult.cpp
     src/bindings/csp/Systems/Assets/Asset.cpp
     src/bindings/csp/Systems/Spaces/UserRoles.cpp
     src/bindings/testtypes/BindingsTestType.cpp

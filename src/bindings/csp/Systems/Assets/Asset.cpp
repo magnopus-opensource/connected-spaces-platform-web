@@ -1,5 +1,8 @@
 // Stub binding.
 
+#include "../../../containers/String.h"
+
+#include "CSP/Common/String.h"
 #include "CSP/Systems/Assets/Asset.h"
 
 #include "emscripten/bind.h"
@@ -21,4 +24,11 @@ EMSCRIPTEN_BINDINGS(CSPAsset)
         .value("ANNOTATION", csp::systems::EAssetType::ANNOTATION)
         .value("ANNOTATION_THUMBNAIL", csp::systems::EAssetType::ANNOTATION_THUMBNAIL)
         .value("TEXT", csp::systems::EAssetType::TEXT);
+
+    emscripten::class_<csp::systems::Asset>("Asset");
+
+    emscripten::class_<csp::systems::BufferAssetDataSource>("BufferAssetDataSource")
+        .class_function(
+            "create", +[]() { return csp::systems::BufferAssetDataSource(); })
+        .property("mimeType", &csp::systems::BufferAssetDataSource::GetMimeType, &csp::systems::BufferAssetDataSource::SetMimeType);
 }

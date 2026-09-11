@@ -4,6 +4,13 @@
 
 #include "CSP/Common/Interfaces/IRealtimeEngine.h"
 #include "CSP/Common/Systems/Log/LogSystem.h"
+#include "CSP/Multiplayer/ComponentBase.h"
+#include "CSP/Multiplayer/Conversation/Conversation.h"
+#include "CSP/Multiplayer/MultiPlayerConnection.h"
+#include "CSP/Multiplayer/NetworkEventBus.h"
+#include "CSP/Multiplayer/OnlineRealtimeEngine.h"
+#include "CSP/Multiplayer/SpaceEntity.h"
+#include "CSP/Systems/SystemsResult.h"
 
 #include <functional>
 
@@ -22,3 +29,24 @@ DECLARE_CALLBACK(csp::common::LogSystem::LogCallbackHandler, LogCallback)
 /* Multiplayer */
 DECLARE_CALLBACK(csp::multiplayer::EntityCreatedCallback, EntityCreatedCallback)
 DECLARE_CALLBACK(csp::multiplayer::CallbackHandler, BooleanCallback)
+DECLARE_CALLBACK(csp::multiplayer::ComponentBase::EntityActionHandler, EntityActionHandlerCallback)
+DECLARE_CALLBACK(csp::multiplayer::SpaceEntity::UpdateCallback, SpaceEntityUpdateCallback)
+DECLARE_CALLBACK(csp::multiplayer::MultiplayerConnection::ErrorCodeCallbackHandler, ErrorCodeCallback)
+DECLARE_CALLBACK(csp::multiplayer::MultiplayerConnection::ConnectionCallbackHandler, ConnectionStatusCallback)
+DECLARE_CALLBACK(csp::multiplayer::OnlineRealtimeEngine::ScopeLeaderCallback, ScopeLeaderCallback)
+DECLARE_CALLBACK(csp::multiplayer::CustomNetworkEventCallback, CustomNetworkEventCallback)
+DECLARE_CALLBACK(csp::multiplayer::AccessControlChangedEventCallback, AccessControlChangedEventCallback)
+DECLARE_CALLBACK(csp::multiplayer::AssetDetailBlobChangedEventCallback, AssetDetailBlobChangedEventCallback)
+DECLARE_CALLBACK(csp::multiplayer::AsyncCallCompletedEventCallback, AsyncCallCompletedEventCallback)
+DECLARE_CALLBACK(csp::multiplayer::ConversationEventCallback, ConversationEventCallback)
+DECLARE_CALLBACK(csp::multiplayer::SequenceChangedEventCallback, SequenceChangedEventCallback)
+DECLARE_CALLBACK(csp::multiplayer::MessageResultCallback, MessageResultCallback)
+DECLARE_CALLBACK(csp::multiplayer::MessageCollectionResultCallback, MessageCollectionResultCallback)
+DECLARE_CALLBACK(csp::multiplayer::ConversationResultCallback, ConversationResultCallback)
+DECLARE_CALLBACK(csp::multiplayer::NumberOfRepliesResultCallback, NumberOfRepliesResultCallback)
+DECLARE_CALLBACK(csp::multiplayer::AnnotationResultCallback, AnnotationResultCallback)
+DECLARE_CALLBACK(csp::multiplayer::AnnotationThumbnailCollectionResultCallback, AnnotationThumbnailCollectionResultCallback)
+
+/* Systems */
+DECLARE_CALLBACK(csp::systems::NullResultCallback, NullResultCallback)
+DECLARE_CALLBACK(csp::systems::StringResultCallback, StringResultCallback)

@@ -7,8 +7,10 @@
 #include "CSP/Common/NetworkEventData.h"
 #include "CSP/Common/ReplicatedValue.h"
 #include "CSP/Common/String.h"
+#include "CSP/Multiplayer/Conversation/Conversation.h"
 
 #include "emscripten/bind.h"
+#include <utility>
 
 EMSCRIPTEN_BINDINGS(CSPNetworkEventData)
 {
@@ -57,10 +59,12 @@ EMSCRIPTEN_BINDINGS(CSPNetworkEventData)
         .property("assetCollectionId", &csp::common::AssetDetailBlobChangedNetworkEventData::AssetCollectionId);
 
     emscripten::class_<csp::common::ConversationNetworkEventData, emscripten::base<csp::common::NetworkEventData>>("ConversationNetworkEventData")
-        .class_function("create", +[]() { return csp::common::ConversationNetworkEventData(); });
-    //TODO: These are multiplayer objects. When multiplayer gets bound, bind these correctly (ie, if bound as classes, do get/set split with JSDisposable)
-    // .property("messageType", &csp::common::ConversationNetworkEventData::MessageType)
-    // .property("messageInfo", &csp::common::ConversationNetworkEventData::MessageInfo);
+        .class_function(
+            "create", +[]() { return csp::common::ConversationNetworkEventData(); })
+        .property("messageType", &csp::common::ConversationNetworkEventData::MessageType)
+        .function(
+            "getMessageInfo", +[](const csp::common::ConversationNetworkEventData& self) { return self.MessageInfo; })
+        .function("setMessageInfo(value)", +[](csp::common::ConversationNetworkEventData& self, csp::multiplayer::MessageInfo value) { self.MessageInfo = std::move(value); });
 
     emscripten::class_<csp::common::AccessControlChangedNetworkEventData, emscripten::base<csp::common::NetworkEventData>>("AccessControlChangedNetworkEventData")
         .class_function(

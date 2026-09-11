@@ -1,5 +1,3 @@
-// Stub binding.
-
 #include "CSP/Multiplayer/SpaceTransform.h"
 
 #include "emscripten/bind.h"

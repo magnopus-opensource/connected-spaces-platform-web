@@ -48,8 +48,10 @@ template <typename K, typename V> inline constexpr bool RequiresNoDisposal<csp::
  * It is only necessary to use this adapter for types that have custom disposal behaviour,
  * which will primarily be containers.
  */
+
 template <typename T> class JSDisposable {
 
+    // Minor footgun: This can't detect value_object declared types, and they should not be JSDisposable.
     static_assert(!RequiresNoDisposal<T>, "JSDisposable<T> is redundant for this T, as it is always represented by a JS primitive type.");
 
     // ownedType must be declared before view: member init order follows

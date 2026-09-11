@@ -800,4 +800,23 @@ describe('CSPFoundation', () => {
       nonOwning?.deleteLater();
     }).toThrow();
   });
+
+  it('JS-owned pointers can be disposed', () => {
+    const aliveCountBefore = csp.BindingsTestType.aliveCount();
+
+    {
+      using elem = csp.BindingsTestType.createOwningPointer(1, 'one');
+
+      expect(elem).not.toBeNullable();
+
+      expect(elem?.delete).toBeTypeOf('function');
+      expect(elem?.deleteLater).toBeTypeOf('function');
+      expect(elem?.[Symbol.dispose]).toBeTypeOf('function');
+
+      expect(csp.BindingsTestType.aliveCount()).toBe(aliveCountBefore + 1);
+    }
+
+    // Owned pointer is now disposed, so count decreases.
+    expect(csp.BindingsTestType.aliveCount()).toBe(aliveCountBefore);
+  });
 });
