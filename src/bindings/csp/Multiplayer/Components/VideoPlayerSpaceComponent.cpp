@@ -15,11 +15,6 @@ EMSCRIPTEN_BINDINGS(CSPVideoPlayerSpaceComponent)
         .value("Play", csp::multiplayer::VideoPlayerPlaybackState::Play)
         .value("Num", csp::multiplayer::VideoPlayerPlaybackState::Num);
 
-    emscripten::enum_<csp::multiplayer::VideoPlayerActions>("VideoPlayerActions", emscripten::enum_value_type::number)
-        .value("VideoBegin", csp::multiplayer::VideoPlayerActions::VideoBegin)
-        .value("VideoEnd", csp::multiplayer::VideoPlayerActions::VideoEnd)
-        .value("Num", csp::multiplayer::VideoPlayerActions::Num);
-
     emscripten::enum_<csp::multiplayer::VideoPlayerSourceType>("VideoPlayerSourceType", emscripten::enum_value_type::number)
         .value("URLSource", csp::multiplayer::VideoPlayerSourceType::URLSource)
         .value("AssetSource", csp::multiplayer::VideoPlayerSourceType::AssetSource)

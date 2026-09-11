@@ -15,12 +15,6 @@
 
 EMSCRIPTEN_BINDINGS(CSPAnimatedModelSpaceComponent)
 {
-    emscripten::enum_<csp::multiplayer::AnimatedModelActions>("AnimatedModelActions", emscripten::enum_value_type::number)
-        .value("Play", csp::multiplayer::AnimatedModelActions::Play)
-        .value("Pause", csp::multiplayer::AnimatedModelActions::Pause)
-        .value("Restart", csp::multiplayer::AnimatedModelActions::Restart)
-        .value("Num", csp::multiplayer::AnimatedModelActions::Num);
-
     emscripten::enum_<csp::multiplayer::AnimatedModelPropertyKeys>("AnimatedModelPropertyKeys", emscripten::enum_value_type::number)
         .value("ExternalResourceAssetId", csp::multiplayer::AnimatedModelPropertyKeys::ExternalResourceAssetId)
         .value("ExternalResourceAssetCollectionId", csp::multiplayer::AnimatedModelPropertyKeys::ExternalResourceAssetCollectionId)

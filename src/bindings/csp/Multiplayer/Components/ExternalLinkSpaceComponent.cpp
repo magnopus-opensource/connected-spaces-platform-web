@@ -8,10 +8,6 @@
 
 EMSCRIPTEN_BINDINGS(CSPExternalLinkSpaceComponent)
 {
-    emscripten::enum_<csp::multiplayer::ExternalLinkActions>("ExternalLinkActions", emscripten::enum_value_type::number)
-        .value("LinkClicked", csp::multiplayer::ExternalLinkActions::LinkClicked)
-        .value("Num", csp::multiplayer::ExternalLinkActions::Num);
-
     emscripten::enum_<csp::multiplayer::ExternalLinkPropertyKeys>("ExternalLinkPropertyKeys", emscripten::enum_value_type::number)
         .value("LinkUrl", csp::multiplayer::ExternalLinkPropertyKeys::LinkUrl)
         .value("Position", csp::multiplayer::ExternalLinkPropertyKeys::Position)
