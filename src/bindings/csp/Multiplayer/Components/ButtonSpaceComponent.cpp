@@ -9,7 +9,6 @@
 EMSCRIPTEN_BINDINGS(CSPButtonSpaceComponent)
 {
     emscripten::enum_<csp::multiplayer::ButtonPropertyKeys>("ButtonPropertyKeys", emscripten::enum_value_type::number)
-        .value("Name_DEPRECATED", csp::multiplayer::ButtonPropertyKeys::Name_DEPRECATED)
         .value("LabelText", csp::multiplayer::ButtonPropertyKeys::LabelText)
         .value("IconAssetId", csp::multiplayer::ButtonPropertyKeys::IconAssetId)
         .value("AssetCollectionId", csp::multiplayer::ButtonPropertyKeys::AssetCollectionId)

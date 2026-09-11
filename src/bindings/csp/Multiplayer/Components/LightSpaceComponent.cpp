@@ -26,7 +26,6 @@ EMSCRIPTEN_BINDINGS(CSPLightSpaceComponent)
         .value("NoCookie", csp::multiplayer::LightCookieType::NoCookie);
 
     emscripten::enum_<csp::multiplayer::LightPropertyKeys>("LightPropertyKeys", emscripten::enum_value_type::number)
-        .value("Name_DEPRECATED", csp::multiplayer::LightPropertyKeys::Name_DEPRECATED)
         .value("LightType", csp::multiplayer::LightPropertyKeys::LightType)
         .value("Color", csp::multiplayer::LightPropertyKeys::Color)
         .value("Intensity", csp::multiplayer::LightPropertyKeys::Intensity)

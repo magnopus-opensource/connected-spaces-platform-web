@@ -17,7 +17,6 @@ EMSCRIPTEN_BINDINGS(CSPGaussianSplatSpaceComponent)
         .value("Scale", csp::multiplayer::GaussianSplatPropertyKeys::Scale)
         .value("IsVisible", csp::multiplayer::GaussianSplatPropertyKeys::IsVisible)
         .value("IsARVisible", csp::multiplayer::GaussianSplatPropertyKeys::IsARVisible)
-        .value("IsShadowCaster_DEPRECATED", csp::multiplayer::GaussianSplatPropertyKeys::IsShadowCaster_DEPRECATED)
         .value("Tint", csp::multiplayer::GaussianSplatPropertyKeys::Tint)
         .value("IsVirtualVisible", csp::multiplayer::GaussianSplatPropertyKeys::IsVirtualVisible)
         .value("Num", csp::multiplayer::GaussianSplatPropertyKeys::Num);

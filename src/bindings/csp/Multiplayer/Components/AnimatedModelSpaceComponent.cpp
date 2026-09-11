@@ -9,6 +9,7 @@
 #include "emscripten/bind.h"
 #include <cstdint>
 
+// We disagree with the deprecation of one of the properties here (SetExternalResourceAssetId)
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 
@@ -29,7 +30,6 @@ EMSCRIPTEN_BINDINGS(CSPAnimatedModelSpaceComponent)
         .value("IsLoopPlayback", csp::multiplayer::AnimatedModelPropertyKeys::IsLoopPlayback)
         .value("IsPlaying", csp::multiplayer::AnimatedModelPropertyKeys::IsPlaying)
         .value("IsVisible", csp::multiplayer::AnimatedModelPropertyKeys::IsVisible)
-        .value("RESERVED", csp::multiplayer::AnimatedModelPropertyKeys::RESERVED)
         .value("AnimationIndex", csp::multiplayer::AnimatedModelPropertyKeys::AnimationIndex)
         .value("IsARVisible", csp::multiplayer::AnimatedModelPropertyKeys::IsARVisible)
         .value("ThirdPartyComponentRef", csp::multiplayer::AnimatedModelPropertyKeys::ThirdPartyComponentRef)

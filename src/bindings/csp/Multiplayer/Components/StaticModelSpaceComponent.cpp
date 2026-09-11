@@ -8,6 +8,7 @@
 
 #include "emscripten/bind.h"
 
+// We disagree with the deprecation of one of the properties here (SetExternalResourceAssetId)
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 
