@@ -64,7 +64,7 @@ EMSCRIPTEN_BINDINGS(CSPSpaceEntity)
             "getChildEntities",
             +[](const csp::multiplayer::SpaceEntity& self) {
                 const csp::common::List<csp::multiplayer::SpaceEntity*>* childEntities = self.GetChildEntities();
-                return childEntities != nullptr ? *childEntities : csp::common::List<csp::multiplayer::SpaceEntity*> { };
+                return childEntities != nullptr ? *childEntities : csp::common::List<csp::multiplayer::SpaceEntity*> {};
             })
         .function(
             "createChildEntity(name, spaceTransform)",
@@ -90,7 +90,7 @@ EMSCRIPTEN_BINDINGS(CSPSpaceEntity)
             "getComponents",
             +[](const csp::multiplayer::SpaceEntity& self) {
                 const csp::common::Map<uint16_t, csp::multiplayer::ComponentBase*>* components = self.GetComponents();
-                return components != nullptr ? *components : csp::common::Map<uint16_t, csp::multiplayer::ComponentBase*> { };
+                return components != nullptr ? *components : csp::common::Map<uint16_t, csp::multiplayer::ComponentBase*> {};
             })
         .function(
             "getComponent(key)", +[](csp::multiplayer::SpaceEntity& self, uint16_t key) { return bindings::utils::NonOwningVal<ComponentBasePointer>(self.GetComponent(key)); })

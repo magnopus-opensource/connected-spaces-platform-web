@@ -64,7 +64,8 @@ EMSCRIPTEN_BINDINGS(CSPNetworkEventData)
         .property("messageType", &csp::common::ConversationNetworkEventData::MessageType)
         .function(
             "getMessageInfo", +[](const csp::common::ConversationNetworkEventData& self) { return self.MessageInfo; })
-        .function("setMessageInfo(value)", +[](csp::common::ConversationNetworkEventData& self, csp::multiplayer::MessageInfo value) { self.MessageInfo = std::move(value); });
+        .function(
+            "setMessageInfo(value)", +[](csp::common::ConversationNetworkEventData& self, csp::multiplayer::MessageInfo value) { self.MessageInfo = std::move(value); });
 
     emscripten::class_<csp::common::AccessControlChangedNetworkEventData, emscripten::base<csp::common::NetworkEventData>>("AccessControlChangedNetworkEventData")
         .class_function(

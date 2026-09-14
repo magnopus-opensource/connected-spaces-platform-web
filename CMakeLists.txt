@@ -59,10 +59,56 @@ add_executable(connected-spaces-platform-bindings
     src/bindings/csp/Multiplayer/Components/StaticModelSpaceComponent.cpp
     src/bindings/csp/Multiplayer/Components/TextSpaceComponent.cpp
     src/bindings/csp/Multiplayer/Components/VideoPlayerSpaceComponent.cpp
+    src/bindings/csp/Systems/SystemBase.cpp
     src/bindings/csp/Systems/SystemsManager.cpp
     src/bindings/csp/Systems/SystemsResult.cpp
+    src/bindings/csp/Systems/ServiceStatus.cpp
+    src/bindings/csp/Systems/CSPSceneData.cpp
     src/bindings/csp/Systems/Assets/Asset.cpp
+    src/bindings/csp/Systems/Assets/AssetCollection.cpp
+    src/bindings/csp/Systems/Assets/TextureInfo.cpp
+    src/bindings/csp/Systems/Assets/Material.cpp
+    src/bindings/csp/Systems/Assets/GLTFMaterial.cpp
+    src/bindings/csp/Systems/Assets/AlphaVideoMaterial.cpp
+    src/bindings/csp/Systems/Assets/LOD.cpp
+    src/bindings/csp/Systems/Assets/AssetSystem.cpp
+    src/bindings/csp/Systems/Analytics/AnalyticsSystem.cpp
+    src/bindings/csp/Systems/ECommerce/ECommerce.cpp
+    src/bindings/csp/Systems/ECommerce/ECommerceSystem.cpp
+    src/bindings/csp/Systems/EventTicketing/EventTicketing.cpp
+    src/bindings/csp/Systems/EventTicketing/EventTicketingSystem.cpp
+    src/bindings/csp/Systems/ExternalServices/ExternalServiceProxySystem.cpp
+    src/bindings/csp/Systems/GraphQL/GraphQL.cpp
+    src/bindings/csp/Systems/GraphQL/GraphQLSystem.cpp
+    src/bindings/csp/Systems/HotspotSequence/HotspotGroup.cpp
+    src/bindings/csp/Systems/HotspotSequence/HotspotSequenceSystem.cpp
+    src/bindings/csp/Systems/Maintenance/Maintenance.cpp
+    src/bindings/csp/Systems/Maintenance/MaintenanceSystem.cpp
+    src/bindings/csp/Systems/Multiplayer/Scope.cpp
+    src/bindings/csp/Systems/Multiplayer/ScopeLeader.cpp
+    src/bindings/csp/Systems/Quota/Quota.cpp
+    src/bindings/csp/Systems/Quota/QuotaSystem.cpp
+    src/bindings/csp/Systems/Script/ScriptSystem.cpp
+    src/bindings/csp/Systems/Sequence/Sequence.cpp
+    src/bindings/csp/Systems/Sequence/SequenceSystem.cpp
+    src/bindings/csp/Systems/Settings/ApplicationSettings.cpp
+    src/bindings/csp/Systems/Settings/ApplicationSettingsSystem.cpp
+    src/bindings/csp/Systems/Settings/SettingsCollection.cpp
+    src/bindings/csp/Systems/Settings/SettingsSystem.cpp
+    src/bindings/csp/Systems/Spaces/Space.cpp
+    src/bindings/csp/Systems/Spaces/SpaceSystem.cpp
+    src/bindings/csp/Systems/Spaces/Site.cpp
     src/bindings/csp/Systems/Spaces/UserRoles.cpp
+    src/bindings/csp/Systems/Spatial/SpatialDataTypes.cpp
+    src/bindings/csp/Systems/Spatial/Anchor.cpp
+    src/bindings/csp/Systems/Spatial/AnchorSystem.cpp
+    src/bindings/csp/Systems/Spatial/PointOfInterest.cpp
+    src/bindings/csp/Systems/Spatial/PointOfInterestSystem.cpp
+    src/bindings/csp/Systems/Users/Profile.cpp
+    src/bindings/csp/Systems/Users/Authentication.cpp
+    src/bindings/csp/Systems/Users/ThirdPartyAuthentication.cpp
+    src/bindings/csp/Systems/Users/UserSystem.cpp
+    src/bindings/csp/Systems/Voip/VoipSystem.cpp
     src/bindings/testtypes/BindingsTestType.cpp
     src/bindings/testtypes/TestContainerBindings.cpp
     src/bindings/testtypes/TestCallbackBindings.cpp

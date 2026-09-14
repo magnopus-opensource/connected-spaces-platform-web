@@ -4,8 +4,8 @@
 #include "../../../containers/String.h"
 #include "../../../utils/Handles.h"
 #include "../../CallbackDeclarations.h"
-#include "../../PromiseDeclarations.h"
 #include "../../PointerDeclarations.h"
+#include "../../PromiseDeclarations.h"
 
 #include "CSP/Common/Interfaces/IRealtimeEngine.h"
 #include "CSP/Common/List.h"

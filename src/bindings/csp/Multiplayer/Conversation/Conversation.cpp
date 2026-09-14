@@ -79,7 +79,8 @@ EMSCRIPTEN_BINDINGS(CSPConversation)
         .property("authorCameraRotation", &csp::multiplayer::AnnotationData::AuthorCameraRotation);
 
     emscripten::class_<csp::multiplayer::MessageResult, emscripten::base<csp::systems::ResultBase>>("MessageResult")
-        .function("getMessageInfo", +[](const csp::multiplayer::MessageResult& self) { return self.GetMessageInfo(); });
+        .function(
+            "getMessageInfo", +[](const csp::multiplayer::MessageResult& self) { return self.GetMessageInfo(); });
 
     emscripten::class_<csp::multiplayer::MessageCollectionResult, emscripten::base<csp::systems::ResultBase>>("MessageCollectionResult")
         .property("totalCount", &csp::multiplayer::MessageCollectionResult::GetTotalCount)
@@ -89,7 +90,8 @@ EMSCRIPTEN_BINDINGS(CSPConversation)
             });
 
     emscripten::class_<csp::multiplayer::ConversationResult, emscripten::base<csp::systems::ResultBase>>("ConversationResult")
-        .function("getConversationInfo", +[](const csp::multiplayer::ConversationResult& self) { return self.GetConversationInfo(); });
+        .function(
+            "getConversationInfo", +[](const csp::multiplayer::ConversationResult& self) { return self.GetConversationInfo(); });
 
     emscripten::class_<csp::multiplayer::NumberOfRepliesResult, emscripten::base<csp::systems::ResultBase>>("NumberOfRepliesResult")
         .property("count", &csp::multiplayer::NumberOfRepliesResult::GetCount);
@@ -99,7 +101,8 @@ EMSCRIPTEN_BINDINGS(CSPConversation)
             "getAnnotationData", +[](const csp::multiplayer::AnnotationResult& self) { return self.GetAnnotationData(); })
         .function(
             "getAnnotationAsset", +[](const csp::multiplayer::AnnotationResult& self) { return self.GetAnnotationAsset(); })
-        .function("getAnnotationThumbnailAsset", +[](const csp::multiplayer::AnnotationResult& self) { return self.GetAnnotationThumbnailAsset(); });
+        .function(
+            "getAnnotationThumbnailAsset", +[](const csp::multiplayer::AnnotationResult& self) { return self.GetAnnotationThumbnailAsset(); });
 
     emscripten::class_<csp::multiplayer::AnnotationThumbnailCollectionResult, emscripten::base<csp::systems::ResultBase>>("AnnotationThumbnailCollectionResult")
         .property("totalCount", &csp::multiplayer::AnnotationThumbnailCollectionResult::GetTotalCount)

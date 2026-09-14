@@ -64,7 +64,7 @@ EMSCRIPTEN_BINDINGS(CSPComponentBase)
             +[](const csp::multiplayer::ComponentBase& self, uint16_t key) -> csp::common::ReplicatedValue {
                 const auto* prop = self.GetProperty(key);
                 // Honestly paranoid, the CSP implementation as written today does guard against this anyway. The return value has no need to be a pointer ... it's odd.
-                return prop == nullptr ? csp::common::ReplicatedValue { } : *prop;
+                return prop == nullptr ? csp::common::ReplicatedValue {} : *prop;
             })
         .function("setProperty(key, value)", &csp::multiplayer::ComponentBase::SetProperty)
         .function(
