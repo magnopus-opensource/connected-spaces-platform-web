@@ -6,6 +6,7 @@
 #include "../containers/String.h"
 #include "../utils/JSDisposable.h"
 
+#include "CSP/CSPFoundation.h"
 #include "CSP/Common/Array.h"
 #include "CSP/Common/List.h"
 #include "CSP/Common/Map.h"
@@ -53,6 +54,15 @@
 
 EMSCRIPTEN_BINDINGS(CSPContainerDeclarations)
 {
+
+    /* CspFoundation */
+
+    // Array
+    emscripten::register_type<csp::common::Array<csp::FeatureFlag>>("FeatureFlag[]");
+    emscripten::register_type<bindings::utils::JSDisposable<csp::common::Array<csp::FeatureFlag>>>("(FeatureFlag[] & Disposable)");
+
+    // Optional
+    emscripten::register_optional<csp::common::Array<csp::FeatureFlag>>();
 
     /* Common */
 

@@ -6,6 +6,8 @@ project(ConnectedSpacesPlatformWeb VERSION 1.0
 
 add_executable(connected-spaces-platform-bindings
     Bindings.cpp
+    src/bindings/csp/AssetHash.cpp
+    src/bindings/csp/CSPFoundation.cpp
     src/bindings/csp/ContainerDeclarations.cpp
     src/bindings/csp/CallbackDeclarations.cpp
     src/bindings/csp/PromiseDeclarations.cpp
