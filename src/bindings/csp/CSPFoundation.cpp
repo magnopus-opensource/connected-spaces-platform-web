@@ -41,35 +41,18 @@ EMSCRIPTEN_BINDINGS(CSPFoundation)
         .function(
             "getUserService", +[](const csp::EndpointURIs& self) { return self.UserService; })
         .function(
-            "setUserService(value)", +[](csp::EndpointURIs& self, csp::ServiceDefinition value) { self.UserService = std::move(value); })
-        .function(
             "getPrototypeService", +[](const csp::EndpointURIs& self) { return self.PrototypeService; })
-        .function(
-            "setPrototypeService(value)", +[](csp::EndpointURIs& self, csp::ServiceDefinition value) { self.PrototypeService = std::move(value); })
         .function(
             "getSpatialDataService", +[](const csp::EndpointURIs& self) { return self.SpatialDataService; })
         .function(
-            "setSpatialDataService(value)", +[](csp::EndpointURIs& self, csp::ServiceDefinition value) { self.SpatialDataService = std::move(value); })
-        .function(
             "getMultiplayerService", +[](const csp::EndpointURIs& self) { return self.MultiplayerService; })
-        .function(
-            "setMultiplayerService(value)", +[](csp::EndpointURIs& self, csp::ServiceDefinition value) { self.MultiplayerService = std::move(value); })
         .function(
             "getAggregationService", +[](const csp::EndpointURIs& self) { return self.AggregationService; })
         .function(
-            "setAggregationService(value)", +[](csp::EndpointURIs& self, csp::ServiceDefinition value) { self.AggregationService = std::move(value); })
-        .function(
             "getTrackingService", +[](const csp::EndpointURIs& self) { return self.TrackingService; })
         .function(
-            "setTrackingService(value)", +[](csp::EndpointURIs& self, csp::ServiceDefinition value) { self.TrackingService = std::move(value); })
-        .function(
             "getMaintenanceWindow", +[](const csp::EndpointURIs& self) { return self.MaintenanceWindow; })
-        .function(
-            "setMaintenanceWindow(value)", +[](csp::EndpointURIs& self, csp::ServiceDefinition value) { self.MaintenanceWindow = std::move(value); })
-        .function(
-            "getMultiplayerConnection", +[](const csp::EndpointURIs& self) { return self.MultiplayerConnection; })
-        .function(
-            "setMultiplayerConnection(value)", +[](csp::EndpointURIs& self, csp::ServiceDefinition value) { self.MultiplayerConnection = std::move(value); });
+        .function("getMultiplayerConnection", +[](const csp::EndpointURIs& self) { return self.MultiplayerConnection; });
 
     emscripten::class_<csp::ClientUserAgent>("ClientUserAgent")
         .class_function(
