@@ -9,7 +9,7 @@ emscripten::class_<Person>("Person")
     .class_function("create(name, age)", +[](std::string name, int age)
     //                      ^^^^  ^^^
     {
-      return Person(value, std::move(name, age));
+      return Person(std::move(name), age);
     })
     .function("setAge(age)", &Person::SetAge)
     //                ^^^

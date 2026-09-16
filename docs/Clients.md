@@ -5,7 +5,7 @@ The contents may be moved into the main README or elsewhere at some point in the
 
 ## Explicit Resource Management
 
-The CSP web bindings API makes extensive use of the [Explict Resource Management](https://github.com/tc39/proposal-explicit-resource-management) proposal for JavaScript, which at the time of writing has been recommended for implemention but has not yet been incorporated into ECMAScript standard. This includes the `using` keyword, the `dispose` symbol as well as the `Disposable` interface for TypeScript.
+The CSP web bindings API makes extensive use of the [Explicit Resource Management](https://github.com/tc39/proposal-explicit-resource-management) proposal for JavaScript, which at the time of writing has been recommended for implementation but has not yet been incorporated into ECMAScript standard. This includes the `using` keyword, the `dispose` symbol as well as the `Disposable` interface for TypeScript.
 
 As a result, the features of the proposal are not yet available in all browsers, in particular Safari - see [Can I use](https://caniuse.com/wf-explicit-resource-management) for an updated guide to browser support.
 
