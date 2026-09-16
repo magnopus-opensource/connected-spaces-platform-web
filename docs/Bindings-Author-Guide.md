@@ -95,6 +95,20 @@ emscripten::class_<CspClass>("CspClass")
     ...
 ```
 
+### Handling Private Destructors
+
+Some CSP classes have private destructors meaning that they are not intended to be user-instantiated or destroyed, which results in a compilation error in `emscripten::class_` when binding them. This is notably the case for the CSP `System` classes and the `SystemsManager`.
+
+To bind these classes, we define a no-op specialisation of `emscripten::internal::raw_destructor` for each of them:
+
+```cpp
+namespace emscripten::internal {
+template <> void raw_destructor<csp::systems::AssetSystem>(csp::systems::AssetSystem*) { }
+}
+```
+
+Defining this no-op specialisation is necessary because `emscripten::class_` instantiates a `raw_destructor` for the bound class in question, with the default implementation calling the class destructor.
+
 ### Value Objects
 
 Some classes may be bound as _value objects_. In JavaScript, users of these types do not need to worry about memory lifetime management.
