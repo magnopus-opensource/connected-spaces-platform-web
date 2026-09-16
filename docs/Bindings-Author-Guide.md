@@ -190,6 +190,31 @@ emscripten::class_<CspClass>("CspClass")
     ...
 ```
 
+Callback-based CSP functions using `ResultBase` as the callback argument can report progress of the operation to the caller. To support this, an optional progress callback function can be supplied to `Promisify` when binding the CSP function:
+
+```cpp
+emscripten::class_<CspClass>("CspClass")
+    ...
+    .function("asyncFunctionUsingResultBaseType", +[](CspClass& self, ProgressCallback progressCallback)
+    {
+        return Promisify<PromiseOfResultBaseType>(
+            [&](emscripten::val cb) { self.CallbackFunction(ToNativeCallback(cb.as<CallbackJsType>())); },
+            progressCallback
+        );
+    })
+    ...
+```
+
+`ProgressCallback` is an Emscripten val type declared in [CallbackDeclarations.h](..\src\bindings\csp\CallbackDeclarations.h) with the following TypeScript signature:
+
+```ts
+(requestProgress: number, responseProgress: number) => void
+```
+
+> [!NOTE]
+>
+> Due to the implementation of `promisify`, the progress callback function is only used in JavaScript and does not ever get called from C++ in the bindings machinery. Therefore it should not be used with `ToNativeCallback`.
+
 ## Pointers
 
 When pointers to a specific type appear in the bindings as either a function argument or return value, the pointer type must be registered.
