@@ -27,8 +27,4 @@ EMSCRIPTEN_BINDINGS(CSPThirdPartyAuthentication)
         .property("providerAuthUrl", &csp::systems::ThirdPartyProviderDetails::ProviderAuthURL)
         .property("thirdPartyAuthStateId", &csp::systems::ThirdPartyProviderDetails::ThirdPartyAuthStateId)
         .property("providerRedirectUrl", &csp::systems::ThirdPartyProviderDetails::ProviderRedirectURL);
-
-    emscripten::class_<csp::systems::ProviderDetailsResult, emscripten::base<csp::systems::ResultBase>>("ProviderDetailsResult")
-        .function(
-            "getDetails", +[](const csp::systems::ProviderDetailsResult& self) { return self.GetDetails(); });
 }

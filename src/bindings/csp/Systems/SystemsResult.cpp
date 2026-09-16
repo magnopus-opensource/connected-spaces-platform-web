@@ -22,7 +22,4 @@ EMSCRIPTEN_BINDINGS(CSPSystemsResult)
         .property("value", &csp::systems::StringArrayResult::GetValue);
 
     emscripten::class_<csp::systems::UInt64Result, emscripten::base<csp::systems::ResultBase>>("UInt64Result").property("value", &csp::systems::UInt64Result::GetValue);
-
-    emscripten::class_<csp::systems::HTTPHeadersResult, emscripten::base<csp::systems::ResultBase>>("HTTPHeadersResult")
-        .property("value", &csp::systems::HTTPHeadersResult::GetValue);
 }

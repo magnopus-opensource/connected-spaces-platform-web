@@ -15,8 +15,4 @@ EMSCRIPTEN_BINDINGS(CSPScopeLeader)
         .property("scopeLeaderUserId", &csp::systems::ScopeLeader::ScopeLeaderUserId)
         .property("scopeClientId", &csp::systems::ScopeLeader::ScopeClientId)
         .property("electionInProgress", &csp::systems::ScopeLeader::ElectionInProgress);
-
-    emscripten::class_<csp::systems::ScopeLeaderResult, emscripten::base<csp::systems::ResultBase>>("ScopeLeaderResult")
-        .function(
-            "getScopeLeader", +[](const csp::systems::ScopeLeaderResult& self) { return self.GetScopeLeader(); });
 }

@@ -42,8 +42,7 @@ EMSCRIPTEN_BINDINGS(CSPAssetCollection)
         .function("equals(other)", &csp::systems::AssetCollection::operator==);
 
     emscripten::class_<csp::systems::AssetCollectionResult, emscripten::base<csp::systems::ResultBase>>("AssetCollectionResult")
-        .function(
-            "getAssetCollection", +[](const csp::systems::AssetCollectionResult& self) { return self.GetAssetCollection(); });
+        .function("getAssetCollection", +[](const csp::systems::AssetCollectionResult& self) { return self.GetAssetCollection(); });
 
     emscripten::class_<csp::systems::AssetCollectionsResult, emscripten::base<csp::systems::ResultBase>>("AssetCollectionsResult")
         .property("totalCount", &csp::systems::AssetCollectionsResult::GetTotalCount)
@@ -54,6 +53,4 @@ EMSCRIPTEN_BINDINGS(CSPAssetCollection)
 
     emscripten::class_<csp::systems::AssetCollectionCountResult, emscripten::base<csp::systems::ResultBase>>("AssetCollectionCountResult")
         .property("count", &csp::systems::AssetCollectionCountResult::GetCount);
-
-    emscripten::class_<csp::systems::AssetCollectionsCopyResult, emscripten::base<csp::systems::AssetCollectionsResult>>("AssetCollectionsCopyResult");
 }

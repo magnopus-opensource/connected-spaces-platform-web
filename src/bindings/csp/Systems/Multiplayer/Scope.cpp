@@ -26,12 +26,4 @@ EMSCRIPTEN_BINDINGS(CSPScope)
         .property("solveRadius", &csp::systems::Scope::SolveRadius)
         .property("managedLeaderElection", &csp::systems::Scope::ManagedLeaderElection)
         .function("equals(other)", &csp::systems::Scope::operator==);
-
-    emscripten::class_<csp::systems::ScopeResult, emscripten::base<csp::systems::ResultBase>>("ScopeResult")
-        .function(
-            "getScope", +[](const csp::systems::ScopeResult& self) { return self.GetScope(); });
-
-    emscripten::class_<csp::systems::ScopesResult, emscripten::base<csp::systems::ResultBase>>("ScopesResult")
-        .function(
-            "getScopes", +[](const csp::systems::ScopesResult& self) { return bindings::utils::JSDisposable<csp::common::Array<csp::systems::Scope>> { self.GetScopes() }; });
 }

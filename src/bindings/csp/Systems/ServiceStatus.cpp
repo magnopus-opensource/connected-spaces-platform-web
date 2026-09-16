@@ -42,8 +42,4 @@ EMSCRIPTEN_BINDINGS(CSPServiceStatus)
         .function(
             "setServices(value)", +[](csp::systems::ServicesDeploymentStatus& self, csp::common::Array<csp::systems::ServiceStatus> value) { self.Services = std::move(value); })
         .function("equals(other)", &csp::systems::ServicesDeploymentStatus::operator==);
-
-    emscripten::class_<csp::systems::ServicesDeploymentStatusResult, emscripten::base<csp::systems::ResultBase>>("ServicesDeploymentStatusResult")
-        .function(
-            "getLatestServicesDeploymentStatus", +[](const csp::systems::ServicesDeploymentStatusResult& self) { return self.GetLatestServicesDeploymentStatus(); });
 }

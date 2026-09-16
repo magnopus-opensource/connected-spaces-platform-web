@@ -67,8 +67,7 @@ EMSCRIPTEN_BINDINGS(CSPAnchor)
         .function("equals(other)", &csp::systems::AnchorResolution::operator==);
 
     emscripten::class_<csp::systems::AnchorResult, emscripten::base<csp::systems::ResultBase>>("AnchorResult")
-        .function(
-            "getAnchor", +[](const csp::systems::AnchorResult& self) { return self.GetAnchor(); });
+        .function("getAnchor", +[](const csp::systems::AnchorResult& self) { return self.GetAnchor(); });
 
     emscripten::class_<csp::systems::AnchorCollectionResult, emscripten::base<csp::systems::ResultBase>>("AnchorCollectionResult")
         .function(
@@ -76,12 +75,5 @@ EMSCRIPTEN_BINDINGS(CSPAnchor)
             +[](const csp::systems::AnchorCollectionResult& self) { return bindings::utils::JSDisposable<csp::common::Array<csp::systems::Anchor>> { self.GetAnchors() }; });
 
     emscripten::class_<csp::systems::AnchorResolutionResult, emscripten::base<csp::systems::ResultBase>>("AnchorResolutionResult")
-        .function(
-            "getAnchorResolution", +[](const csp::systems::AnchorResolutionResult& self) { return self.GetAnchorResolution(); });
-
-    emscripten::class_<csp::systems::AnchorResolutionCollectionResult, emscripten::base<csp::systems::ResultBase>>("AnchorResolutionCollectionResult")
-        .function(
-            "getAnchorResolutions", +[](const csp::systems::AnchorResolutionCollectionResult& self) {
-                return bindings::utils::JSDisposable<csp::common::Array<csp::systems::AnchorResolution>> { self.GetAnchorResolutions() };
-            });
+        .function("getAnchorResolution", +[](const csp::systems::AnchorResolutionResult& self) { return self.GetAnchorResolution(); });
 }
