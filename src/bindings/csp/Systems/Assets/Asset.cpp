@@ -1,4 +1,5 @@
 #include "../../../containers/Array.h"
+#include "../../../containers/NativeBuffer.h"
 #include "../../../containers/String.h"
 #include "../../../utils/JSDisposable.h"
 
@@ -10,9 +11,6 @@
 
 #include "emscripten/bind.h"
 #include "emscripten/val.h"
-#include <cstddef>
-
-EMSCRIPTEN_DECLARE_VAL_TYPE(AssetDataBuffer);
 
 namespace emscripten::internal {
 template <> void raw_destructor<csp::systems::AssetDataSource>(csp::systems::AssetDataSource*) { }
@@ -20,8 +18,6 @@ template <> void raw_destructor<csp::systems::AssetDataSource>(csp::systems::Ass
 
 EMSCRIPTEN_BINDINGS(CSPAsset)
 {
-    emscripten::register_type<AssetDataBuffer>("Uint8Array");
-
     emscripten::enum_<csp::systems::EAssetType>("EAssetType", emscripten::enum_value_type::number)
         .value("IMAGE", csp::systems::EAssetType::IMAGE)
         .value("THUMBNAIL", csp::systems::EAssetType::THUMBNAIL)
@@ -75,7 +71,18 @@ EMSCRIPTEN_BINDINGS(CSPAsset)
 
     emscripten::class_<csp::systems::BufferAssetDataSource, emscripten::base<csp::systems::AssetDataSource>>("BufferAssetDataSource")
         .class_function(
-            "create", +[]() { return csp::systems::BufferAssetDataSource(); });
+            "create", +[]() { return csp::systems::BufferAssetDataSource(); })
+        .property(
+            "bufferLength", +[](const csp::systems::BufferAssetDataSource& self) { return self.BufferLength; })
+        .function(
+            "setBuffer(buffer)",
+            +[](csp::systems::BufferAssetDataSource& self, const bindings::containers::NativeBuffer& buffer) {
+                self.Buffer = buffer.GetData();
+                self.BufferLength = buffer.GetLength();
+            })
+        .function(
+            "getBufferView",
+            +[](const csp::systems::BufferAssetDataSource& self) { return bindings::containers::MakeByteArrayView(static_cast<std::uint8_t*>(self.Buffer), self.BufferLength); });
 
     emscripten::class_<csp::systems::AssetResult, emscripten::base<csp::systems::ResultBase>>("AssetResult")
         .function(
@@ -91,14 +98,12 @@ EMSCRIPTEN_BINDINGS(CSPAsset)
     emscripten::class_<csp::systems::AssetDataResult, emscripten::base<csp::systems::ResultBase>>("AssetDataResult")
         .property("dataLength", &csp::systems::AssetDataResult::GetDataLength)
         .function(
-            "getData", +[](const csp::systems::AssetDataResult& self) {
-                const std::size_t length = self.GetDataLength();
-                unsigned char* data = const_cast<unsigned char*>(static_cast<const unsigned char*>(self.GetData()));
-
-                if (data == nullptr || length == 0) {
-                    return AssetDataBuffer { emscripten::val::global("Uint8Array").new_(emscripten::val(0)) };
-                }
-
-                return AssetDataBuffer { emscripten::val::global("Uint8Array").new_(emscripten::typed_memory_view(length, data)) };
+            "getData",
+            +[](const csp::systems::AssetDataResult& self) {
+                return bindings::containers::MakeByteArrayCopy(static_cast<const std::uint8_t*>(self.GetData()), self.GetDataLength());
+            })
+        .function(
+            "getDataView", +[](const csp::systems::AssetDataResult& self) {
+                return bindings::containers::MakeByteArrayView(static_cast<const std::uint8_t*>(self.GetData()), self.GetDataLength());
             });
 }
