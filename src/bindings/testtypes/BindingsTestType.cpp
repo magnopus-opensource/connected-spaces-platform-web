@@ -119,7 +119,8 @@ EMSCRIPTEN_BINDINGS(CSPTestTypeBindings)
         .class_function(
             "create(value, name)", +[](int value, std::string name) { return BindingsTestType(value, std::move(name)); })
         .class_function(
-            "createOwningPointer(value, name)", +[](int value, std::string name) { return new BindingsTestType(value, std::move(name)); }, emscripten::allow_raw_pointers())
+            "createOwningPointer(value, name)", +[](int value, std::string name) { return new BindingsTestType(value, std::move(name)); }, emscripten::allow_raw_pointers(),
+            emscripten::nonnull<emscripten::ret_val>())
         .property("value", &BindingsTestType::GetValue, &BindingsTestType::SetValue)
         .property("name", &BindingsTestType::GetName, &BindingsTestType::SetName)
         .function("equals(other)", &BindingsTestType::operator==)
