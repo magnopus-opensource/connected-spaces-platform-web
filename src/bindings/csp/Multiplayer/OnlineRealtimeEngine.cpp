@@ -24,14 +24,14 @@ EMSCRIPTEN_BINDINGS(CSPOnlineRealtimeEngine)
                  csp::common::IJSScriptRunner& remoteScriptRunner) {
                 return new csp::multiplayer::OnlineRealtimeEngine(multiplayerConnection, logSystem, networkEventBus, remoteScriptRunner);
             },
-            emscripten::allow_raw_pointers())
+            emscripten::allow_raw_pointers(), emscripten::nonnull<emscripten::ret_val>())
         .class_function(
             "createWithJsonSchemas(multiplayerConnection, logSystem, networkEventBus, remoteScriptRunner, jsonSchemas)",
             +[](csp::multiplayer::MultiplayerConnection& multiplayerConnection, csp::common::LogSystem& logSystem, csp::multiplayer::NetworkEventBus& networkEventBus,
                  csp::common::IJSScriptRunner& remoteScriptRunner, const csp::common::List<csp::common::String>& jsonSchemas) {
                 return new csp::multiplayer::OnlineRealtimeEngine(multiplayerConnection, logSystem, networkEventBus, remoteScriptRunner, jsonSchemas);
             },
-            emscripten::allow_raw_pointers())
+            emscripten::allow_raw_pointers(), emscripten::nonnull<emscripten::ret_val>())
         .property("isLeaderElectionEnabled", &csp::multiplayer::OnlineRealtimeEngine::IsLeaderElectionEnabled)
         .property("leaderId", &csp::multiplayer::OnlineRealtimeEngine::GetLeaderId)
         .property("entityPatchRateLimitEnabled", &csp::multiplayer::OnlineRealtimeEngine::GetEntityPatchRateLimitEnabled,
