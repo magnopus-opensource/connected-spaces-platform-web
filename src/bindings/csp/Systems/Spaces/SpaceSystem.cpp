@@ -141,14 +141,14 @@ EMSCRIPTEN_BINDINGS(CSPSpaceSystem)
                 return Promisify<PromiseOfSpaceResult>([&](emscripten::val cb) { self.AddUserToSpace(spaceId, userId, ToNativeCallback(cb.as<SpaceResultCallback>())); });
             })
         .function(
-            "addSiteInfo(spaceId, siteInfo)",
-            +[](csp::systems::SpaceSystem& self, const csp::common::String& spaceId, csp::systems::Site siteInfo) {
-                return Promisify<PromiseOfSiteResult>([&](emscripten::val cb) { self.AddSiteInfo(spaceId, siteInfo, ToNativeCallback(cb.as<SiteResultCallback>())); });
+            "addSiteInfo(siteInfo)",
+            +[](csp::systems::SpaceSystem& self, const csp::systems::Site& siteInfo) {
+                return Promisify<PromiseOfSiteResult>([&](emscripten::val cb) { self.AddSiteInfo(siteInfo, ToNativeCallback(cb.as<SiteResultCallback>())); });
             })
         .function(
-            "removeSiteInfo(spaceId, siteInfo)",
-            +[](csp::systems::SpaceSystem& self, const csp::common::String& spaceId, csp::systems::Site siteInfo) {
-                return Promisify<PromiseOfNullResult>([&](emscripten::val cb) { self.RemoveSiteInfo(spaceId, siteInfo, ToNativeCallback(cb.as<NullResultCallback>())); });
+            "removeSiteInfo(siteInfo)",
+            +[](csp::systems::SpaceSystem& self, const csp::systems::Site& siteInfo) {
+                return Promisify<PromiseOfNullResult>([&](emscripten::val cb) { self.RemoveSiteInfo(siteInfo, ToNativeCallback(cb.as<NullResultCallback>())); });
             })
         .function(
             "getSitesInfo(spaceId)",
