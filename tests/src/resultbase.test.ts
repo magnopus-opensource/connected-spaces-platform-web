@@ -113,4 +113,16 @@ describeOnAndOffThread('ResultBase Callbacks', (offThread, modelLabel) => {
 
     expect(progressReportCount).toBe(4);
   });
+
+  it(`Await ResultBase with undefined progress callback (${modelLabel})`, async () => {
+    using helper = csp.CallbacksBindingMechanismsTestType.create(offThread);
+
+    using result = await helper.callbackFunctionStringResultOptionalProgressAsync(undefined);
+
+    await untilCallbacksSettled(csp);
+
+    expect(result.resultCode).toBe(csp.EResultCode.Success);
+    expect(result.httpResultCode).toBe(csp.EResponseCodes.ResponseOK);
+    expect(result.value).toBe('Success');
+  });
 });

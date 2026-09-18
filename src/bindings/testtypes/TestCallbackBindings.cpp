@@ -331,8 +331,6 @@ MAKE_CALLBACK(TestCallbackNamespace::TestCallbackArrayOfOptional, TestCallbackAr
 
 MAKE_CALLBACK(TestCallbackNamespace::TestCallbackStringResultTestType, CallbackFunctionStringResultTestTypeJSCallback, "(resultArg: StringResultTestType) => void")
 
-MAKE_CALLBACK(TestCallbackNamespace::TestCallbackProgressCallbackType, TestCallbackProgressCallbackTypeJSCallback, "(requestProgress: number, responseProgress: number) => void")
-
 /**
  * Register the promise types for the callback return types.
  * These must exist and be named so that the bindings for the async functions to construct these
@@ -352,6 +350,8 @@ EMSCRIPTEN_DECLARE_VAL_TYPE(TestCallbackPromiseOfNestedContainerOfBindingsTestTy
 EMSCRIPTEN_DECLARE_VAL_TYPE(TestCallbackPromiseOfOptionalContainerOfBindingsTestType);
 // Array of optional
 EMSCRIPTEN_DECLARE_VAL_TYPE(TestCallbackPromiseOfContainerOfBindingsTestTypeOptional);
+
+EMSCRIPTEN_DECLARE_VAL_TYPE(TestCallbackPromiseOfStringResultTestType);
 
 EMSCRIPTEN_BINDINGS(register_TestCallbackPromiseTypes)
 {
@@ -377,13 +377,17 @@ EMSCRIPTEN_BINDINGS(register_TestCallbackPromiseTypes)
     emscripten::register_type<TestCallbackPromiseOfOptionalContainerOfBindingsTestType>("Promise<(BindingsTestType[] & Disposable) | undefined>");
     // Array of optional
     emscripten::register_type<TestCallbackPromiseOfContainerOfBindingsTestTypeOptional>("Promise<(BindingsTestType | undefined)[] & Disposable>");
+
+    emscripten::register_type<TestCallbackPromiseOfStringResultTestType>("Promise<StringResultTestType>");
 }
 
-EMSCRIPTEN_DECLARE_VAL_TYPE(TestCallbackPromiseOfStringResultTestType);
-EMSCRIPTEN_BINDINGS(register_TestCallbackPromiseOfStringResultTestType) { emscripten::register_type<TestCallbackPromiseOfStringResultTestType>("Promise<StringResultTestType>"); }
+EMSCRIPTEN_DECLARE_VAL_TYPE(TestCallbackProgressCallbackTypeJSCallback);
 
 EMSCRIPTEN_BINDINGS(CSPCallbacksTestTypeBindings)
 {
+    emscripten::register_type<TestCallbackProgressCallbackTypeJSCallback>("(requestProgress: number, responseProgress: number) => void");
+    emscripten::register_optional<TestCallbackProgressCallbackTypeJSCallback>();
+
     emscripten::class_<CallbacksBindingMechanismsTestType>("CallbacksBindingMechanismsTestType")
         .class_function(
             "create", +[] { return CallbacksBindingMechanismsTestType(false); })
@@ -630,6 +634,13 @@ EMSCRIPTEN_BINDINGS(CSPCallbacksTestTypeBindings)
         .function(
             "callbackFunctionStringResultProgressAsync(progressCallback)",
             +[](CallbacksBindingMechanismsTestType& self, TestCallbackProgressCallbackTypeJSCallback progressCallback) {
+                return Promisify<TestCallbackPromiseOfStringResultTestType>(
+                    [&](emscripten::val cb) { self.CallbackFunctionStringResultProgress(ToNativeCallback(cb.as<CallbackFunctionStringResultTestTypeJSCallback>())); },
+                    progressCallback);
+            })
+        .function(
+            "callbackFunctionStringResultOptionalProgressAsync(progressCallback)",
+            +[](CallbacksBindingMechanismsTestType& self, const csp::common::Optional<TestCallbackProgressCallbackTypeJSCallback>& progressCallback) {
                 return Promisify<TestCallbackPromiseOfStringResultTestType>(
                     [&](emscripten::val cb) { self.CallbackFunctionStringResultProgress(ToNativeCallback(cb.as<CallbackFunctionStringResultTestTypeJSCallback>())); },
                     progressCallback);

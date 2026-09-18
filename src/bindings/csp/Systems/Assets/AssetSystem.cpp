@@ -25,13 +25,6 @@ namespace emscripten::internal {
 template <> void raw_destructor<csp::systems::AssetSystem>(csp::systems::AssetSystem*) { }
 }
 
-namespace {
-emscripten::val ProgressCallbackOrUndefined(const csp::common::Optional<ProgressCallback>& progressCallback)
-{
-    return progressCallback.HasValue() ? emscripten::val(*progressCallback) : emscripten::val::undefined();
-}
-}
-
 EMSCRIPTEN_BINDINGS(CSPAssetSystem)
 {
     emscripten::class_<csp::systems::AssetSystem, emscripten::base<csp::systems::SystemBase>>("AssetSystem")
@@ -166,7 +159,7 @@ EMSCRIPTEN_BINDINGS(CSPAssetSystem)
                  const csp::systems::AssetDataSource& assetDataSource, const csp::common::Optional<ProgressCallback>& progressCallback) {
                 return Promisify<PromiseOfUriResult>(
                     [&](emscripten::val cb) { self.UploadAssetData(assetCollection, asset, assetDataSource, ToNativeCallback(cb.as<UriResultCallback>())); },
-                    ProgressCallbackOrUndefined(progressCallback));
+                    progressCallback);
             })
         .function(
             "uploadAssetDataEx(assetCollection, asset, assetDataSource, cancellationToken, progressCallback)",
@@ -177,7 +170,7 @@ EMSCRIPTEN_BINDINGS(CSPAssetSystem)
                     [&](emscripten::val cb) {
                         self.UploadAssetDataEx(assetCollection, asset, assetDataSource, cancellationToken, ToNativeCallback(cb.as<UriResultCallback>()));
                     },
-                    ProgressCallbackOrUndefined(progressCallback));
+                    progressCallback);
             })
         .function(
             "downloadAssetData(asset)",
@@ -208,7 +201,7 @@ EMSCRIPTEN_BINDINGS(CSPAssetSystem)
                  const csp::common::Optional<ProgressCallback>& progressCallback) {
                 return Promisify<PromiseOfAssetResult>(
                     [&](emscripten::val cb) { self.RegisterAssetToLODChain(assetCollection, asset, lodLevel, ToNativeCallback(cb.as<AssetResultCallback>())); },
-                    ProgressCallbackOrUndefined(progressCallback));
+                    progressCallback);
             })
         .function(
             "createMaterial(name, shaderType, spaceId, metadata, assetTags)",
