@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { loadCSP } from '../loadModule';
+import { loadCSP } from '../../loadModule';
 import createModule, { type MainModule } from 'connected-spaces-platform-bindings';
-import { forceHeapGrowth } from './testUtils';
+import { forceHeapGrowth } from '../testUtils';
 
 describe('CSPFoundation', () => {
   let csp: MainModule;

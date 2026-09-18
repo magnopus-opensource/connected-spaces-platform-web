@@ -1,6 +1,6 @@
 import { beforeAll, expect, it } from 'vitest';
-import { loadCSP } from '../loadModule';
-import { describeOnAndOffThread, forceHeapGrowth, until, untilCallbacksSettled } from './testUtils';
+import { loadCSP } from '../../loadModule';
+import { describeOnAndOffThread, forceHeapGrowth, until, untilCallbacksSettled } from '../testUtils';
 import createModule, { type MainModule } from 'connected-spaces-platform-bindings';
 
 /*
