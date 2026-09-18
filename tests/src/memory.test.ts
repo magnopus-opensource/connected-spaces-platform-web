@@ -809,9 +809,9 @@ describe('CSPFoundation', () => {
 
       expect(elem).not.toBeNullable();
 
-      expect(elem?.delete).toBeTypeOf('function');
-      expect(elem?.deleteLater).toBeTypeOf('function');
-      expect(elem?.[Symbol.dispose]).toBeTypeOf('function');
+      expect(elem.delete).toBeTypeOf('function');
+      expect(elem.deleteLater).toBeTypeOf('function');
+      expect(elem[Symbol.dispose]).toBeTypeOf('function');
 
       expect(csp.BindingsTestType.aliveCount()).toBe(aliveCountBefore + 1);
     }
