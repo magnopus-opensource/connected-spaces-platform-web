@@ -214,3 +214,22 @@ jsFunctionReturningDisposable().then((result) => {
 ...
 // Remember to dispose liftedResult!
 ```
+
+### ResultBase Handling and Progress Callbacks
+
+With the majority of async callback functions in CSP using `ResultBase`-derived types as their callback arguments, the async binding machinery provides first-class handling for `ResultBase`. Note that for these kinds of callback-bases functions, CSP will call the supplied callback multiple times with instances of the `ResultBase`-derived type.
+
+If the callback argument is a `ResultBase` it will be handled as follows depending on its `resultCode`:
+
+- `Success`: the promise will resolve with the `ResultBase` argument itself as the fulfillment value
+- `Failed`: the promise will will reject with a `CspRequestError` object that can be caught by the JavaScript caller
+- `Init`: the promise will not yet be resolved or rejected as the operation is just commencing
+- `InProgress`: the promise will not yet be resolved or rejected as the operation is progress
+
+For the `InProgress` case, the CSP function in question can provide progress information via the `ResultBase` argument. To support this, an optional progress callback function can be supplied when binding the CSP function. For example:
+
+```js
+const result = await jsFunctionWithCallback((requestProgress, responseProgress) => {
+  console.log(`Operation progress - request: ${requestProgress} response: ${requestProgress}`);
+});
+```

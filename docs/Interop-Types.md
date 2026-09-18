@@ -233,3 +233,38 @@ Owned C++ memory, such as in value arrays, must be deleted to avoid leaks, and i
 Non owned memory is not disposable, and if you are type-checking correctly, will reject being declared as `using`, as is appropriate to convey that there is no disposal going on. In an ideal world, the inverse of this check would also exist as a lint rule, to insist that you use `using` unless you explicitly declare that you don't want to, and take on manual disposal responsibility yourself.
 
 Speaking of manual disposal, the `using` mechanism calls into the free function `disposeArray`/`disposeMap` etc defined in [Disposal.cpp](../src/bindings/containers/Disposal.cpp). You are free to use these instead if you wish more manual control.
+
+## NativeBuffer
+
+`NativeBuffer` is not a CSP type but rather a utility class to enable transferring binary data efficiently between JavaScript and CSP. This is currently used for uploading and downloading asset file data.
+
+Via the `NativeBuffer` bindings, users can allocate WASM memory and access it for reading and writing using a JavaScript `Uint8Array` typed array. The lifetime of the `NativeBuffer` is the responsibility of the caller in JavaScript who must delete it when finished with it. This can done via `using` as with other types.
+
+```ts
+// Using a Blob, created by loading a file for example
+const byteArray = new UintArray(await blob.arrayBuffer);
+
+using buffer = csp.NativeBuffer.createFromByteArray(byteArray);
+// Pass the buffer to a CSP function requiring it, for example to upload asset file data
+
+...
+
+// buffer disposed at end of scope
+```
+
+Accessing `NativeBuffer` memory can be done either by obtaining a live `UintArray8` view into the memory or by creating a separate copy of it:
+
+```ts
+// Allocate the NativeBuffer
+using buffer = csp.NativeBuffer.create(512)
+
+...
+
+// Live view into the buffer memory as Uint8Array
+const bufferView = buffer.getView();
+
+// Copy of the buffer memory as Uint8Array
+const bufferCopy = buffer.toByteArray();
+```
+
+The view into the buffer does not keep the `NativeBuffer` memory alive, so the caller must ensure that the `NativeBuffer` is still valid and has not been released when the view is used.

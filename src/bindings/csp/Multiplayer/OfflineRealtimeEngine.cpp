@@ -40,5 +40,6 @@ EMSCRIPTEN_BINDINGS(CSPOfflineRealtimeEngine)
                 return new csp::multiplayer::OfflineRealtimeEngine(sceneDescription, logSystem, remoteScriptRunner, jsonSchemas);
             },
             emscripten::allow_raw_pointers())
-        .class_function("localClientId", +[]() { return csp::multiplayer::OfflineRealtimeEngine::LocalClientId(); });
+        .class_function(
+            "localClientId", +[]() { return csp::multiplayer::OfflineRealtimeEngine::LocalClientId(); });
 }

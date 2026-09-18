@@ -95,6 +95,20 @@ emscripten::class_<CspClass>("CspClass")
     ...
 ```
 
+### Handling Private Destructors
+
+Some CSP classes have private destructors meaning that they are not intended to be user-instantiated or destroyed, which results in a compilation error in `emscripten::class_` when binding them. This is notably the case for the CSP `System` classes and the `SystemsManager`.
+
+To bind these classes, we define a no-op specialisation of `emscripten::internal::raw_destructor` for each of them:
+
+```cpp
+namespace emscripten::internal {
+template <> void raw_destructor<csp::systems::AssetSystem>(csp::systems::AssetSystem*) { }
+}
+```
+
+Defining this no-op specialisation is necessary because `emscripten::class_` instantiates a `raw_destructor` for the bound class in question, with the default implementation calling the class destructor.
+
 ### Value Objects
 
 Some classes may be bound as _value objects_. In JavaScript, users of these types do not need to worry about memory lifetime management.
@@ -175,6 +189,31 @@ emscripten::class_<CspClass>("CspClass")
     })
     ...
 ```
+
+Callback-based CSP functions using `ResultBase` as the callback argument can report progress of the operation to the caller. To support this, an optional progress callback function can be supplied to `Promisify` when binding the CSP function:
+
+```cpp
+emscripten::class_<CspClass>("CspClass")
+    ...
+    .function("asyncFunctionUsingResultBaseType", +[](CspClass& self, ProgressCallback progressCallback)
+    {
+        return Promisify<PromiseOfResultBaseType>(
+            [&](emscripten::val cb) { self.CallbackFunction(ToNativeCallback(cb.as<CallbackJsType>())); },
+            progressCallback
+        );
+    })
+    ...
+```
+
+`ProgressCallback` is an Emscripten val type declared in [CallbackDeclarations.h](..\src\bindings\csp\CallbackDeclarations.h) with the following TypeScript signature:
+
+```ts
+(requestProgress: number, responseProgress: number) => void
+```
+
+> [!NOTE]
+>
+> Due to the implementation of `promisify`, the progress callback function is only used in JavaScript and does not ever get called from C++ in the bindings machinery. Therefore it should not be used with `ToNativeCallback`.
 
 ## Pointers
 

@@ -72,9 +72,11 @@ namespace {
  *                       based on ResultBase that report progress.
  */
 template <typename PromiseValType = emscripten::val, typename WrapperFn>
-inline PromiseValType Promisify(WrapperFn&& wrapperFn, emscripten::val progressCallback = emscripten::val::undefined())
+inline PromiseValType Promisify(WrapperFn&& wrapperFn, const csp::common::Optional<emscripten::val>& progressCallback = csp::common::Optional<emscripten::val>())
 {
-    emscripten::val promiseAndCallback = emscripten::val::take_ownership(make_promise_with_cloning_callback(progressCallback.as_handle()));
+    emscripten::val progressCallbackVal = progressCallback.HasValue() ? *progressCallback : emscripten::val::undefined();
+
+    emscripten::val promiseAndCallback = emscripten::val::take_ownership(make_promise_with_cloning_callback(progressCallbackVal.as_handle()));
     // This is the JS callback that the C++ function will ultimately call, and is responsible for
     // resolving the promise.
     emscripten::val jsCallback = promiseAndCallback["callback"];

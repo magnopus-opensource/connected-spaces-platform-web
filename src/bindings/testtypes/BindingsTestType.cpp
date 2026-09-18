@@ -139,7 +139,6 @@ EMSCRIPTEN_BINDINGS(CSPTestTypeBindings)
     emscripten::register_type<csp::common::Array<int>>("number[]");
     emscripten::register_type<csp::common::Array<BindingsTestType>>("BindingsTestType[]");
     emscripten::register_type<csp::common::Array<BindingsTestType*>>("(BindingsTestType | null)[]");
-    emscripten::register_type<csp::common::Array<csp::common::String>>("string[]");
 
     // List
     emscripten::register_type<csp::common::List<int>>("number[]");
@@ -173,7 +172,6 @@ EMSCRIPTEN_BINDINGS(CSPTestTypeBindings)
     // Optional
     emscripten::register_optional<BindingsTestType>();
     emscripten::register_optional<BindingsTestType*>();
-    emscripten::register_optional<csp::common::String>();
     // Optional of List<BindingsTestType> (note the register_type instead of register_optional with JSDisposable to ensure the container has Disposable)
     emscripten::register_optional<csp::common::List<BindingsTestType>>();
     emscripten::register_type<bindings::utils::JSDisposable<csp::common::Optional<csp::common::List<BindingsTestType>>>>("(BindingsTestType[] & Disposable) | undefined");
