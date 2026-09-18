@@ -5,16 +5,12 @@
 
 namespace bindings::containers {
 
-NativeBuffer::NativeBuffer(std::size_t length) : m_data(nullptr), m_length(length)
+NativeBuffer::NativeBuffer(std::size_t length) : m_data(length)
 {
     if (length == 0) {
         throw std::runtime_error("Length must be greater than 0");
     }
-
-    m_data = new std::uint8_t[length]();
 }
-
-NativeBuffer::~NativeBuffer() { delete[] m_data; }
 
 NativeBuffer* NativeBuffer::CreateFromByteArray(const ByteArray& byteArray)
 {

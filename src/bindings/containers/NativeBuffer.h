@@ -18,19 +18,18 @@ public:
     static NativeBuffer* CreateFromByteArray(const ByteArray& byteArray);
 
     explicit NativeBuffer(std::size_t length);
-    ~NativeBuffer();
 
     NativeBuffer(const NativeBuffer&) = delete;
     NativeBuffer& operator=(const NativeBuffer&) = delete;
     NativeBuffer(NativeBuffer&&) = delete;
     NativeBuffer& operator=(NativeBuffer&&) = delete;
 
-    std::uint8_t* GetData() const { return m_data; }
-    std::size_t GetLength() const { return m_length; }
+    std::uint8_t* GetData() { return m_data.data(); }
+    const std::uint8_t* GetData() const { return m_data.data(); }
+    std::size_t GetLength() const { return m_data.size(); }
 
 private:
-    std::uint8_t* m_data;
-    std::size_t m_length;
+    std::vector<std::uint8_t> m_data;
 };
 
 /*

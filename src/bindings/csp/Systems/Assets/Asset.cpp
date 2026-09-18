@@ -76,7 +76,7 @@ EMSCRIPTEN_BINDINGS(CSPAsset)
             "bufferLength", +[](const csp::systems::BufferAssetDataSource& self) { return self.BufferLength; })
         .function(
             "setBuffer(buffer)",
-            +[](csp::systems::BufferAssetDataSource& self, const bindings::containers::NativeBuffer& buffer) {
+            +[](csp::systems::BufferAssetDataSource& self, bindings::containers::NativeBuffer& buffer) {
                 self.Buffer = buffer.GetData();
                 self.BufferLength = buffer.GetLength();
             })
