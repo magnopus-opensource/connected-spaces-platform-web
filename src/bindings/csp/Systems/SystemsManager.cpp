@@ -1,6 +1,7 @@
 #include "../../utils/Handles.h"
 #include "../PointerDeclarations.h"
 
+#include "CSP/Common/Systems/Log/LogSystem.h"
 #include "CSP/Systems/Analytics/AnalyticsSystem.h"
 #include "CSP/Systems/Assets/AssetSystem.h"
 #include "CSP/Systems/ECommerce/ECommerceSystem.h"
@@ -81,6 +82,5 @@ EMSCRIPTEN_BINDINGS(CSPSystemsManager)
         .function(
             "getMultiplayerConnection",
             +[](csp::systems::SystemsManager& self) { return bindings::utils::NonOwningVal<MultiplayerConnectionPointer>(self.GetMultiplayerConnection()); })
-        .function(
-            "getEventBus", +[](csp::systems::SystemsManager& self) { return bindings::utils::NonOwningVal<NetworkEventBusPointer>(self.GetEventBus()); });
+        .function("getEventBus", +[](csp::systems::SystemsManager& self) { return bindings::utils::NonOwningVal<NetworkEventBusPointer>(self.GetEventBus()); });
 }
