@@ -141,7 +141,6 @@ EMSCRIPTEN_BINDINGS(CSPContainerDeclarations)
     emscripten::register_type<csp::common::Array<csp::systems::InviteUserRoleInfo>>("InviteUserRoleInfo[]");
     emscripten::register_type<bindings::utils::JSDisposable<csp::common::Array<csp::systems::InviteUserRoleInfo>>>("(InviteUserRoleInfo[] & Disposable)");
     emscripten::register_type<csp::common::Array<csp::systems::BasicProfile>>("BasicProfile[]");
-    emscripten::register_type<bindings::utils::JSDisposable<csp::common::Array<csp::systems::BasicProfile>>>("(BasicProfile[] & Disposable)");
     emscripten::register_type<csp::common::Array<csp::systems::FeatureLimitInfo>>("FeatureLimitInfo[]");
     emscripten::register_type<bindings::utils::JSDisposable<csp::common::Array<csp::systems::FeatureLimitInfo>>>("(FeatureLimitInfo[] & Disposable)");
     emscripten::register_type<csp::common::Array<csp::systems::FeatureQuotaInfo>>("FeatureQuotaInfo[]");
