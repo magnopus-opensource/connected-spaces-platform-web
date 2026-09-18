@@ -47,13 +47,13 @@ EMSCRIPTEN_BINDINGS(CSPAssetSystem)
             })
         .function(
             "deleteMultipleAssetCollections(assetCollections)",
-            +[](csp::systems::AssetSystem& self, csp::common::Array<csp::systems::AssetCollection> assetCollections) {
+            +[](csp::systems::AssetSystem& self, const csp::common::Array<csp::systems::AssetCollection>& assetCollections) {
                 return Promisify<PromiseOfNullResult>(
                     [&](emscripten::val cb) { self.DeleteMultipleAssetCollections(assetCollections, ToNativeCallback(cb.as<NullResultCallback>())); });
             })
         .function(
             "copyAssetCollectionsToSpace(sourceAssetCollections, destSpaceId, copyAsync)",
-            +[](csp::systems::AssetSystem& self, csp::common::Array<csp::systems::AssetCollection> sourceAssetCollections, const csp::common::String& destSpaceId,
+            +[](csp::systems::AssetSystem& self, const csp::common::Array<csp::systems::AssetCollection>& sourceAssetCollections, const csp::common::String& destSpaceId,
                  bool copyAsync) {
                 return Promisify<PromiseOfAssetCollectionsResult>([&](emscripten::val cb) {
                     self.CopyAssetCollectionsToSpace(sourceAssetCollections, destSpaceId, copyAsync, ToNativeCallback(cb.as<AssetCollectionsResultCallback>()));
@@ -206,7 +206,7 @@ EMSCRIPTEN_BINDINGS(CSPAssetSystem)
         .function(
             "createMaterial(name, shaderType, spaceId, metadata, assetTags)",
             +[](csp::systems::AssetSystem& self, const csp::common::String& name, csp::systems::EShaderType shaderType, const csp::common::String& spaceId,
-                 csp::common::Map<csp::common::String, csp::common::String> metadata, const csp::common::Array<csp::common::String>& assetTags) {
+                 const csp::common::Map<csp::common::String, csp::common::String>& metadata, const csp::common::Array<csp::common::String>& assetTags) {
                 return Promisify<PromiseOfMaterialResult>([&](emscripten::val cb) {
                     self.CreateMaterial(name, shaderType, spaceId, metadata, assetTags, ToNativeCallback(cb.as<MaterialResultCallback>()));
                 });

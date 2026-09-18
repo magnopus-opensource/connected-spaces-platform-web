@@ -12,10 +12,7 @@
 EMSCRIPTEN_BINDINGS(CSPLogSystem)
 {
     emscripten::class_<csp::common::LogSystem>("LogSystem")
-        //Const cast exists due to CSP having an inappropriate non-const method. They may remove, in which case, remove this.
-        .property(
-            "systemLevel", +[](const csp::common::LogSystem& self) { return const_cast<csp::common::LogSystem&>(self).GetSystemLevel(); },
-            +[](csp::common::LogSystem& self, csp::common::LogLevel value) { self.SetSystemLevel(value); })
+        .property("systemLevel", &csp::common::LogSystem::GetSystemLevel, &csp::common::LogSystem::SetSystemLevel)
         .function(
             "setLogCallback(callback)", +[](csp::common::LogSystem& self, LogCallback callback) { self.SetLogCallback(ToNativeCallback(callback)); })
         .function(

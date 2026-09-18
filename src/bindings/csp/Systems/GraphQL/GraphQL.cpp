@@ -8,7 +8,5 @@
 
 EMSCRIPTEN_BINDINGS(CSPGraphQL)
 {
-    emscripten::class_<csp::systems::GraphQLResult, emscripten::base<csp::systems::ResultBase>>("GraphQLResult")
-        .function(
-            "getResponse", +[](csp::systems::GraphQLResult& self) { return self.GetResponse(); });
+    emscripten::class_<csp::systems::GraphQLResult, emscripten::base<csp::systems::ResultBase>>("GraphQLResult").property("response", &csp::systems::GraphQLResult::GetResponse);
 }
