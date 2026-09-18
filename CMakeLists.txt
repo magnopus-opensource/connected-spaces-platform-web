@@ -143,6 +143,9 @@ target_compile_options(connected-spaces-platform-bindings PRIVATE
   $<$<CONFIG:Debug>:-fstandalone-debug> # By default, clang limits debug info to keep binary size down, normally fine, but WASM is a special case. Turn that off.
 )
 
+# We configure this to set a different maximum memory for tests, since we start a lot of runtimes and don't want to reserve so much memory.
+set(CSP_WASM_MAXIMUM_MEMORY "1073741824" CACHE STRING "Maximum wasm heap size, in bytes")
+
 target_link_options(connected-spaces-platform-bindings PRIVATE
    $<$<PLATFORM_ID:Emscripten>:
     # Emit DWARF in the final .wasm for Debug builds only.
@@ -161,7 +164,7 @@ target_link_options(connected-spaces-platform-bindings PRIVATE
     -sWASM_BIGINT
     -sALLOW_MEMORY_GROWTH=1
     -sINITIAL_MEMORY=33554432
-    -sMAXIMUM_MEMORY=1073741824
+    -sMAXIMUM_MEMORY=${CSP_WASM_MAXIMUM_MEMORY}
     "-sEXPORTED_RUNTIME_METHODS=['ccall','setValue','getValue','addFunction','removeFunction','UTF8ToString','stringToUTF8', 'stringToNewUTF8', 'lengthBytesUTF8','HEAPU8']"
     "-sINCOMING_MODULE_JS_API=['buffer','fetchSettings','instantiateWasm','locateFile','mainScriptUrlOrBlob','wasmMemory', 'noExitRuntime']"
     --emit-tsd=connected-spaces-platform-bindings.d.ts

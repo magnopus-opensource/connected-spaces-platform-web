@@ -32,7 +32,7 @@ jobs:
         uses: emscripten-core/setup-emsdk@v15
         with:
           version: 5.0.2
-          actions-cache-folder: "emsdk-cache"
+          actions-cache-folder: 'emsdk-cache'
 
       # emcc's --emit-tsd shells out to `tsc`. emsdk 5.0.2 invokes it with
       # `--outFile`, which errors under TypeScript 6.x. Pin to the latest 5.x
@@ -65,7 +65,7 @@ jobs:
           # some older transitive Conan recipes (e.g. asyncplusplus/1.2) still
           # declare.
           # If cmake 4 is on the runner, this is neccesary.
-          CMAKE_POLICY_VERSION_MINIMUM: "3.5"
+          CMAKE_POLICY_VERSION_MINIMUM: '3.5'
         run: |
           set -eux
           conan install . \
@@ -77,7 +77,9 @@ jobs:
         env:
           # Tell Cmake where CSP is
           CMAKE_PREFIX_PATH: ${{ github.workspace }}/CSP/install
-        run: cmake --preset ${{ matrix.config }}
+        # Lower CSP_MAXIMUM_MEMORY for the tests. Because of shared array buffer, I believe we reserve the entire range regardless of whether we use it.
+        # Since we start a bunch of CSP runtimes in the tests, we're saturating the runners.
+        run: cmake --preset ${{ matrix.config }} -DCSP_WASM_MAXIMUM_MEMORY=268435456
 
       - name: Build
         shell: bash
@@ -92,7 +94,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: "24"
+          node-version: '24'
 
       - name: Install Test dependencies
         shell: bash
