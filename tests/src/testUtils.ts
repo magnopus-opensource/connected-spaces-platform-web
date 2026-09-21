@@ -10,10 +10,10 @@ import {
   Profile,
   ScriptSystem,
   Space,
-  SpaceResult,
   SpaceSystem,
   UserSystem
 } from 'connected-spaces-platform-bindings';
+import { loadCSP } from '../loadModule';
 
 /* Timer to let us busy-wait on callbacks finishing. */
 export async function until(predicate: () => boolean, timeoutMs = 6000): Promise<void> {
@@ -106,6 +106,41 @@ export const describeOnAndOffThread = (name: string, describeFn: (offThread: boo
   for (const { mode, offThread } of CALLBACK_THREADING_MODE) {
     describe(`${name} - ${mode}`, () => describeFn(offThread, mode));
   }
+};
+
+const ENDPOINT_ROOT_URI = 'https://ogs.magnopus-dev.cloud';
+const TENANT = 'OKO_TESTS';
+
+const USER_AGENT_CLIENT_OS = 'WASMTestsOS';
+const USER_AGENT_CLIENT_SKU = 'connected-spaces-platform-web-tests';
+const USER_AGENT_CLIENT_ENVIRONMENT = 'ODev';
+const USER_AGENT_CHS_ENVIRONMENT = 'oDev';
+
+const createUserAgent = (csp: MainModule) => {
+  const userAgent = csp.ClientUserAgent.create();
+
+  userAgent.cspVersion = csp.CSPFoundation.getVersion();
+  userAgent.clientOs = USER_AGENT_CLIENT_OS;
+  userAgent.clientSku = USER_AGENT_CLIENT_SKU;
+  userAgent.clientVersion = csp.CSPFoundation.getVersion();
+  userAgent.clientEnvironment = USER_AGENT_CLIENT_ENVIRONMENT;
+  userAgent.chsEnvironment = USER_AGENT_CHS_ENVIRONMENT;
+
+  return userAgent;
+};
+
+export const initCsp = async () => {
+  const csp = await loadCSP();
+
+  using userAgent = createUserAgent(csp);
+
+  const initResult = csp.CSPFoundation.initialise(ENDPOINT_ROOT_URI, TENANT, userAgent);
+
+  if (!initResult) {
+    throw new Error('Failed to initialise CSP');
+  }
+
+  return csp;
 };
 
 /**
