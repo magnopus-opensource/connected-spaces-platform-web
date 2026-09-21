@@ -146,7 +146,7 @@ describe('CSP EventBus Integrations', () => {
   });
 
   it('Send-Receive Custom Event', async () => {
-    let profile = await makeTestUser(csp.SystemsManager.get().getUserSystem());
+    using profile = await makeTestUser(csp.SystemsManager.get().getUserSystem());
 
     using loginResult = await userSystem.login(profile.email, generatedTestAccountPassword, true, true);
     expect(loginResult.resultCode).toBe(csp.EResultCode.Success);

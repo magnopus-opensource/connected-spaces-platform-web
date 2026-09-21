@@ -105,7 +105,7 @@ describe('CSP Asset Integrations', () => {
   });
 
   it('Asset Collection In Space', async () => {
-    let profile = await makeTestUser(userSystem);
+    using profile = await makeTestUser(userSystem);
     using loginResult = await userSystem.login(profile.email, generatedTestAccountPassword, true, true);
     expect(loginResult.resultCode).toBe(csp.EResultCode.Success);
 
@@ -147,7 +147,7 @@ describe('CSP Asset Integrations', () => {
   });
 
   it('Upload Asset', async () => {
-    let profile = await makeTestUser(userSystem);
+    using profile = await makeTestUser(userSystem);
     using loginResult = await userSystem.login(profile.email, generatedTestAccountPassword, true, true);
     expect(loginResult.resultCode).toBe(csp.EResultCode.Success);
 
