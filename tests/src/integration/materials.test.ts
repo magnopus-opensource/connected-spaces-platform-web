@@ -21,6 +21,10 @@ import {
   until
 } from '../testUtils';
 
+// Allow these integration tests to run longer than the configured timeout.
+// This matters for WebKit and Firefox which are slower than Chromium for some reason.
+const MATERIAL_TEST_TIMEOUT_MS = 60_000;
+
 const createTestMaterialName = () => `WASM-INTEROP-TESTMATERIAL-${crypto.randomUUID()}`;
 
 describe('CSP Custom Material Integration Tests', () => {
@@ -106,264 +110,276 @@ describe('CSP Custom Material Integration Tests', () => {
     expect(csp.CSPFoundation.shutdown()).toBe(true);
   });
 
-  it('Create and delete custom material', async () => {
-    // Create a test user and log in
-    using userProfile = await makeTestUser(userSystem);
+  it(
+    'Create and delete custom material',
+    async () => {
+      // Create a test user and log in
+      using userProfile = await makeTestUser(userSystem);
 
-    using loginResult = await userSystem.login(userProfile.email, generatedTestAccountPassword, true, true);
-    expect(loginResult.resultCode).toBe(csp.EResultCode.Success);
+      using loginResult = await userSystem.login(userProfile.email, generatedTestAccountPassword, true, true);
+      expect(loginResult.resultCode).toBe(csp.EResultCode.Success);
 
-    // Create a test space
-    using space = await createTestSpace(csp, spaceSystem);
+      // Create a test space
+      using space = await createTestSpace(csp, spaceSystem);
 
-    // ------ Create the test material ------
+      // ------ Create the test material ------
 
-    const materialName = createTestMaterialName();
+      const materialName = createTestMaterialName();
 
-    using createMaterialResult = await assetSystem.createMaterial(
-      materialName,
-      csp.EShaderType.Standard,
-      space.id,
-      new Map<string, string>(),
-      ['material-test-tag']
-    );
+      using createMaterialResult = await assetSystem.createMaterial(
+        materialName,
+        csp.EShaderType.Standard,
+        space.id,
+        new Map<string, string>(),
+        ['material-test-tag']
+      );
 
-    expect(createMaterialResult.resultCode).toBe(csp.EResultCode.Success);
+      expect(createMaterialResult.resultCode).toBe(csp.EResultCode.Success);
 
-    // Materials are client owning pointers, so we need to dispose them and also check for null
-    // before use.
-    using material = createMaterialResult.getMaterial();
+      // Materials are client owning pointers, so we need to dispose them and also check for null
+      // before use.
+      using material = createMaterialResult.getMaterial();
 
-    expect(material).not.toBeNullable();
+      expect(material).not.toBeNullable();
 
-    if (!material) {
-      throw new Error('Material is null');
-    }
-
-    expect(material.name).toBe(materialName);
-    expect(material.shaderType).toBe(csp.EShaderType.Standard);
-
-    // ------ Delete the test material ------
-
-    const deleteMaterialResult = await assetSystem.deleteMaterial(material);
-
-    expect(deleteMaterialResult.resultCode).toBe(csp.EResultCode.Success);
-
-    // Clean up by deleting the test space
-    const deleteSpaceResult = await spaceSystem.deleteSpace(space.id);
-    expect(deleteSpaceResult.resultCode).toBe(csp.EResultCode.Success);
-  });
-
-  it('Update a custom material', async () => {
-    // Create a test user and log in
-    using userProfile = await makeTestUser(userSystem);
-
-    using loginResult = await userSystem.login(userProfile.email, generatedTestAccountPassword, true, true);
-    expect(loginResult.resultCode).toBe(csp.EResultCode.Success);
-
-    // Create a test space
-    using space = await createTestSpace(csp, spaceSystem);
-
-    // Create a custom material
-
-    const materialName = createTestMaterialName();
-
-    using createMaterialResult = await assetSystem.createMaterial(
-      materialName,
-      csp.EShaderType.Standard,
-      space.id,
-      new Map<string, string>(),
-      ['material-test-tag']
-    );
-    expect(createMaterialResult.resultCode).toBe(csp.EResultCode.Success);
-
-    // Materials are client owning pointers, so we need to dispose them and also check for null
-    // before use
-    using material = createMaterialResult.getMaterial();
-    expect(material).not.toBeNullable();
-
-    if (!material) {
-      throw new Error('Material is null');
-    }
-
-    // ------ Update the test material ------
-
-    // We're down-casting the material here so no `using`, otherwise we'd double delete
-    const gltfMaterial = material as GLTFMaterial;
-
-    gltfMaterial.alphaMode = csp.EAlphaMode.Blend;
-    gltfMaterial.alphaCutoff = 0.75;
-    gltfMaterial.doubleSided = true;
-    gltfMaterial.baseColorFactor = { x: 1, y: 0.5, z: 0, w: 0.5 };
-    gltfMaterial.metallicFactor = 0.5;
-    gltfMaterial.roughnessFactor = 0.5;
-    gltfMaterial.emissiveFactor = { x: 0, y: 0.5, z: 1 };
-    gltfMaterial.emissiveStrength = 1.5;
-
-    const testTextureAssetCollectionId = 'test-asset-collection-id';
-    const testTextureAssetId = 'test-asset-id';
-
-    using textureInfo = csp.TextureInfo.create();
-    textureInfo.setCollectionAndAssetId(testTextureAssetCollectionId, testTextureAssetId);
-    textureInfo.uvOffset = { x: 0.5, y: 0.25 };
-    textureInfo.uvRotation = 45;
-    textureInfo.uvScale = { x: 2, y: 2 };
-    textureInfo.texCoord = 1;
-    textureInfo.isStereoFlipped = true;
-    textureInfo.stereoVideoType = csp.StereoVideoType.TopBottom;
-
-    gltfMaterial.setBaseColorTexture(textureInfo);
-
-    using updateMaterialResult = await assetSystem.updateMaterial(material);
-
-    expect(updateMaterialResult.resultCode).toBe(csp.EResultCode.Success);
-
-    // ------ Update the test material and re-retrieve it ------
-
-    using getMaterialResult = await assetSystem.getMaterial(material.materialCollectionId, material.materialId);
-
-    expect(getMaterialResult.resultCode).toBe(csp.EResultCode.Success);
-
-    using retrievedMaterial = getMaterialResult.getMaterial();
-    expect(retrievedMaterial).not.toBeNullable();
-
-    if (!retrievedMaterial) {
-      throw new Error('Retrieved material is null');
-    }
-
-    const retrievedGltfMaterial = retrievedMaterial as GLTFMaterial;
-
-    expect(retrievedGltfMaterial.alphaMode).toBe(csp.EAlphaMode.Blend);
-    expect(retrievedGltfMaterial.alphaCutoff).toBe(0.75);
-    expect(retrievedGltfMaterial.doubleSided).toBe(true);
-    expect(retrievedGltfMaterial.baseColorFactor).toEqual({ x: 1, y: 0.5, z: 0, w: 0.5 });
-    expect(retrievedGltfMaterial.metallicFactor).toBe(0.5);
-    expect(retrievedGltfMaterial.roughnessFactor).toBe(0.5);
-    expect(retrievedGltfMaterial.emissiveFactor).toEqual({ x: 0, y: 0.5, z: 1 });
-    expect(retrievedGltfMaterial.emissiveStrength).toBe(1.5);
-
-    using baseColorTextureInfo = retrievedGltfMaterial.getBaseColorTexture();
-    expect(baseColorTextureInfo).not.toBeNullable();
-
-    if (!baseColorTextureInfo) {
-      throw new Error('Base color texture info is null');
-    }
-    expect(baseColorTextureInfo.assetCollectionId).toBe(testTextureAssetCollectionId);
-    expect(baseColorTextureInfo.assetId).toBe(testTextureAssetId);
-    expect(baseColorTextureInfo.uvOffset).toEqual({ x: 0.5, y: 0.25 });
-    expect(baseColorTextureInfo.uvRotation).toBe(45);
-    expect(baseColorTextureInfo.uvScale).toEqual({ x: 2, y: 2 });
-    expect(baseColorTextureInfo.texCoord).toBe(1);
-    expect(baseColorTextureInfo.isStereoFlipped).toBe(true);
-    expect(baseColorTextureInfo.stereoVideoType).toBe(csp.StereoVideoType.TopBottom);
-
-    // Delete the test material
-    const deleteMaterialResult = await assetSystem.deleteMaterial(material);
-    expect(deleteMaterialResult.resultCode).toBe(csp.EResultCode.Success);
-
-    // Clean up by deleting the test space
-    const deleteSpaceResult = await spaceSystem.deleteSpace(space.id);
-    expect(deleteSpaceResult.resultCode).toBe(csp.EResultCode.Success);
-  });
-
-  it('Material update events are received', async () => {
-    // Create a test user and log in
-    using userProfile = await makeTestUser(userSystem);
-
-    using loginResult = await userSystem.login(userProfile.email, generatedTestAccountPassword, true, true);
-    expect(loginResult.resultCode).toBe(csp.EResultCode.Success);
-
-    // Enable self-messaging to be able receive events
-    const setAllowSelfMessagingFlagResult = await multiplayerConnection.setAllowSelfMessagingFlag(true);
-    expect(setAllowSelfMessagingFlagResult).toBe(csp.ErrorCode.None);
-
-    // Create and enter a test space
-    using space = await createTestSpace(csp, spaceSystem);
-
-    using realtimeEngine = await enterOnlineSpace(
-      csp,
-      spaceSystem,
-      multiplayerConnection,
-      logSystem,
-      eventBus,
-      scriptSystem,
-      space
-    );
-
-    // ------ Listen for material update events ------
-
-    let callbackCalled = false;
-    let materialCreatedEventReceived = false;
-    let materialUpdatedEventReceived = false;
-    let materialDeletedEventReceived = false;
-
-    assetSystem.setMaterialChangedCallback((materialChangedParams) => {
-      callbackCalled = true;
-
-      if (materialChangedParams.changeType === csp.EAssetChangeType.Created) {
-        materialCreatedEventReceived = true;
-      } else if (materialChangedParams.changeType === csp.EAssetChangeType.Updated) {
-        materialUpdatedEventReceived = true;
-      } else if (materialChangedParams.changeType === csp.EAssetChangeType.Deleted) {
-        materialDeletedEventReceived = true;
+      if (!material) {
+        throw new Error('Material is null');
       }
-    });
 
-    // Create a custom material
-    const materialName = createTestMaterialName();
+      expect(material.name).toBe(materialName);
+      expect(material.shaderType).toBe(csp.EShaderType.Standard);
 
-    using createMaterialResult = await assetSystem.createMaterial(
-      materialName,
-      csp.EShaderType.Standard,
-      space.id,
-      new Map<string, string>(),
-      ['material-test-tag']
-    );
-    expect(createMaterialResult.resultCode).toBe(csp.EResultCode.Success);
+      // ------ Delete the test material ------
 
-    await until(() => callbackCalled);
-    callbackCalled = false;
+      const deleteMaterialResult = await assetSystem.deleteMaterial(material);
 
-    expect(materialCreatedEventReceived).toBe(true);
+      expect(deleteMaterialResult.resultCode).toBe(csp.EResultCode.Success);
 
-    // Materials are client owning pointers, so we need to dispose them and also check for null
-    // before use
-    using material = createMaterialResult.getMaterial();
-    expect(material).not.toBeNullable();
+      // Clean up by deleting the test space
+      const deleteSpaceResult = await spaceSystem.deleteSpace(space.id);
+      expect(deleteSpaceResult.resultCode).toBe(csp.EResultCode.Success);
+    },
+    MATERIAL_TEST_TIMEOUT_MS
+  );
 
-    if (!material) {
-      throw new Error('Material is null');
-    }
+  it(
+    'Update a custom material',
+    async () => {
+      // Create a test user and log in
+      using userProfile = await makeTestUser(userSystem);
 
-    // Update the test material
+      using loginResult = await userSystem.login(userProfile.email, generatedTestAccountPassword, true, true);
+      expect(loginResult.resultCode).toBe(csp.EResultCode.Success);
 
-    // We're down-casting the material here so no `using`, otherwise we'd double delete
-    const gltfMaterial = material as GLTFMaterial;
-    gltfMaterial.metallicFactor = 0.5;
+      // Create a test space
+      using space = await createTestSpace(csp, spaceSystem);
 
-    using updateMaterialResult = await assetSystem.updateMaterial(material);
-    expect(updateMaterialResult.resultCode).toBe(csp.EResultCode.Success);
+      // Create a custom material
 
-    await until(() => callbackCalled);
-    callbackCalled = false;
+      const materialName = createTestMaterialName();
 
-    expect(materialUpdatedEventReceived).toBe(true);
+      using createMaterialResult = await assetSystem.createMaterial(
+        materialName,
+        csp.EShaderType.Standard,
+        space.id,
+        new Map<string, string>(),
+        ['material-test-tag']
+      );
+      expect(createMaterialResult.resultCode).toBe(csp.EResultCode.Success);
 
-    // Delete the test material
+      // Materials are client owning pointers, so we need to dispose them and also check for null
+      // before use
+      using material = createMaterialResult.getMaterial();
+      expect(material).not.toBeNullable();
 
-    const deleteMaterialResult = await assetSystem.deleteMaterial(material);
-    expect(deleteMaterialResult.resultCode).toBe(csp.EResultCode.Success);
+      if (!material) {
+        throw new Error('Material is null');
+      }
 
-    await until(() => callbackCalled);
-    callbackCalled = false;
+      // ------ Update the test material ------
 
-    expect(materialDeletedEventReceived).toBe(true);
+      // We're down-casting the material here so no `using`, otherwise we'd double delete
+      const gltfMaterial = material as GLTFMaterial;
 
-    // Clean up by exiting and deleting the test space
-    using exitSpaceResult = await spaceSystem.exitSpace();
-    expect(exitSpaceResult.resultCode).toBe(csp.EResultCode.Success);
+      gltfMaterial.alphaMode = csp.EAlphaMode.Blend;
+      gltfMaterial.alphaCutoff = 0.75;
+      gltfMaterial.doubleSided = true;
+      gltfMaterial.baseColorFactor = { x: 1, y: 0.5, z: 0, w: 0.5 };
+      gltfMaterial.metallicFactor = 0.5;
+      gltfMaterial.roughnessFactor = 0.5;
+      gltfMaterial.emissiveFactor = { x: 0, y: 0.5, z: 1 };
+      gltfMaterial.emissiveStrength = 1.5;
 
-    const deleteSpaceResult = await spaceSystem.deleteSpace(space.id);
-    expect(deleteSpaceResult.resultCode).toBe(csp.EResultCode.Success);
-  });
+      const testTextureAssetCollectionId = 'test-asset-collection-id';
+      const testTextureAssetId = 'test-asset-id';
+
+      using textureInfo = csp.TextureInfo.create();
+      textureInfo.setCollectionAndAssetId(testTextureAssetCollectionId, testTextureAssetId);
+      textureInfo.uvOffset = { x: 0.5, y: 0.25 };
+      textureInfo.uvRotation = 45;
+      textureInfo.uvScale = { x: 2, y: 2 };
+      textureInfo.texCoord = 1;
+      textureInfo.isStereoFlipped = true;
+      textureInfo.stereoVideoType = csp.StereoVideoType.TopBottom;
+
+      gltfMaterial.setBaseColorTexture(textureInfo);
+
+      using updateMaterialResult = await assetSystem.updateMaterial(material);
+
+      expect(updateMaterialResult.resultCode).toBe(csp.EResultCode.Success);
+
+      // ------ Update the test material and re-retrieve it ------
+
+      using getMaterialResult = await assetSystem.getMaterial(material.materialCollectionId, material.materialId);
+
+      expect(getMaterialResult.resultCode).toBe(csp.EResultCode.Success);
+
+      using retrievedMaterial = getMaterialResult.getMaterial();
+      expect(retrievedMaterial).not.toBeNullable();
+
+      if (!retrievedMaterial) {
+        throw new Error('Retrieved material is null');
+      }
+
+      const retrievedGltfMaterial = retrievedMaterial as GLTFMaterial;
+
+      expect(retrievedGltfMaterial.alphaMode).toBe(csp.EAlphaMode.Blend);
+      expect(retrievedGltfMaterial.alphaCutoff).toBe(0.75);
+      expect(retrievedGltfMaterial.doubleSided).toBe(true);
+      expect(retrievedGltfMaterial.baseColorFactor).toEqual({ x: 1, y: 0.5, z: 0, w: 0.5 });
+      expect(retrievedGltfMaterial.metallicFactor).toBe(0.5);
+      expect(retrievedGltfMaterial.roughnessFactor).toBe(0.5);
+      expect(retrievedGltfMaterial.emissiveFactor).toEqual({ x: 0, y: 0.5, z: 1 });
+      expect(retrievedGltfMaterial.emissiveStrength).toBe(1.5);
+
+      using baseColorTextureInfo = retrievedGltfMaterial.getBaseColorTexture();
+      expect(baseColorTextureInfo).not.toBeNullable();
+
+      if (!baseColorTextureInfo) {
+        throw new Error('Base color texture info is null');
+      }
+      expect(baseColorTextureInfo.assetCollectionId).toBe(testTextureAssetCollectionId);
+      expect(baseColorTextureInfo.assetId).toBe(testTextureAssetId);
+      expect(baseColorTextureInfo.uvOffset).toEqual({ x: 0.5, y: 0.25 });
+      expect(baseColorTextureInfo.uvRotation).toBe(45);
+      expect(baseColorTextureInfo.uvScale).toEqual({ x: 2, y: 2 });
+      expect(baseColorTextureInfo.texCoord).toBe(1);
+      expect(baseColorTextureInfo.isStereoFlipped).toBe(true);
+      expect(baseColorTextureInfo.stereoVideoType).toBe(csp.StereoVideoType.TopBottom);
+
+      // Delete the test material
+      const deleteMaterialResult = await assetSystem.deleteMaterial(material);
+      expect(deleteMaterialResult.resultCode).toBe(csp.EResultCode.Success);
+
+      // Clean up by deleting the test space
+      const deleteSpaceResult = await spaceSystem.deleteSpace(space.id);
+      expect(deleteSpaceResult.resultCode).toBe(csp.EResultCode.Success);
+    },
+    MATERIAL_TEST_TIMEOUT_MS
+  );
+
+  it(
+    'Material update events are received',
+    async () => {
+      // Create a test user and log in
+      using userProfile = await makeTestUser(userSystem);
+
+      using loginResult = await userSystem.login(userProfile.email, generatedTestAccountPassword, true, true);
+      expect(loginResult.resultCode).toBe(csp.EResultCode.Success);
+
+      // Enable self-messaging to be able receive events
+      const setAllowSelfMessagingFlagResult = await multiplayerConnection.setAllowSelfMessagingFlag(true);
+      expect(setAllowSelfMessagingFlagResult).toBe(csp.ErrorCode.None);
+
+      // Create and enter a test space
+      using space = await createTestSpace(csp, spaceSystem);
+
+      using realtimeEngine = await enterOnlineSpace(
+        csp,
+        spaceSystem,
+        multiplayerConnection,
+        logSystem,
+        eventBus,
+        scriptSystem,
+        space
+      );
+
+      // ------ Listen for material update events ------
+
+      let callbackCalled = false;
+      let materialCreatedEventReceived = false;
+      let materialUpdatedEventReceived = false;
+      let materialDeletedEventReceived = false;
+
+      assetSystem.setMaterialChangedCallback((materialChangedParams) => {
+        callbackCalled = true;
+
+        if (materialChangedParams.changeType === csp.EAssetChangeType.Created) {
+          materialCreatedEventReceived = true;
+        } else if (materialChangedParams.changeType === csp.EAssetChangeType.Updated) {
+          materialUpdatedEventReceived = true;
+        } else if (materialChangedParams.changeType === csp.EAssetChangeType.Deleted) {
+          materialDeletedEventReceived = true;
+        }
+      });
+
+      // Create a custom material
+      const materialName = createTestMaterialName();
+
+      using createMaterialResult = await assetSystem.createMaterial(
+        materialName,
+        csp.EShaderType.Standard,
+        space.id,
+        new Map<string, string>(),
+        ['material-test-tag']
+      );
+      expect(createMaterialResult.resultCode).toBe(csp.EResultCode.Success);
+
+      await until(() => callbackCalled);
+      callbackCalled = false;
+
+      expect(materialCreatedEventReceived).toBe(true);
+
+      // Materials are client owning pointers, so we need to dispose them and also check for null
+      // before use
+      using material = createMaterialResult.getMaterial();
+      expect(material).not.toBeNullable();
+
+      if (!material) {
+        throw new Error('Material is null');
+      }
+
+      // Update the test material
+
+      // We're down-casting the material here so no `using`, otherwise we'd double delete
+      const gltfMaterial = material as GLTFMaterial;
+      gltfMaterial.metallicFactor = 0.5;
+
+      using updateMaterialResult = await assetSystem.updateMaterial(material);
+      expect(updateMaterialResult.resultCode).toBe(csp.EResultCode.Success);
+
+      await until(() => callbackCalled);
+      callbackCalled = false;
+
+      expect(materialUpdatedEventReceived).toBe(true);
+
+      // Delete the test material
+
+      const deleteMaterialResult = await assetSystem.deleteMaterial(material);
+      expect(deleteMaterialResult.resultCode).toBe(csp.EResultCode.Success);
+
+      await until(() => callbackCalled);
+      callbackCalled = false;
+
+      expect(materialDeletedEventReceived).toBe(true);
+
+      // Clean up by exiting and deleting the test space
+      using exitSpaceResult = await spaceSystem.exitSpace();
+      expect(exitSpaceResult.resultCode).toBe(csp.EResultCode.Success);
+
+      const deleteSpaceResult = await spaceSystem.deleteSpace(space.id);
+      expect(deleteSpaceResult.resultCode).toBe(csp.EResultCode.Success);
+    },
+    MATERIAL_TEST_TIMEOUT_MS
+  );
 });
