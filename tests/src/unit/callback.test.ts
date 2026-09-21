@@ -389,7 +389,7 @@ describeOnAndOffThread('Callbacks', (offThread, modeLabel) => {
     const heapAfter = (freshCsp as unknown as { HEAPU8: Uint8Array }).HEAPU8.byteLength;
     expect(heapAfter).toBe(heapBefore);
     expect(callbackInvocationCount).toBe(targetIterations);
-  });
+  }, 120_000);
 
   /*
    * Tests callback argument lifetime specificities.

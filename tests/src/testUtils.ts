@@ -1,5 +1,19 @@
 import { describe } from 'vitest';
-import { CspRequestError, LogLevel, MainModule, Profile, UserSystem } from 'connected-spaces-platform-bindings';
+import {
+  CspRequestError,
+  LogLevel,
+  LogSystem,
+  MainModule,
+  MultiplayerConnection,
+  NetworkEventBus,
+  OnlineRealtimeEngine,
+  Profile,
+  ScriptSystem,
+  Space,
+  SpaceResult,
+  SpaceSystem,
+  UserSystem
+} from 'connected-spaces-platform-bindings';
 
 /* Timer to let us busy-wait on callbacks finishing. */
 export async function until(predicate: () => boolean, timeoutMs = 6000): Promise<void> {
@@ -119,12 +133,25 @@ export function registerLogSystemCallback(csp: MainModule, systemLevel: LogLevel
   });
 }
 
+/*
+ * This is handy to have when debugging, so you can just throw a `printCSPRequestError(err as CspRequestError)` inside a catch block.
+ * For example :
+    try {
+      await userSystem.login(profile.email, 'NotTheCorrectPassword', false, true);
+    } catch (error) {
+      printCSPRequestError(error as CspRequestError);
+    }
+ */
+export function printCSPRequestError(e: CspRequestError) {
+  console.error(`CSP Request Error: http ${e.httpResultCode}, reason ${e.failureReason}\n${e.responseBody}`);
+}
+
 export const generatedTestAccountEmailFormat = 'testnopus.pokemon{}@magnopus.com';
 export const generatedTestAccountPassword = '3R{d2}3C<x[J7=jU';
 export const generatedTestAccountDisplayName = 'WasmBindingsTestUser';
 
 /**
- * Make a test user on the test tenant
+ * Make a test user on the test tenant.
  */
 export async function makeTestUser(userSystem: UserSystem | null): Promise<Profile> {
   if (userSystem === null) {
@@ -148,8 +175,52 @@ export async function makeTestUser(userSystem: UserSystem | null): Promise<Profi
     let profile = result.getProfile();
     return profile;
   } catch (error) {
-    const e = error as CspRequestError;
-    console.error(`creating test user failed: http ${e.httpResultCode}, reason ${e.failureReason}\n${e.responseBody}`);
+    printCSPRequestError(error as CspRequestError);
+    throw error;
+  }
+}
+
+/*
+ * Create a uniquely named ad hoc test space. Returns a space object, remember to grab it with `using`
+ */
+export async function createTestSpace(csp: MainModule, spaceSystem: SpaceSystem): Promise<Space> {
+  try {
+    using createSpaceResult = await spaceSystem.createSpace(
+      'WASM-INTEROP-TESTSPACE-{}'.replace('{}', crypto.randomUUID()),
+      'Test space in WASM interop tests',
+      csp.SpaceAttributes.Public,
+      undefined,
+      new Map<string, string>()
+    );
+
+    // Make sure to grab this with using.
+    return createSpaceResult.getSpace();
+  } catch (error) {
+    printCSPRequestError(error as CspRequestError);
+    throw error;
+  }
+}
+
+/*
+ * Enter a space in an online context. Returns an OnlineRealtimeEngine, remember to grab it with `using`
+ */
+export async function enterOnlineSpace(
+  csp: MainModule,
+  spaceSystem: SpaceSystem,
+  multiplayerConnection: MultiplayerConnection,
+  logSystem: LogSystem,
+  eventBus: NetworkEventBus,
+  scriptSystem: ScriptSystem,
+  space: Space
+): Promise<OnlineRealtimeEngine> {
+  try {
+    let realtimeEngine = csp.OnlineRealtimeEngine.create(multiplayerConnection, logSystem, eventBus, scriptSystem);
+    realtimeEngine.setEntityFetchCompleteCallback((entityCount: number) => {});
+    using enterResult = await spaceSystem.enterSpace(space.id, realtimeEngine);
+    expect(enterResult.resultCode).toBe(csp.EResultCode.Success);
+    return realtimeEngine;
+  } catch (error) {
+    printCSPRequestError(error as CspRequestError);
     throw error;
   }
 }

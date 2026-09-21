@@ -24,7 +24,6 @@ EMSCRIPTEN_BINDINGS(CSPMultiplayerConnection)
     emscripten::class_<csp::multiplayer::MultiplayerConnection>("MultiplayerConnection")
         .property("clientId", &csp::multiplayer::MultiplayerConnection::GetClientId)
         .property("connectionState", &csp::multiplayer::MultiplayerConnection::GetConnectionState)
-        .property("allowSelfMessagingFlag", &csp::multiplayer::MultiplayerConnection::GetAllowSelfMessagingFlag)
         .function(
             "setDisconnectionCallback(callback)",
             +[](csp::multiplayer::MultiplayerConnection& self, ConnectionStatusCallback callback) { self.SetDisconnectionCallback(ToNativeCallback(callback)); })
@@ -34,6 +33,7 @@ EMSCRIPTEN_BINDINGS(CSPMultiplayerConnection)
         .function(
             "setNetworkInterruptionCallback(callback)",
             +[](csp::multiplayer::MultiplayerConnection& self, ConnectionStatusCallback callback) { self.SetNetworkInterruptionCallback(ToNativeCallback(callback)); })
+        .function("getAllowSelfMessagingFlag", &csp::multiplayer::MultiplayerConnection::GetAllowSelfMessagingFlag)
         .function(
             "setAllowSelfMessagingFlag(allowSelfMessaging)",
             +[](csp::multiplayer::MultiplayerConnection& self, bool allowSelfMessaging) {
