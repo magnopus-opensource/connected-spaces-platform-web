@@ -1,5 +1,5 @@
 import { describe } from 'vitest';
-import { MainModule } from 'connected-spaces-platform-bindings';
+import { CspRequestError, LogLevel, MainModule, Profile, UserSystem } from 'connected-spaces-platform-bindings';
 
 /* Timer to let us busy-wait on callbacks finishing. */
 export async function until(predicate: () => boolean, timeoutMs = 6000): Promise<void> {
@@ -93,3 +93,63 @@ export const describeOnAndOffThread = (name: string, describeFn: (offThread: boo
     describe(`${name} - ${mode}`, () => describeFn(offThread, mode));
   }
 };
+
+/**
+ * Route CSP's log output to the browser console
+ */
+export function registerLogSystemCallback(csp: MainModule, systemLevel: LogLevel = csp.LogLevel.VeryVerbose): void {
+  const logSystem = csp.SystemsManager.get().getLogSystem();
+
+  if (logSystem === null) {
+    throw new Error('registerLogSystemCallback: no LogSystem available - has CSPFoundation.initialise been called?');
+  }
+
+  logSystem.systemLevel = systemLevel;
+
+  logSystem.setLogCallback((level, message) => {
+    const line = `[CSP] ${message}`;
+
+    if (level === csp.LogLevel.Fatal || level === csp.LogLevel.Error) {
+      console.error(line);
+    } else if (level === csp.LogLevel.Warning) {
+      console.warn(line);
+    } else {
+      console.log(line);
+    }
+  });
+}
+
+export const generatedTestAccountEmailFormat = 'testnopus.pokemon{}@magnopus.com';
+export const generatedTestAccountPassword = '3R{d2}3C<x[J7=jU';
+export const generatedTestAccountDisplayName = 'WasmBindingsTestUser';
+
+/**
+ * Make a test user on the test tenant
+ */
+export async function makeTestUser(userSystem: UserSystem | null): Promise<Profile> {
+  if (userSystem === null) {
+    throw new Error('MakeTestUser provided null usersystem');
+  }
+
+  const email = generatedTestAccountEmailFormat.replace('{}', crypto.randomUUID());
+  const displayName = generatedTestAccountDisplayName;
+
+  try {
+    using result = await userSystem.createUser(
+      displayName,
+      email,
+      generatedTestAccountPassword,
+      false,
+      true,
+      undefined,
+      undefined
+    );
+
+    let profile = result.getProfile();
+    return profile;
+  } catch (error) {
+    const e = error as CspRequestError;
+    console.error(`creating test user failed: http ${e.httpResultCode}, reason ${e.failureReason}\n${e.responseBody}`);
+    throw error;
+  }
+}

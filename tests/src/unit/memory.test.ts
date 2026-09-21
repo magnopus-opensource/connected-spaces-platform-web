@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { loadCSP } from '../loadModule';
+import { loadCSP } from '../../loadModule';
 import createModule, { type MainModule } from 'connected-spaces-platform-bindings';
-import { forceHeapGrowth } from './testUtils';
+import { forceHeapGrowth } from '../testUtils';
 
 describe('CSPFoundation', () => {
   let csp: MainModule;
@@ -818,5 +818,27 @@ describe('CSPFoundation', () => {
 
     // Owned pointer is now disposed, so count decreases.
     expect(csp.BindingsTestType.aliveCount()).toBe(aliveCountBefore);
+  });
+
+  it('Handle returned from an async function is disposed by the callers `using`', async () => {
+    const before = csp.BindingsTestType.aliveCount();
+
+    async function createHandleInFunction() {
+      let handle = csp.BindingsTestType.create(1, 'returned-through-a-function');
+      return handle;
+    }
+
+    {
+      using returned = await createHandleInFunction();
+
+      // We survive the return
+      expect(returned.isDeleted()).toBe(false);
+      expect(returned.value).toBe(1);
+      expect(returned.name).toBe('returned-through-a-function');
+      expect(csp.BindingsTestType.aliveCount()).toBe(before + 1);
+    }
+
+    // On scope exit, we're freed
+    expect(csp.BindingsTestType.aliveCount()).toBe(before);
   });
 });

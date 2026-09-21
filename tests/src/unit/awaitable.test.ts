@@ -1,7 +1,7 @@
 import { beforeAll, beforeEach, expect, it } from 'vitest';
-import { loadCSP } from '../loadModule';
+import { loadCSP } from '../../loadModule';
 import { BindingsTestType, type MainModule } from 'connected-spaces-platform-bindings';
-import { describeOnAndOffThread, untilCallbacksSettled } from './testUtils';
+import { describeOnAndOffThread, untilCallbacksSettled } from '../testUtils';
 
 /*
  * Tests for the binding of awaitable callbacks into the typescript boundary.

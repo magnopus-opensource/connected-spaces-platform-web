@@ -1,7 +1,7 @@
 import { it, expect, beforeAll } from 'vitest';
-import { loadCSP } from '../loadModule';
+import { loadCSP } from '../../loadModule';
 import type { MainModule } from 'connected-spaces-platform-bindings';
-import { describeOnAndOffThread, untilCallbacksSettled } from './testUtils';
+import { describeOnAndOffThread, untilCallbacksSettled } from '../testUtils';
 
 /*
  * Test ResultBase bindings integration with callbacks.
