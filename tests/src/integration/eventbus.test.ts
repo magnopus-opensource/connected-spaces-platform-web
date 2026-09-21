@@ -126,7 +126,7 @@ describe('CSP EventBus Integrations', () => {
     expect(eventBus.allRegistrations().length).toBe(initialEventCount + 0);
   });
 
-  it('Reject deuplicate callback registration', async () => {
+  it('Reject duplicate callback registration', async () => {
     // We register to internal events (access control, asset detail chanced, async call completed, etc) as standard,
     // but we only want to measure the delta here.
     let initialEventCount = eventBus.allRegistrations().length;
