@@ -246,13 +246,19 @@ export async function enterOnlineSpace(
   logSystem: LogSystem,
   eventBus: NetworkEventBus,
   scriptSystem: ScriptSystem,
-  space: Space
+  space: Space,
+  scriptLeaderReadyCallback?: (success: boolean) => void
 ): Promise<OnlineRealtimeEngine> {
   try {
     let realtimeEngine = csp.OnlineRealtimeEngine.create(multiplayerConnection, logSystem, eventBus, scriptSystem);
     realtimeEngine.setEntityFetchCompleteCallback((entityCount: number) => {});
     using enterResult = await spaceSystem.enterSpace(space.id, realtimeEngine);
     expect(enterResult.resultCode).toBe(csp.EResultCode.Success);
+
+    if (scriptLeaderReadyCallback) {
+      realtimeEngine.setScriptLeaderReadyCallback(scriptLeaderReadyCallback);
+    }
+
     return realtimeEngine;
   } catch (error) {
     printCSPRequestError(error as CspRequestError);
