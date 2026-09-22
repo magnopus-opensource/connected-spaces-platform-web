@@ -67,20 +67,20 @@ describe('CSP User Integrations', () => {
   });
 
   it('Login as User', async () => {
-    let profile = await makeTestUser(userSystem);
+    using profile = await makeTestUser(userSystem);
     using loginResult = await userSystem.login(profile.email, generatedTestAccountPassword, false, true);
     expect(loginResult.resultCode).toBe(csp.EResultCode.Success);
   });
 
   it('Login as User And Create Multiplayer Connection', async () => {
-    let profile = await makeTestUser(userSystem);
+    using profile = await makeTestUser(userSystem);
     using loginResult = await userSystem.login(profile.email, generatedTestAccountPassword, true, true);
     expect(loginResult.resultCode).toBe(csp.EResultCode.Success);
     expect(systemsManager.getMultiplayerConnection()?.connectionState).toBe(csp.ConnectionState.Connected);
   });
 
   it('Re-Login Same Account', async () => {
-    let profile = await makeTestUser(userSystem);
+    using profile = await makeTestUser(userSystem);
     using loginResult = await userSystem.login(profile.email, generatedTestAccountPassword, false, true);
     expect(loginResult.resultCode).toBe(csp.EResultCode.Success);
     expect(userSystem.getLoginState().loginStateValue).toBe(csp.ELoginState.LoggedIn);
@@ -95,7 +95,7 @@ describe('CSP User Integrations', () => {
   });
 
   it('Fail to login with bad password', async () => {
-    let profile = await makeTestUser(userSystem);
+    using profile = await makeTestUser(userSystem);
 
     /* A Failed result rejects the promise rather than resolving it, so there is no result handle to dispose. */
     await expect(userSystem.login(profile.email, 'NotTheCorrectPassword', false, true)).rejects.toMatchObject({
