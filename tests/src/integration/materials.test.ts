@@ -16,103 +16,100 @@ import {
   enterOnlineSpace,
   generatedTestAccountPassword,
   initCsp,
+  INTEGRATION_TEST_TIMEOUT_MS,
   makeTestUser,
   registerLogSystemCallback,
   until
 } from '../testUtils';
 
-// Allow these integration tests to run longer than the configured timeout.
-// This matters for WebKit and Firefox which are slower than Chromium for some reason.
-const MATERIAL_TEST_TIMEOUT_MS = 60_000;
-
 const createTestMaterialName = () => `WASM-INTEROP-TESTMATERIAL-${crypto.randomUUID()}`;
 
-describe('CSP Custom Material Integration Tests', () => {
-  let csp: MainModule;
+describe(
+  'CSP Custom Material Integration Tests',
+  () => {
+    let csp: MainModule;
 
-  let systemsManager: SystemsManager;
-  let assetSystem: AssetSystem;
-  let userSystem: UserSystem;
-  let eventBus: NetworkEventBus;
-  let spaceSystem: SpaceSystem;
-  let multiplayerConnection: MultiplayerConnection;
-  let logSystem: LogSystem;
-  let scriptSystem: ScriptSystem;
+    let systemsManager: SystemsManager;
+    let assetSystem: AssetSystem;
+    let userSystem: UserSystem;
+    let eventBus: NetworkEventBus;
+    let spaceSystem: SpaceSystem;
+    let multiplayerConnection: MultiplayerConnection;
+    let logSystem: LogSystem;
+    let scriptSystem: ScriptSystem;
 
-  beforeAll(async () => {
-    csp = await initCsp();
+    beforeAll(async () => {
+      csp = await initCsp();
 
-    systemsManager = csp.SystemsManager.get();
+      systemsManager = csp.SystemsManager.get();
 
-    let userSystemOrNull = systemsManager.getUserSystem();
-    if (userSystemOrNull === null) {
-      throw new Error('Could not get UserSystem');
-    } else {
-      userSystem = userSystemOrNull;
-    }
+      let userSystemOrNull = systemsManager.getUserSystem();
+      if (userSystemOrNull === null) {
+        throw new Error('Could not get UserSystem');
+      } else {
+        userSystem = userSystemOrNull;
+      }
 
-    let assetSystemOrNull = systemsManager.getAssetSystem();
-    if (assetSystemOrNull === null) {
-      throw new Error('Could not get AssetSystem');
-    } else {
-      assetSystem = assetSystemOrNull;
-    }
+      let assetSystemOrNull = systemsManager.getAssetSystem();
+      if (assetSystemOrNull === null) {
+        throw new Error('Could not get AssetSystem');
+      } else {
+        assetSystem = assetSystemOrNull;
+      }
 
-    let eventBusOrNull = systemsManager.getEventBus();
-    if (eventBusOrNull === null) {
-      throw new Error('Could not get EventBus');
-    } else {
-      eventBus = eventBusOrNull;
-    }
+      let eventBusOrNull = systemsManager.getEventBus();
+      if (eventBusOrNull === null) {
+        throw new Error('Could not get EventBus');
+      } else {
+        eventBus = eventBusOrNull;
+      }
 
-    let spaceSystemOrNull = systemsManager.getSpaceSystem();
-    if (spaceSystemOrNull === null) {
-      throw new Error('Could not get SpaceSystem');
-    } else {
-      spaceSystem = spaceSystemOrNull;
-    }
+      let spaceSystemOrNull = systemsManager.getSpaceSystem();
+      if (spaceSystemOrNull === null) {
+        throw new Error('Could not get SpaceSystem');
+      } else {
+        spaceSystem = spaceSystemOrNull;
+      }
 
-    let multiplayerConnectionOrNull = systemsManager.getMultiplayerConnection();
-    if (multiplayerConnectionOrNull === null) {
-      throw new Error('Could not get MultiplayerConnection');
-    } else {
-      multiplayerConnection = multiplayerConnectionOrNull;
-    }
+      let multiplayerConnectionOrNull = systemsManager.getMultiplayerConnection();
+      if (multiplayerConnectionOrNull === null) {
+        throw new Error('Could not get MultiplayerConnection');
+      } else {
+        multiplayerConnection = multiplayerConnectionOrNull;
+      }
 
-    let logSystemOrNull = systemsManager.getLogSystem();
-    if (logSystemOrNull === null) {
-      throw new Error('Could not get LogSystem');
-    } else {
-      logSystem = logSystemOrNull;
-    }
+      let logSystemOrNull = systemsManager.getLogSystem();
+      if (logSystemOrNull === null) {
+        throw new Error('Could not get LogSystem');
+      } else {
+        logSystem = logSystemOrNull;
+      }
 
-    let scriptSystemOrNull = systemsManager.getScriptSystem();
-    if (scriptSystemOrNull === null) {
-      throw new Error('Could not get ScriptSystem');
-    } else {
-      scriptSystem = scriptSystemOrNull;
-    }
+      let scriptSystemOrNull = systemsManager.getScriptSystem();
+      if (scriptSystemOrNull === null) {
+        throw new Error('Could not get ScriptSystem');
+      } else {
+        scriptSystem = scriptSystemOrNull;
+      }
 
-    registerLogSystemCallback(csp);
-  });
+      registerLogSystemCallback(csp);
+    });
 
-  afterEach(async () => {
-    if (userSystem.getLoginState().loginStateValue === csp.ELoginState.LoggedIn) {
-      using logoutResult = await userSystem.logout();
+    afterEach(async () => {
+      if (userSystem.getLoginState().loginStateValue === csp.ELoginState.LoggedIn) {
+        using logoutResult = await userSystem.logout();
 
-      expect(logoutResult.resultCode).toBe(csp.EResultCode.Success);
-    }
-  });
+        expect(logoutResult.resultCode).toBe(csp.EResultCode.Success);
+      }
+    });
 
-  afterAll(async () => {
-    await multiplayerConnection.setAllowSelfMessagingFlag(false);
+    afterAll(async () => {
+      await multiplayerConnection.setAllowSelfMessagingFlag(false);
 
-    expect(csp.CSPFoundation.shutdown()).toBe(true);
-  });
+      expect(csp.CSPFoundation.shutdown()).toBe(true);
+    });
 
-  it(
-    'Create and delete custom material',
-    async () => {
+    it('Create and delete custom material', async () => {
       // Create a test user and log in
       using userProfile = await makeTestUser(userSystem);
 
@@ -158,13 +155,9 @@ describe('CSP Custom Material Integration Tests', () => {
       // Clean up by deleting the test space
       const deleteSpaceResult = await spaceSystem.deleteSpace(space.id);
       expect(deleteSpaceResult.resultCode).toBe(csp.EResultCode.Success);
-    },
-    MATERIAL_TEST_TIMEOUT_MS
-  );
+    });
 
-  it(
-    'Update a custom material',
-    async () => {
+    it('Update a custom material', async () => {
       // Create a test user and log in
       using userProfile = await makeTestUser(userSystem);
 
@@ -274,13 +267,9 @@ describe('CSP Custom Material Integration Tests', () => {
       // Clean up by deleting the test space
       const deleteSpaceResult = await spaceSystem.deleteSpace(space.id);
       expect(deleteSpaceResult.resultCode).toBe(csp.EResultCode.Success);
-    },
-    MATERIAL_TEST_TIMEOUT_MS
-  );
+    });
 
-  it(
-    'Material update events are received',
-    async () => {
+    it('Material update events are received', async () => {
       // Create a test user and log in
       using userProfile = await makeTestUser(userSystem);
 
@@ -379,7 +368,7 @@ describe('CSP Custom Material Integration Tests', () => {
 
       const deleteSpaceResult = await spaceSystem.deleteSpace(space.id);
       expect(deleteSpaceResult.resultCode).toBe(csp.EResultCode.Success);
-    },
-    MATERIAL_TEST_TIMEOUT_MS
-  );
-});
+    });
+  },
+  INTEGRATION_TEST_TIMEOUT_MS
+);

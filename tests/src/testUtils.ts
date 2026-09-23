@@ -15,6 +15,10 @@ import {
 } from 'connected-spaces-platform-bindings';
 import { loadCSP } from '../loadModule';
 
+// Allow these integration tests to run longer than the configured timeout.
+// This matters for WebKit and Firefox which are slower than Chromium for some reason.
+export const INTEGRATION_TEST_TIMEOUT_MS = 60_000;
+
 /* Timer to let us busy-wait on callbacks finishing. */
 export async function until(predicate: () => boolean, { timeoutMs = 6000, intervalMs = 0 } = {}): Promise<void> {
   const deadline = performance.now() + timeoutMs;

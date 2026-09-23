@@ -14,14 +14,11 @@ import {
   enterOnlineSpace,
   generatedTestAccountPassword,
   initCsp,
+  INTEGRATION_TEST_TIMEOUT_MS,
   makeTestUser,
   registerLogSystemCallback,
   until
 } from '../testUtils';
-
-// Allow these integration tests to run longer than the configured timeout.
-// This matters for WebKit and Firefox which are slower than Chromium for some reason.
-const INTEGRATION_TEST_TIMEOUT_MS = 60_000;
 
 // Smallest possible PNG image (1x1 pixel transparent image)
 // prettier-ignore
@@ -37,86 +34,86 @@ const pngTestData = new Uint8Array([
   0x42, 0x60, 0x82
 ]);
 
-describe('Conversation', () => {
-  let csp: MainModule;
+describe(
+  'CSP Conversation Integration Tests',
+  () => {
+    let csp: MainModule;
 
-  let spaceSystem: SpaceSystem;
-  let userSystem: UserSystem;
-  let logSystem: LogSystem;
-  let scriptSystem: ScriptSystem;
-  let multiplayerConnection: MultiplayerConnection;
-  let eventBus: NetworkEventBus;
+    let spaceSystem: SpaceSystem;
+    let userSystem: UserSystem;
+    let logSystem: LogSystem;
+    let scriptSystem: ScriptSystem;
+    let multiplayerConnection: MultiplayerConnection;
+    let eventBus: NetworkEventBus;
 
-  beforeAll(async () => {
-    csp = await initCsp();
+    beforeAll(async () => {
+      csp = await initCsp();
 
-    const systemsManager = csp.SystemsManager.get();
+      const systemsManager = csp.SystemsManager.get();
 
-    let userSystemOrNull = systemsManager.getUserSystem();
-    if (userSystemOrNull === null) {
-      throw new Error('Could not get UserSystem');
-    } else {
-      userSystem = userSystemOrNull;
-    }
+      let userSystemOrNull = systemsManager.getUserSystem();
+      if (userSystemOrNull === null) {
+        throw new Error('Could not get UserSystem');
+      } else {
+        userSystem = userSystemOrNull;
+      }
 
-    let spaceSystemOrNull = systemsManager.getSpaceSystem();
-    if (spaceSystemOrNull === null) {
-      throw new Error('Could not get SpaceSystem');
-    } else {
-      spaceSystem = spaceSystemOrNull;
-    }
+      let spaceSystemOrNull = systemsManager.getSpaceSystem();
+      if (spaceSystemOrNull === null) {
+        throw new Error('Could not get SpaceSystem');
+      } else {
+        spaceSystem = spaceSystemOrNull;
+      }
 
-    let logSystemOrNull = systemsManager.getLogSystem();
-    if (logSystemOrNull === null) {
-      throw new Error('Could not get LogSystem');
-    } else {
-      logSystem = logSystemOrNull;
-    }
+      let logSystemOrNull = systemsManager.getLogSystem();
+      if (logSystemOrNull === null) {
+        throw new Error('Could not get LogSystem');
+      } else {
+        logSystem = logSystemOrNull;
+      }
 
-    let scriptSystemOrNull = systemsManager.getScriptSystem();
-    if (scriptSystemOrNull === null) {
-      throw new Error('Could not get ScriptSystem');
-    } else {
-      scriptSystem = scriptSystemOrNull;
-    }
+      let scriptSystemOrNull = systemsManager.getScriptSystem();
+      if (scriptSystemOrNull === null) {
+        throw new Error('Could not get ScriptSystem');
+      } else {
+        scriptSystem = scriptSystemOrNull;
+      }
 
-    let multiplayerConnectionOrNull = systemsManager.getMultiplayerConnection();
-    if (multiplayerConnectionOrNull === null) {
-      throw new Error('Could not get MultiplayerConnection');
-    } else {
-      multiplayerConnection = multiplayerConnectionOrNull;
-    }
+      let multiplayerConnectionOrNull = systemsManager.getMultiplayerConnection();
+      if (multiplayerConnectionOrNull === null) {
+        throw new Error('Could not get MultiplayerConnection');
+      } else {
+        multiplayerConnection = multiplayerConnectionOrNull;
+      }
 
-    let eventBusOrNull = systemsManager.getEventBus();
-    if (eventBusOrNull === null) {
-      throw new Error('Could not get EventBus');
-    } else {
-      eventBus = eventBusOrNull;
-    }
+      let eventBusOrNull = systemsManager.getEventBus();
+      if (eventBusOrNull === null) {
+        throw new Error('Could not get EventBus');
+      } else {
+        eventBus = eventBusOrNull;
+      }
 
-    registerLogSystemCallback(csp);
-  });
+      registerLogSystemCallback(csp);
+    });
 
-  afterEach(async () => {
-    const setAllowSelfMessagingFlagResult = await multiplayerConnection.setAllowSelfMessagingFlag(false);
-    expect(setAllowSelfMessagingFlagResult).toBe(csp.ErrorCode.None);
+    afterEach(async () => {
+      const setAllowSelfMessagingFlagResult = await multiplayerConnection.setAllowSelfMessagingFlag(false);
+      expect(setAllowSelfMessagingFlagResult).toBe(csp.ErrorCode.None);
 
-    if (userSystem.getLoginState().loginStateValue === csp.ELoginState.LoggedIn) {
-      using logoutResult = await userSystem.logout();
+      if (userSystem.getLoginState().loginStateValue === csp.ELoginState.LoggedIn) {
+        using logoutResult = await userSystem.logout();
 
-      expect(logoutResult.resultCode).toBe(csp.EResultCode.Success);
-    }
-  });
+        expect(logoutResult.resultCode).toBe(csp.EResultCode.Success);
+      }
+    });
 
-  afterAll(async () => {
-    expect(csp.CSPFoundation.shutdown()).toBe(true);
-  });
+    afterAll(async () => {
+      expect(csp.CSPFoundation.shutdown()).toBe(true);
+    });
 
-  //================================================================================================
+    //================================================================================================
 
-  it(
-    'Create a conversation',
-    async () => {
+    it('Create a conversation', async () => {
       // Create a test user and log in
       using userProfile = await makeTestUser(userSystem);
 
@@ -177,13 +174,9 @@ describe('Conversation', () => {
 
       using spaceDeletionResult = await spaceSystem.deleteSpace(space.id);
       expect(spaceDeletionResult.resultCode).toBe(csp.EResultCode.Success);
-    },
-    INTEGRATION_TEST_TIMEOUT_MS
-  );
+    });
 
-  it(
-    'Update a conversation',
-    async () => {
+    it('Update a conversation', async () => {
       // Create a test user and log in
       using userProfile = await makeTestUser(userSystem);
 
@@ -258,13 +251,9 @@ describe('Conversation', () => {
 
       using spaceDeletionResult = await spaceSystem.deleteSpace(space.id);
       expect(spaceDeletionResult.resultCode).toBe(csp.EResultCode.Success);
-    },
-    INTEGRATION_TEST_TIMEOUT_MS
-  );
+    });
 
-  it(
-    'The update conversation callback is called',
-    async () => {
+    it('The update conversation callback is called', async () => {
       // Create a test user and log in
       using userProfile = await makeTestUser(userSystem);
 
@@ -395,13 +384,9 @@ describe('Conversation', () => {
 
       using spaceDeletionResult = await spaceSystem.deleteSpace(space.id);
       expect(spaceDeletionResult.resultCode).toBe(csp.EResultCode.Success);
-    },
-    INTEGRATION_TEST_TIMEOUT_MS
-  );
+    });
 
-  it(
-    'Add messages (replies) to a conversation',
-    async () => {
+    it('Add messages (replies) to a conversation', async () => {
       // Create a test user and log in
       using userProfile = await makeTestUser(userSystem);
 
@@ -496,13 +481,9 @@ describe('Conversation', () => {
 
       using spaceDeletionResult = await spaceSystem.deleteSpace(space.id);
       expect(spaceDeletionResult.resultCode).toBe(csp.EResultCode.Success);
-    },
-    INTEGRATION_TEST_TIMEOUT_MS
-  );
+    });
 
-  it(
-    'Add an annotation to a conversation',
-    async () => {
+    it('Add an annotation to a conversation', async () => {
       // Create a test user and log in
       using userProfile = await makeTestUser(userSystem);
 
@@ -608,7 +589,7 @@ describe('Conversation', () => {
 
       using spaceDeletionResult = await spaceSystem.deleteSpace(space.id);
       expect(spaceDeletionResult.resultCode).toBe(csp.EResultCode.Success);
-    },
-    INTEGRATION_TEST_TIMEOUT_MS
-  );
-});
+    });
+  },
+  INTEGRATION_TEST_TIMEOUT_MS
+);
