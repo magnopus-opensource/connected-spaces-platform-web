@@ -1,5 +1,4 @@
 import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest';
-import { loadCSP } from '../../loadModule';
 import type {
   MainModule,
   SystemsManager,
@@ -11,6 +10,7 @@ import {
   createTestSpace,
   enterOnlineSpace,
   generatedTestAccountPassword,
+  initCsp,
   makeTestUser,
   registerLogSystemCallback
 } from '../testUtils';
@@ -26,17 +26,7 @@ describe('CSP Asset Integrations', () => {
   let spaceSystem: SpaceSystem;
 
   beforeAll(async () => {
-    csp = await loadCSP();
-
-    using userAgent = csp.ClientUserAgent.create();
-    userAgent.cspVersion = csp.CSPFoundation.getVersion();
-    userAgent.clientOs = 'WASMTestsOS';
-    userAgent.clientSku = 'connected-spaces-platform-web-tests';
-    userAgent.clientVersion = csp.CSPFoundation.getVersion();
-    userAgent.clientEnvironment = 'ODev';
-    userAgent.chsEnvironment = 'oDev';
-
-    csp.CSPFoundation.initialise(ENDPOINT_ROOT_URI, TENANT, userAgent);
+    csp = await initCsp();
 
     systemsManager = csp.SystemsManager.get();
 

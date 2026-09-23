@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest';
-import { loadCSP } from '../../loadModule';
 import type { MainModule, SystemsManager, UserSystem, CspRequestError } from 'connected-spaces-platform-bindings';
 import {
   generatedTestAccountDisplayName,
   generatedTestAccountPassword,
+  initCsp,
   makeTestUser,
   registerLogSystemCallback
 } from '../testUtils';
@@ -17,17 +17,7 @@ describe('CSP User Integrations', () => {
   let userSystem: UserSystem;
 
   beforeAll(async () => {
-    csp = await loadCSP();
-
-    using userAgent = csp.ClientUserAgent.create();
-    userAgent.cspVersion = csp.CSPFoundation.getVersion();
-    userAgent.clientOs = 'WASMTestsOS';
-    userAgent.clientSku = 'connected-spaces-platform-web-tests';
-    userAgent.clientVersion = csp.CSPFoundation.getVersion();
-    userAgent.clientEnvironment = 'ODev';
-    userAgent.chsEnvironment = 'oDev';
-
-    csp.CSPFoundation.initialise(ENDPOINT_ROOT_URI, TENANT, userAgent);
+    csp = await initCsp();
 
     systemsManager = csp.SystemsManager.get();
 
