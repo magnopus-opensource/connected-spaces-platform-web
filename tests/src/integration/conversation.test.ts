@@ -14,7 +14,6 @@ import {
   createTestSpace,
   enterOnlineSpace,
   initCsp,
-  INTEGRATION_TEST_TIMEOUT_MS,
   loginTestUser,
   makeTestUser,
   registerLogSystemCallback,
@@ -40,550 +39,546 @@ interface ConversationUpdateTestEvent {
   message: string;
 }
 
-describe(
-  'CSP Conversation Integration Tests',
-  () => {
-    let csp: MainModule;
+describe('CSP Conversation Integration Tests', () => {
+  let csp: MainModule;
 
-    let spaceSystem: SpaceSystem;
-    let userSystem: UserSystem;
-    let logSystem: LogSystem;
-    let scriptSystem: ScriptSystem;
-    let multiplayerConnection: MultiplayerConnection;
-    let eventBus: NetworkEventBus;
+  let spaceSystem: SpaceSystem;
+  let userSystem: UserSystem;
+  let logSystem: LogSystem;
+  let scriptSystem: ScriptSystem;
+  let multiplayerConnection: MultiplayerConnection;
+  let eventBus: NetworkEventBus;
 
-    beforeAll(async () => {
-      csp = await initCsp();
+  beforeAll(async () => {
+    csp = await initCsp();
 
-      const systemsManager = csp.SystemsManager.get();
+    const systemsManager = csp.SystemsManager.get();
 
-      let userSystemOrNull = systemsManager.getUserSystem();
-      if (userSystemOrNull === null) {
-        throw new Error('Could not get UserSystem');
-      } else {
-        userSystem = userSystemOrNull;
-      }
+    let userSystemOrNull = systemsManager.getUserSystem();
+    if (userSystemOrNull === null) {
+      throw new Error('Could not get UserSystem');
+    } else {
+      userSystem = userSystemOrNull;
+    }
 
-      let spaceSystemOrNull = systemsManager.getSpaceSystem();
-      if (spaceSystemOrNull === null) {
-        throw new Error('Could not get SpaceSystem');
-      } else {
-        spaceSystem = spaceSystemOrNull;
-      }
+    let spaceSystemOrNull = systemsManager.getSpaceSystem();
+    if (spaceSystemOrNull === null) {
+      throw new Error('Could not get SpaceSystem');
+    } else {
+      spaceSystem = spaceSystemOrNull;
+    }
 
-      let logSystemOrNull = systemsManager.getLogSystem();
-      if (logSystemOrNull === null) {
-        throw new Error('Could not get LogSystem');
-      } else {
-        logSystem = logSystemOrNull;
-      }
+    let logSystemOrNull = systemsManager.getLogSystem();
+    if (logSystemOrNull === null) {
+      throw new Error('Could not get LogSystem');
+    } else {
+      logSystem = logSystemOrNull;
+    }
 
-      let scriptSystemOrNull = systemsManager.getScriptSystem();
-      if (scriptSystemOrNull === null) {
-        throw new Error('Could not get ScriptSystem');
-      } else {
-        scriptSystem = scriptSystemOrNull;
-      }
+    let scriptSystemOrNull = systemsManager.getScriptSystem();
+    if (scriptSystemOrNull === null) {
+      throw new Error('Could not get ScriptSystem');
+    } else {
+      scriptSystem = scriptSystemOrNull;
+    }
 
-      let multiplayerConnectionOrNull = systemsManager.getMultiplayerConnection();
-      if (multiplayerConnectionOrNull === null) {
-        throw new Error('Could not get MultiplayerConnection');
-      } else {
-        multiplayerConnection = multiplayerConnectionOrNull;
-      }
+    let multiplayerConnectionOrNull = systemsManager.getMultiplayerConnection();
+    if (multiplayerConnectionOrNull === null) {
+      throw new Error('Could not get MultiplayerConnection');
+    } else {
+      multiplayerConnection = multiplayerConnectionOrNull;
+    }
 
-      let eventBusOrNull = systemsManager.getEventBus();
-      if (eventBusOrNull === null) {
-        throw new Error('Could not get EventBus');
-      } else {
-        eventBus = eventBusOrNull;
-      }
+    let eventBusOrNull = systemsManager.getEventBus();
+    if (eventBusOrNull === null) {
+      throw new Error('Could not get EventBus');
+    } else {
+      eventBus = eventBusOrNull;
+    }
 
-      registerLogSystemCallback(csp);
+    registerLogSystemCallback(csp);
+  });
+
+  afterEach(async () => {
+    using loginState = userSystem.getLoginState();
+
+    if (loginState.loginStateValue === csp.ELoginState.LoggedIn) {
+      using logoutResult = await userSystem.logout();
+
+      expect(logoutResult.resultCode).toBe(csp.EResultCode.Success);
+    }
+  });
+
+  afterAll(async () => {
+    await multiplayerConnection.setAllowSelfMessagingFlag(false);
+
+    expect(csp.CSPFoundation.shutdown()).toBe(true);
+  });
+
+  //================================================================================================
+
+  it('Create a conversation', async () => {
+    // Create a test user and log in
+    using userProfile = await makeTestUser(userSystem);
+
+    await loginTestUser(csp, userSystem, multiplayerConnection, userProfile.email);
+
+    // Create a test space
+    using space = await createTestSpace(csp, spaceSystem);
+
+    // Enter the test space
+
+    using realtimeEngine = await enterOnlineSpace(
+      csp,
+      spaceSystem,
+      multiplayerConnection,
+      logSystem,
+      eventBus,
+      scriptSystem,
+      space
+    );
+
+    // ------ Create a conversation component ------
+
+    using testEntity = await realtimeEngine.createEntity('TestEntity', {
+      position: { x: 1, y: 2, z: 3 },
+      rotation: { x: 1, y: 2, z: 3, w: 4 },
+      scale: { x: 3, y: 2, z: 1 }
     });
 
-    afterEach(async () => {
-      using loginState = userSystem.getLoginState();
+    expect(testEntity).not.toBeNullable();
 
-      if (loginState.loginStateValue === csp.ELoginState.LoggedIn) {
-        using logoutResult = await userSystem.logout();
+    if (!testEntity) {
+      throw new Error('Failed to create the test entity');
+    }
 
-        expect(logoutResult.resultCode).toBe(csp.EResultCode.Success);
-      }
+    const component = testEntity.addComponent(csp.ComponentType.Conversation);
+    expect(component).not.toBeNullable();
+
+    if (!component) {
+      throw new Error('Failed to add Conversation component to the entity');
+    }
+
+    const conversationComponent = component as ConversationSpaceComponent;
+
+    // ------ Create a conversation message ------
+
+    const conversationMessage = 'Hello, testing conversations.';
+
+    using createConversationResult = await conversationComponent.createConversation(conversationMessage);
+
+    expect(createConversationResult.resultCode).toBe(csp.EResultCode.Success);
+    // Value is the conversation id so make sure we get a non-empty result
+    expect(createConversationResult.value).toBeTruthy();
+
+    // Clean up by exiting and deleting the created space
+    using exitResult = await spaceSystem.exitSpace();
+    expect(exitResult.resultCode).toBe(csp.EResultCode.Success);
+
+    using spaceDeletionResult = await spaceSystem.deleteSpace(space.id);
+    expect(spaceDeletionResult.resultCode).toBe(csp.EResultCode.Success);
+  });
+
+  it('Update a conversation', async () => {
+    // Create a test user and log in
+    using userProfile = await makeTestUser(userSystem);
+
+    await loginTestUser(csp, userSystem, multiplayerConnection, userProfile.email);
+
+    // Create a test space
+    using space = await createTestSpace(csp, spaceSystem);
+
+    // Enter the test space
+
+    using realtimeEngine = await enterOnlineSpace(
+      csp,
+      spaceSystem,
+      multiplayerConnection,
+      logSystem,
+      eventBus,
+      scriptSystem,
+      space
+    );
+
+    // ------ Create a conversation component and a conversation ------
+
+    using testEntity = await realtimeEngine.createEntity('TestEntity', {
+      position: { x: 1, y: 2, z: 3 },
+      rotation: { x: 1, y: 2, z: 3, w: 4 },
+      scale: { x: 3, y: 2, z: 1 }
     });
 
-    afterAll(async () => {
-      await multiplayerConnection.setAllowSelfMessagingFlag(false);
+    expect(testEntity).not.toBeNullable();
 
-      expect(csp.CSPFoundation.shutdown()).toBe(true);
+    if (!testEntity) {
+      throw new Error('Failed to create the test entity');
+    }
+
+    const component = testEntity.addComponent(csp.ComponentType.Conversation);
+    expect(component).not.toBeNullable();
+
+    if (!component) {
+      throw new Error('Failed to add Conversation component to the entity');
+    }
+
+    const conversationComponent = component as ConversationSpaceComponent;
+
+    using createConversationResult = await conversationComponent.createConversation('Hello, testing conversations.');
+    expect(createConversationResult.resultCode).toBe(csp.EResultCode.Success);
+
+    // ------ Update the conversation message ------
+
+    const updatedConversationMessage = 'Updated conversation message.';
+    using messageUpdate = csp.MessageUpdateParams.create(updatedConversationMessage);
+
+    using updateResult = await conversationComponent.updateConversation(messageUpdate);
+    expect(updateResult.resultCode).toBe(csp.EResultCode.Success);
+
+    using conversationResult = await conversationComponent.getConversationInfo();
+    expect(conversationResult.resultCode).toBe(csp.EResultCode.Success);
+
+    using messageInfo = conversationResult.getConversationInfo();
+
+    expect(messageInfo.message).toBe(updatedConversationMessage);
+
+    // ------ Delete the conversation ------
+
+    using deleteResult = await conversationComponent.deleteConversation();
+
+    expect(deleteResult.resultCode).toBe(csp.EResultCode.Success);
+
+    // Clean up by exiting and deleting the created space
+    using exitResult = await spaceSystem.exitSpace();
+    expect(exitResult.resultCode).toBe(csp.EResultCode.Success);
+
+    using spaceDeletionResult = await spaceSystem.deleteSpace(space.id);
+    expect(spaceDeletionResult.resultCode).toBe(csp.EResultCode.Success);
+  });
+
+  it('The update conversation callback is called', async () => {
+    // Create a test user and log in
+    using userProfile = await makeTestUser(userSystem);
+
+    await loginTestUser(csp, userSystem, multiplayerConnection, userProfile.email);
+
+    // Enable self-messaging to be able receive events
+    const setAllowSelfMessagingFlagResult = await multiplayerConnection.setAllowSelfMessagingFlag(true);
+    expect(setAllowSelfMessagingFlagResult).toBe(csp.ErrorCode.None);
+
+    // Create a test space
+    using space = await createTestSpace(csp, spaceSystem);
+
+    // Enter the test space
+
+    using realtimeEngine = await enterOnlineSpace(
+      csp,
+      spaceSystem,
+      multiplayerConnection,
+      logSystem,
+      eventBus,
+      scriptSystem,
+      space
+    );
+
+    realtimeEngine.entityPatchRateLimitEnabled = false;
+
+    // ------ Create a conversation component ------
+
+    using testEntity = await realtimeEngine.createEntity('TestEntity', {
+      position: { x: 1, y: 2, z: 3 },
+      rotation: { x: 1, y: 2, z: 3, w: 4 },
+      scale: { x: 3, y: 2, z: 1 }
     });
 
-    //================================================================================================
+    expect(testEntity).not.toBeNullable();
 
-    it('Create a conversation', async () => {
-      // Create a test user and log in
-      using userProfile = await makeTestUser(userSystem);
+    if (!testEntity) {
+      throw new Error('Failed to create the test entity');
+    }
 
-      await loginTestUser(csp, userSystem, multiplayerConnection, userProfile.email);
+    const component = testEntity.addComponent(csp.ComponentType.Conversation);
+    expect(component).not.toBeNullable();
 
-      // Create a test space
-      using space = await createTestSpace(csp, spaceSystem);
+    if (!component) {
+      throw new Error('Failed to add Conversation component to the entity');
+    }
 
-      // Enter the test space
+    const conversationComponent = component as ConversationSpaceComponent;
 
-      using realtimeEngine = await enterOnlineSpace(
-        csp,
-        spaceSystem,
-        multiplayerConnection,
-        logSystem,
-        eventBus,
-        scriptSystem,
-        space
-      );
+    // ------ Set the conversation update callback and store received events ------
 
-      // ------ Create a conversation component ------
+    const conversationUpdateEvents: ConversationUpdateTestEvent[] = [];
 
-      using testEntity = await realtimeEngine.createEntity('TestEntity', {
-        position: { x: 1, y: 2, z: 3 },
-        rotation: { x: 1, y: 2, z: 3, w: 4 },
-        scale: { x: 3, y: 2, z: 1 }
+    conversationComponent.setConversationUpdateCallback((conversationNetworkEventData) => {
+      using messageInfo = conversationNetworkEventData.getMessageInfo();
+
+      conversationUpdateEvents.push({
+        messageType: conversationNetworkEventData.messageType,
+        message: messageInfo.message
       });
-
-      expect(testEntity).not.toBeNullable();
-
-      if (!testEntity) {
-        throw new Error('Failed to create the test entity');
-      }
-
-      const component = testEntity.addComponent(csp.ComponentType.Conversation);
-      expect(component).not.toBeNullable();
-
-      if (!component) {
-        throw new Error('Failed to add Conversation component to the entity');
-      }
-
-      const conversationComponent = component as ConversationSpaceComponent;
-
-      // ------ Create a conversation message ------
-
-      const conversationMessage = 'Hello, testing conversations.';
-
-      using createConversationResult = await conversationComponent.createConversation(conversationMessage);
-
-      expect(createConversationResult.resultCode).toBe(csp.EResultCode.Success);
-      // Value is the conversation id so make sure we get a non-empty result
-      expect(createConversationResult.value).toBeTruthy();
-
-      // Clean up by exiting and deleting the created space
-      using exitResult = await spaceSystem.exitSpace();
-      expect(exitResult.resultCode).toBe(csp.EResultCode.Success);
-
-      using spaceDeletionResult = await spaceSystem.deleteSpace(space.id);
-      expect(spaceDeletionResult.resultCode).toBe(csp.EResultCode.Success);
     });
 
-    it('Update a conversation', async () => {
-      // Create a test user and log in
-      using userProfile = await makeTestUser(userSystem);
+    // ------ Create the conversation ------
 
-      await loginTestUser(csp, userSystem, multiplayerConnection, userProfile.email);
+    const initialConversationMessage = 'Hello, testing conversations.';
 
-      // Create a test space
-      using space = await createTestSpace(csp, spaceSystem);
+    using createConversationResult = await conversationComponent.createConversation(initialConversationMessage);
+    expect(createConversationResult.resultCode).toBe(csp.EResultCode.Success);
 
-      // Enter the test space
+    testEntity.queueUpdate();
+    realtimeEngine.processPendingEntityOperations();
 
-      using realtimeEngine = await enterOnlineSpace(
-        csp,
-        spaceSystem,
-        multiplayerConnection,
-        logSystem,
-        eventBus,
-        scriptSystem,
-        space
-      );
+    await until(
+      () => {
+        csp.CSPFoundation.tick();
 
-      // ------ Create a conversation component and a conversation ------
+        return conversationUpdateEvents.length > 0;
+      },
+      { intervalMs: 10 }
+    );
 
-      using testEntity = await realtimeEngine.createEntity('TestEntity', {
-        position: { x: 1, y: 2, z: 3 },
-        rotation: { x: 1, y: 2, z: 3, w: 4 },
-        scale: { x: 3, y: 2, z: 1 }
-      });
+    expect(conversationUpdateEvents.length).toBeGreaterThan(0);
 
-      expect(testEntity).not.toBeNullable();
+    expect(conversationUpdateEvents[0]?.messageType).toBe(csp.ConversationEventType.NewConversation);
+    expect(conversationUpdateEvents[0]?.message).toBe(initialConversationMessage);
 
-      if (!testEntity) {
-        throw new Error('Failed to create the test entity');
-      }
+    // ------ Update the conversation message ------
 
-      const component = testEntity.addComponent(csp.ComponentType.Conversation);
-      expect(component).not.toBeNullable();
+    // Clear the received event array
+    conversationUpdateEvents.length = 0;
 
-      if (!component) {
-        throw new Error('Failed to add Conversation component to the entity');
-      }
+    const updatedConversationMessage = 'Updated conversation message.';
 
-      const conversationComponent = component as ConversationSpaceComponent;
+    using messageUpdate = csp.MessageUpdateParams.create(updatedConversationMessage);
 
-      using createConversationResult = await conversationComponent.createConversation('Hello, testing conversations.');
-      expect(createConversationResult.resultCode).toBe(csp.EResultCode.Success);
+    using updateResult = await conversationComponent.updateConversation(messageUpdate);
+    expect(updateResult.resultCode).toBe(csp.EResultCode.Success);
 
-      // ------ Update the conversation message ------
+    testEntity.queueUpdate();
+    realtimeEngine.processPendingEntityOperations();
 
-      const updatedConversationMessage = 'Updated conversation message.';
-      using messageUpdate = csp.MessageUpdateParams.create(updatedConversationMessage);
+    await until(
+      () => {
+        csp.CSPFoundation.tick();
 
-      using updateResult = await conversationComponent.updateConversation(messageUpdate);
-      expect(updateResult.resultCode).toBe(csp.EResultCode.Success);
+        return conversationUpdateEvents.length > 0;
+      },
+      { intervalMs: 10 }
+    );
 
-      using conversationResult = await conversationComponent.getConversationInfo();
-      expect(conversationResult.resultCode).toBe(csp.EResultCode.Success);
+    expect(conversationUpdateEvents.length).toBeGreaterThan(0);
 
-      using messageInfo = conversationResult.getConversationInfo();
+    expect(conversationUpdateEvents[0]?.messageType).toBe(csp.ConversationEventType.ConversationInformation);
+    expect(conversationUpdateEvents[0]?.message).toBe(updatedConversationMessage);
 
-      expect(messageInfo.message).toBe(updatedConversationMessage);
+    // Clean up by exiting and deleting the created space
+    using exitResult = await spaceSystem.exitSpace();
+    expect(exitResult.resultCode).toBe(csp.EResultCode.Success);
 
-      // ------ Delete the conversation ------
+    using spaceDeletionResult = await spaceSystem.deleteSpace(space.id);
+    expect(spaceDeletionResult.resultCode).toBe(csp.EResultCode.Success);
+  });
 
-      using deleteResult = await conversationComponent.deleteConversation();
+  it('Add messages (replies) to a conversation', async () => {
+    // Create a test user and log in
+    using userProfile = await makeTestUser(userSystem);
 
-      expect(deleteResult.resultCode).toBe(csp.EResultCode.Success);
+    await loginTestUser(csp, userSystem, multiplayerConnection, userProfile.email);
 
-      // Clean up by exiting and deleting the created space
-      using exitResult = await spaceSystem.exitSpace();
-      expect(exitResult.resultCode).toBe(csp.EResultCode.Success);
+    // Create a test space
+    using space = await createTestSpace(csp, spaceSystem);
 
-      using spaceDeletionResult = await spaceSystem.deleteSpace(space.id);
-      expect(spaceDeletionResult.resultCode).toBe(csp.EResultCode.Success);
+    // Enter the test space
+
+    using realtimeEngine = await enterOnlineSpace(
+      csp,
+      spaceSystem,
+      multiplayerConnection,
+      logSystem,
+      eventBus,
+      scriptSystem,
+      space
+    );
+
+    // ------ Create a conversation component and a conversation ------
+
+    using testEntity = await realtimeEngine.createEntity('TestEntity', {
+      position: { x: 1, y: 2, z: 3 },
+      rotation: { x: 1, y: 2, z: 3, w: 4 },
+      scale: { x: 3, y: 2, z: 1 }
     });
 
-    it('The update conversation callback is called', async () => {
-      // Create a test user and log in
-      using userProfile = await makeTestUser(userSystem);
+    expect(testEntity).not.toBeNullable();
 
-      await loginTestUser(csp, userSystem, multiplayerConnection, userProfile.email);
+    if (!testEntity) {
+      throw new Error('Failed to create the test entity');
+    }
 
-      // Enable self-messaging to be able receive events
-      const setAllowSelfMessagingFlagResult = await multiplayerConnection.setAllowSelfMessagingFlag(true);
-      expect(setAllowSelfMessagingFlagResult).toBe(csp.ErrorCode.None);
+    const component = testEntity.addComponent(csp.ComponentType.Conversation);
+    expect(component).not.toBeNullable();
 
-      // Create a test space
-      using space = await createTestSpace(csp, spaceSystem);
+    if (!component) {
+      throw new Error('Failed to add Conversation component to the entity');
+    }
 
-      // Enter the test space
+    const conversationComponent = component as ConversationSpaceComponent;
 
-      using realtimeEngine = await enterOnlineSpace(
-        csp,
-        spaceSystem,
-        multiplayerConnection,
-        logSystem,
-        eventBus,
-        scriptSystem,
-        space
-      );
+    using createConversationResult = await conversationComponent.createConversation('Hello, testing conversations.');
+    expect(createConversationResult.resultCode).toBe(csp.EResultCode.Success);
 
-      realtimeEngine.entityPatchRateLimitEnabled = false;
+    // ------ Add messages (replies) to the conversation ------
 
-      // ------ Create a conversation component ------
+    const message1 = 'Reply 1';
+    const message2 = 'Reply 2';
 
-      using testEntity = await realtimeEngine.createEntity('TestEntity', {
-        position: { x: 1, y: 2, z: 3 },
-        rotation: { x: 1, y: 2, z: 3, w: 4 },
-        scale: { x: 3, y: 2, z: 1 }
-      });
+    using addMessageResult1 = await conversationComponent.addMessage(message1);
+    expect(addMessageResult1.resultCode).toBe(csp.EResultCode.Success);
 
-      expect(testEntity).not.toBeNullable();
+    using addMessageResult2 = await conversationComponent.addMessage(message2);
+    expect(addMessageResult2.resultCode).toBe(csp.EResultCode.Success);
 
-      if (!testEntity) {
-        throw new Error('Failed to create the test entity');
-      }
+    // ------ Retrieve messages from the conversation ------
 
-      const component = testEntity.addComponent(csp.ComponentType.Conversation);
-      expect(component).not.toBeNullable();
+    using numberOfRepliesResult = await conversationComponent.getNumberOfReplies();
+    expect(numberOfRepliesResult.resultCode).toBe(csp.EResultCode.Success);
+    expect(numberOfRepliesResult.count).toBe(2n);
 
-      if (!component) {
-        throw new Error('Failed to add Conversation component to the entity');
-      }
+    using messagesResult = await conversationComponent.getMessagesFromConversation();
+    expect(messagesResult.resultCode).toBe(csp.EResultCode.Success);
 
-      const conversationComponent = component as ConversationSpaceComponent;
+    using messages = messagesResult.getMessages();
+    expect(messages.length).toBe(2);
+    // Messages are in reverse order (most recent first)
+    expect(messages[0]?.message).toBe(message2);
+    expect(messages[1]?.message).toBe(message1);
 
-      // ------ Set the conversation update callback and store received events ------
+    using message1Info = addMessageResult1.getMessageInfo();
+    expect(message1Info.messageId).toBeTruthy();
+    // Verify that the message belongs to the correct conversation
+    expect(message1Info.conversationId).toBe(createConversationResult.value);
+    expect(message1Info.message).toBe(message1);
 
-      const conversationUpdateEvents: ConversationUpdateTestEvent[] = [];
+    // ------ Delete a message ------
 
-      conversationComponent.setConversationUpdateCallback((conversationNetworkEventData) => {
-        using messageInfo = conversationNetworkEventData.getMessageInfo();
+    using deleteMessageResult = await conversationComponent.deleteMessage(message1Info.messageId);
+    expect(deleteMessageResult.resultCode).toBe(csp.EResultCode.Success);
 
-        conversationUpdateEvents.push({
-          messageType: conversationNetworkEventData.messageType,
-          message: messageInfo.message
-        });
-      });
+    using numberOfRepliesAfterDeleteResult = await conversationComponent.getNumberOfReplies();
+    expect(numberOfRepliesAfterDeleteResult.resultCode).toBe(csp.EResultCode.Success);
+    expect(numberOfRepliesAfterDeleteResult.count).toBe(1n);
 
-      // ------ Create the conversation ------
+    // Clean up by exiting and deleting the created space
+    using exitResult = await spaceSystem.exitSpace();
+    expect(exitResult.resultCode).toBe(csp.EResultCode.Success);
 
-      const initialConversationMessage = 'Hello, testing conversations.';
+    using spaceDeletionResult = await spaceSystem.deleteSpace(space.id);
+    expect(spaceDeletionResult.resultCode).toBe(csp.EResultCode.Success);
+  });
 
-      using createConversationResult = await conversationComponent.createConversation(initialConversationMessage);
-      expect(createConversationResult.resultCode).toBe(csp.EResultCode.Success);
+  it('Add an annotation to a conversation', async () => {
+    // Create a test user and log in
+    using userProfile = await makeTestUser(userSystem);
 
-      testEntity.queueUpdate();
-      realtimeEngine.processPendingEntityOperations();
+    await loginTestUser(csp, userSystem, multiplayerConnection, userProfile.email);
 
-      await until(
-        () => {
-          csp.CSPFoundation.tick();
+    // Create a test space
+    using space = await createTestSpace(csp, spaceSystem);
 
-          return conversationUpdateEvents.length > 0;
-        },
-        { intervalMs: 10 }
-      );
+    // Enter the test space
 
-      expect(conversationUpdateEvents.length).toBeGreaterThan(0);
+    using realtimeEngine = await enterOnlineSpace(
+      csp,
+      spaceSystem,
+      multiplayerConnection,
+      logSystem,
+      eventBus,
+      scriptSystem,
+      space
+    );
 
-      expect(conversationUpdateEvents[0]?.messageType).toBe(csp.ConversationEventType.NewConversation);
-      expect(conversationUpdateEvents[0]?.message).toBe(initialConversationMessage);
+    // ------ Create a conversation component and a conversation ------
 
-      // ------ Update the conversation message ------
-
-      // Clear the received event array
-      conversationUpdateEvents.length = 0;
-
-      const updatedConversationMessage = 'Updated conversation message.';
-
-      using messageUpdate = csp.MessageUpdateParams.create(updatedConversationMessage);
-
-      using updateResult = await conversationComponent.updateConversation(messageUpdate);
-      expect(updateResult.resultCode).toBe(csp.EResultCode.Success);
-
-      testEntity.queueUpdate();
-      realtimeEngine.processPendingEntityOperations();
-
-      await until(
-        () => {
-          csp.CSPFoundation.tick();
-
-          return conversationUpdateEvents.length > 0;
-        },
-        { intervalMs: 10 }
-      );
-
-      expect(conversationUpdateEvents.length).toBeGreaterThan(0);
-
-      expect(conversationUpdateEvents[0]?.messageType).toBe(csp.ConversationEventType.ConversationInformation);
-      expect(conversationUpdateEvents[0]?.message).toBe(updatedConversationMessage);
-
-      // Clean up by exiting and deleting the created space
-      using exitResult = await spaceSystem.exitSpace();
-      expect(exitResult.resultCode).toBe(csp.EResultCode.Success);
-
-      using spaceDeletionResult = await spaceSystem.deleteSpace(space.id);
-      expect(spaceDeletionResult.resultCode).toBe(csp.EResultCode.Success);
+    using testEntity = await realtimeEngine.createEntity('TestEntity', {
+      position: { x: 1, y: 2, z: 3 },
+      rotation: { x: 1, y: 2, z: 3, w: 4 },
+      scale: { x: 3, y: 2, z: 1 }
     });
 
-    it('Add messages (replies) to a conversation', async () => {
-      // Create a test user and log in
-      using userProfile = await makeTestUser(userSystem);
+    expect(testEntity).not.toBeNullable();
 
-      await loginTestUser(csp, userSystem, multiplayerConnection, userProfile.email);
+    if (!testEntity) {
+      throw new Error('Failed to create the test entity');
+    }
 
-      // Create a test space
-      using space = await createTestSpace(csp, spaceSystem);
+    const component = testEntity.addComponent(csp.ComponentType.Conversation);
+    expect(component).not.toBeNullable();
 
-      // Enter the test space
+    if (!component) {
+      throw new Error('Failed to add Conversation component to the entity');
+    }
 
-      using realtimeEngine = await enterOnlineSpace(
-        csp,
-        spaceSystem,
-        multiplayerConnection,
-        logSystem,
-        eventBus,
-        scriptSystem,
-        space
-      );
+    const conversationComponent = component as ConversationSpaceComponent;
 
-      // ------ Create a conversation component and a conversation ------
+    using createConversationResult = await conversationComponent.createConversation('Hello, testing conversations.');
+    expect(createConversationResult.resultCode).toBe(csp.EResultCode.Success);
 
-      using testEntity = await realtimeEngine.createEntity('TestEntity', {
-        position: { x: 1, y: 2, z: 3 },
-        rotation: { x: 1, y: 2, z: 3, w: 4 },
-        scale: { x: 3, y: 2, z: 1 }
-      });
+    // ------ Create annotation and thumbnail data ------
 
-      expect(testEntity).not.toBeNullable();
+    using annotationBuffer = csp.NativeBuffer.create(pngTestData.length);
+    annotationBuffer.getView().set(pngTestData);
 
-      if (!testEntity) {
-        throw new Error('Failed to create the test entity');
-      }
+    using annotationBufferAssetDataSource = csp.BufferAssetDataSource.create();
+    annotationBufferAssetDataSource.setBuffer(annotationBuffer);
+    annotationBufferAssetDataSource.mimeType = 'image/png';
 
-      const component = testEntity.addComponent(csp.ComponentType.Conversation);
-      expect(component).not.toBeNullable();
+    using thumbnailBuffer = csp.NativeBuffer.create(pngTestData.length);
+    thumbnailBuffer.getView().set(pngTestData);
 
-      if (!component) {
-        throw new Error('Failed to add Conversation component to the entity');
-      }
+    using thumbnailBufferAssetDataSource = csp.BufferAssetDataSource.create();
+    thumbnailBufferAssetDataSource.setBuffer(thumbnailBuffer);
+    thumbnailBufferAssetDataSource.mimeType = 'image/png';
 
-      const conversationComponent = component as ConversationSpaceComponent;
+    // ------ Add the annotation on the conversation ------
 
-      using createConversationResult = await conversationComponent.createConversation('Hello, testing conversations.');
-      expect(createConversationResult.resultCode).toBe(csp.EResultCode.Success);
+    using addAnnotationResult = await conversationComponent.setConversationAnnotation(
+      {
+        verticalFov: 50,
+        authorCameraPosition: { x: 1, y: 2, z: 3 },
+        authorCameraRotation: { x: 1, y: 2, z: 3, w: 4 }
+      },
+      annotationBufferAssetDataSource,
+      thumbnailBufferAssetDataSource
+    );
 
-      // ------ Add messages (replies) to the conversation ------
+    expect(addAnnotationResult.resultCode).toBe(csp.EResultCode.Success);
 
-      const message1 = 'Reply 1';
-      const message2 = 'Reply 2';
+    using annotationAsset = addAnnotationResult.getAnnotationAsset();
+    expect(annotationAsset.id).toBeTruthy();
 
-      using addMessageResult1 = await conversationComponent.addMessage(message1);
-      expect(addMessageResult1.resultCode).toBe(csp.EResultCode.Success);
+    using annotationThumbnailAsset = addAnnotationResult.getAnnotationThumbnailAsset();
+    expect(annotationThumbnailAsset.id).toBeTruthy();
 
-      using addMessageResult2 = await conversationComponent.addMessage(message2);
-      expect(addMessageResult2.resultCode).toBe(csp.EResultCode.Success);
+    // ------ Retrieve the annotation ------
 
-      // ------ Retrieve messages from the conversation ------
+    using getAnnotationResult = await conversationComponent.getConversationAnnotation();
+    expect(getAnnotationResult.resultCode).toBe(csp.EResultCode.Success);
 
-      using numberOfRepliesResult = await conversationComponent.getNumberOfReplies();
-      expect(numberOfRepliesResult.resultCode).toBe(csp.EResultCode.Success);
-      expect(numberOfRepliesResult.count).toBe(2n);
+    using annotationData = getAnnotationResult.getAnnotationData();
 
-      using messagesResult = await conversationComponent.getMessagesFromConversation();
-      expect(messagesResult.resultCode).toBe(csp.EResultCode.Success);
+    expect(annotationData.verticalFov).toBe(50);
+    expect(annotationData.authorCameraPosition).toEqual({ x: 1, y: 2, z: 3 });
+    expect(annotationData.authorCameraRotation).toEqual({ x: 1, y: 2, z: 3, w: 4 });
 
-      using messages = messagesResult.getMessages();
-      expect(messages.length).toBe(2);
-      // Messages are in reverse order (most recent first)
-      expect(messages[0]?.message).toBe(message2);
-      expect(messages[1]?.message).toBe(message1);
+    // ------ Delete the annotation ------
 
-      using message1Info = addMessageResult1.getMessageInfo();
-      expect(message1Info.messageId).toBeTruthy();
-      // Verify that the message belongs to the correct conversation
-      expect(message1Info.conversationId).toBe(createConversationResult.value);
-      expect(message1Info.message).toBe(message1);
+    using deleteAnnotationResult = await conversationComponent.deleteConversationAnnotation();
+    expect(deleteAnnotationResult.resultCode).toBe(csp.EResultCode.Success);
 
-      // ------ Delete a message ------
+    // Clean up by exiting and deleting the created space
+    using exitResult = await spaceSystem.exitSpace();
+    expect(exitResult.resultCode).toBe(csp.EResultCode.Success);
 
-      using deleteMessageResult = await conversationComponent.deleteMessage(message1Info.messageId);
-      expect(deleteMessageResult.resultCode).toBe(csp.EResultCode.Success);
-
-      using numberOfRepliesAfterDeleteResult = await conversationComponent.getNumberOfReplies();
-      expect(numberOfRepliesAfterDeleteResult.resultCode).toBe(csp.EResultCode.Success);
-      expect(numberOfRepliesAfterDeleteResult.count).toBe(1n);
-
-      // Clean up by exiting and deleting the created space
-      using exitResult = await spaceSystem.exitSpace();
-      expect(exitResult.resultCode).toBe(csp.EResultCode.Success);
-
-      using spaceDeletionResult = await spaceSystem.deleteSpace(space.id);
-      expect(spaceDeletionResult.resultCode).toBe(csp.EResultCode.Success);
-    });
-
-    it('Add an annotation to a conversation', async () => {
-      // Create a test user and log in
-      using userProfile = await makeTestUser(userSystem);
-
-      await loginTestUser(csp, userSystem, multiplayerConnection, userProfile.email);
-
-      // Create a test space
-      using space = await createTestSpace(csp, spaceSystem);
-
-      // Enter the test space
-
-      using realtimeEngine = await enterOnlineSpace(
-        csp,
-        spaceSystem,
-        multiplayerConnection,
-        logSystem,
-        eventBus,
-        scriptSystem,
-        space
-      );
-
-      // ------ Create a conversation component and a conversation ------
-
-      using testEntity = await realtimeEngine.createEntity('TestEntity', {
-        position: { x: 1, y: 2, z: 3 },
-        rotation: { x: 1, y: 2, z: 3, w: 4 },
-        scale: { x: 3, y: 2, z: 1 }
-      });
-
-      expect(testEntity).not.toBeNullable();
-
-      if (!testEntity) {
-        throw new Error('Failed to create the test entity');
-      }
-
-      const component = testEntity.addComponent(csp.ComponentType.Conversation);
-      expect(component).not.toBeNullable();
-
-      if (!component) {
-        throw new Error('Failed to add Conversation component to the entity');
-      }
-
-      const conversationComponent = component as ConversationSpaceComponent;
-
-      using createConversationResult = await conversationComponent.createConversation('Hello, testing conversations.');
-      expect(createConversationResult.resultCode).toBe(csp.EResultCode.Success);
-
-      // ------ Create annotation and thumbnail data ------
-
-      using annotationBuffer = csp.NativeBuffer.create(pngTestData.length);
-      annotationBuffer.getView().set(pngTestData);
-
-      using annotationBufferAssetDataSource = csp.BufferAssetDataSource.create();
-      annotationBufferAssetDataSource.setBuffer(annotationBuffer);
-      annotationBufferAssetDataSource.mimeType = 'image/png';
-
-      using thumbnailBuffer = csp.NativeBuffer.create(pngTestData.length);
-      thumbnailBuffer.getView().set(pngTestData);
-
-      using thumbnailBufferAssetDataSource = csp.BufferAssetDataSource.create();
-      thumbnailBufferAssetDataSource.setBuffer(thumbnailBuffer);
-      thumbnailBufferAssetDataSource.mimeType = 'image/png';
-
-      // ------ Add the annotation on the conversation ------
-
-      using addAnnotationResult = await conversationComponent.setConversationAnnotation(
-        {
-          verticalFov: 50,
-          authorCameraPosition: { x: 1, y: 2, z: 3 },
-          authorCameraRotation: { x: 1, y: 2, z: 3, w: 4 }
-        },
-        annotationBufferAssetDataSource,
-        thumbnailBufferAssetDataSource
-      );
-
-      expect(addAnnotationResult.resultCode).toBe(csp.EResultCode.Success);
-
-      using annotationAsset = addAnnotationResult.getAnnotationAsset();
-      expect(annotationAsset.id).toBeTruthy();
-
-      using annotationThumbnailAsset = addAnnotationResult.getAnnotationThumbnailAsset();
-      expect(annotationThumbnailAsset.id).toBeTruthy();
-
-      // ------ Retrieve the annotation ------
-
-      using getAnnotationResult = await conversationComponent.getConversationAnnotation();
-      expect(getAnnotationResult.resultCode).toBe(csp.EResultCode.Success);
-
-      using annotationData = getAnnotationResult.getAnnotationData();
-
-      expect(annotationData.verticalFov).toBe(50);
-      expect(annotationData.authorCameraPosition).toEqual({ x: 1, y: 2, z: 3 });
-      expect(annotationData.authorCameraRotation).toEqual({ x: 1, y: 2, z: 3, w: 4 });
-
-      // ------ Delete the annotation ------
-
-      using deleteAnnotationResult = await conversationComponent.deleteConversationAnnotation();
-      expect(deleteAnnotationResult.resultCode).toBe(csp.EResultCode.Success);
-
-      // Clean up by exiting and deleting the created space
-      using exitResult = await spaceSystem.exitSpace();
-      expect(exitResult.resultCode).toBe(csp.EResultCode.Success);
-
-      using spaceDeletionResult = await spaceSystem.deleteSpace(space.id);
-      expect(spaceDeletionResult.resultCode).toBe(csp.EResultCode.Success);
-    });
-  },
-  INTEGRATION_TEST_TIMEOUT_MS
-);
+    using spaceDeletionResult = await spaceSystem.deleteSpace(space.id);
+    expect(spaceDeletionResult.resultCode).toBe(csp.EResultCode.Success);
+  });
+});

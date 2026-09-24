@@ -79,6 +79,9 @@ export function makeConfig({ debug = false } = {}) {
           test: {
             name: 'integration',
             include: ['src/integration/**/*.test.ts'],
+            // Allow a longer timeout for integration tests.
+            // This matters especially for WebKit and Firefox which are slower than Chromium for some reason.
+            testTimeout: 60_000,
             sequence: { groupOrder: 2 }
           }
         }
