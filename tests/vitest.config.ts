@@ -82,6 +82,7 @@ export function makeConfig({ debug = false } = {}) {
             // Allow a longer timeout for integration tests.
             // This matters especially for WebKit and Firefox which are slower than Chromium for some reason.
             testTimeout: 60_000,
+            fileParallelism: false,
             sequence: { groupOrder: 2 }
           }
         }
