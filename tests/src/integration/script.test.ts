@@ -16,9 +16,9 @@ import type {
 import {
   createTestSpace,
   enterOnlineSpace,
-  generatedTestAccountPassword,
   initCsp,
   INTEGRATION_TEST_TIMEOUT_MS,
+  loginTestUser,
   makeTestUser,
   registerLogSystemCallback,
   until
@@ -102,8 +102,8 @@ describe(
 
     it('Run Script', async () => {
       using profile = await makeTestUser(userSystem);
-      using loginResult = await userSystem.login(profile.email, generatedTestAccountPassword, true, true);
-      expect(loginResult.resultCode).toBe(csp.EResultCode.Success);
+
+      await loginTestUser(csp, userSystem, multiplayerConnection, profile.email);
 
       let scriptSystemReady: boolean = false;
 
@@ -173,8 +173,8 @@ describe(
 
     it('Scripts Can Log', async () => {
       using profile = await makeTestUser(userSystem);
-      using loginResult = await userSystem.login(profile.email, generatedTestAccountPassword, true, true);
-      expect(loginResult.resultCode).toBe(csp.EResultCode.Success);
+
+      await loginTestUser(csp, userSystem, multiplayerConnection, profile.email);
 
       let scriptSystemReady: boolean = false;
 
@@ -253,8 +253,8 @@ describe(
 
     it('Script Changes Invoke Entity Update Callbacks', async () => {
       using profile = await makeTestUser(userSystem);
-      using loginResult = await userSystem.login(profile.email, generatedTestAccountPassword, true, true);
-      expect(loginResult.resultCode).toBe(csp.EResultCode.Success);
+
+      await loginTestUser(csp, userSystem, multiplayerConnection, profile.email);
 
       let scriptSystemReady: boolean = false;
 

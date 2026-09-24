@@ -12,9 +12,9 @@ import type {
 import {
   createTestSpace,
   enterOnlineSpace,
-  generatedTestAccountPassword,
   initCsp,
   INTEGRATION_TEST_TIMEOUT_MS,
+  loginTestUser,
   makeTestUser,
   registerLogSystemCallback,
   until
@@ -116,8 +116,7 @@ describe(
       // Create a test user and log in
       using userProfile = await makeTestUser(userSystem);
 
-      using loginResult = await userSystem.login(userProfile.email, generatedTestAccountPassword, true, true);
-      expect(loginResult.resultCode).toBe(csp.EResultCode.Success);
+      await loginTestUser(csp, userSystem, multiplayerConnection, userProfile.email);
 
       // Create a test space
       using space = await createTestSpace(csp, spaceSystem);
@@ -179,8 +178,7 @@ describe(
       // Create a test user and log in
       using userProfile = await makeTestUser(userSystem);
 
-      using loginResult = await userSystem.login(userProfile.email, generatedTestAccountPassword, true, true);
-      expect(loginResult.resultCode).toBe(csp.EResultCode.Success);
+      await loginTestUser(csp, userSystem, multiplayerConnection, userProfile.email);
 
       // Create a test space
       using space = await createTestSpace(csp, spaceSystem);
@@ -256,8 +254,7 @@ describe(
       // Create a test user and log in
       using userProfile = await makeTestUser(userSystem);
 
-      using loginResult = await userSystem.login(userProfile.email, generatedTestAccountPassword, true, true);
-      expect(loginResult.resultCode).toBe(csp.EResultCode.Success);
+      await loginTestUser(csp, userSystem, multiplayerConnection, userProfile.email);
 
       // Enable self-messaging to be able receive events
       const setAllowSelfMessagingFlagResult = await multiplayerConnection.setAllowSelfMessagingFlag(true);
@@ -389,8 +386,7 @@ describe(
       // Create a test user and log in
       using userProfile = await makeTestUser(userSystem);
 
-      using loginResult = await userSystem.login(userProfile.email, generatedTestAccountPassword, true, true);
-      expect(loginResult.resultCode).toBe(csp.EResultCode.Success);
+      await loginTestUser(csp, userSystem, multiplayerConnection, userProfile.email);
 
       // Create a test space
       using space = await createTestSpace(csp, spaceSystem);
@@ -486,8 +482,7 @@ describe(
       // Create a test user and log in
       using userProfile = await makeTestUser(userSystem);
 
-      using loginResult = await userSystem.login(userProfile.email, generatedTestAccountPassword, true, true);
-      expect(loginResult.resultCode).toBe(csp.EResultCode.Success);
+      await loginTestUser(csp, userSystem, multiplayerConnection, userProfile.email);
 
       // Create a test space
       using space = await createTestSpace(csp, spaceSystem);

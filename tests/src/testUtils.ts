@@ -219,6 +219,24 @@ export async function makeTestUser(userSystem: UserSystem | null): Promise<Profi
   }
 }
 
+export async function loginTestUser(
+  csp: MainModule,
+  userSystem: UserSystem,
+  multiplayerConnection: MultiplayerConnection,
+  email: string
+) {
+  using result = await userSystem.login(email, generatedTestAccountPassword, true, true);
+  expect(result.resultCode).toBe(csp.EResultCode.Success);
+
+  using loginStateResult = userSystem.getLoginState();
+  expect(loginStateResult.loginStateValue).toBe(csp.ELoginState.LoggedIn);
+
+  // CSP reports login success even if the multiplayer connection failed to start, so check that too
+  expect(multiplayerConnection.connectionState, 'Multiplayer connection failed to start').toBe(
+    csp.ConnectionState.Connected
+  );
+}
+
 /*
  * Create a uniquely named ad hoc test space. Returns a space object, remember to grab it with `using`
  */

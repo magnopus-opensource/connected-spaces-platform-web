@@ -15,9 +15,9 @@ import type {
 import {
   createTestSpace,
   enterOnlineSpace,
-  generatedTestAccountPassword,
   initCsp,
   INTEGRATION_TEST_TIMEOUT_MS,
+  loginTestUser,
   makeTestUser,
   registerLogSystemCallback,
   until
@@ -136,9 +136,7 @@ describe(
     it('Send-Receive Custom Event', async () => {
       using profile = await makeTestUser(csp.SystemsManager.get().getUserSystem());
 
-      using loginResult = await userSystem.login(profile.email, generatedTestAccountPassword, true, true);
-      expect(loginResult.resultCode).toBe(csp.EResultCode.Success);
-      expect(userSystem.getLoginState().loginStateValue).toBe(csp.ELoginState.LoggedIn);
+      await loginTestUser(csp, userSystem, multiplayerConnection, profile.email);
 
       // Important if we want to get messages from ourself.
       expect(await multiplayerConnection.setAllowSelfMessagingFlag(true)).toBe(csp.ErrorCode.None);
