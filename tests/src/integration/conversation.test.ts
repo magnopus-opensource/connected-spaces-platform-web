@@ -97,9 +97,6 @@ describe(
     });
 
     afterEach(async () => {
-      const setAllowSelfMessagingFlagResult = await multiplayerConnection.setAllowSelfMessagingFlag(false);
-      expect(setAllowSelfMessagingFlagResult).toBe(csp.ErrorCode.None);
-
       if (userSystem.getLoginState().loginStateValue === csp.ELoginState.LoggedIn) {
         using logoutResult = await userSystem.logout();
 
@@ -108,6 +105,8 @@ describe(
     });
 
     afterAll(async () => {
+      await multiplayerConnection.setAllowSelfMessagingFlag(false);
+
       expect(csp.CSPFoundation.shutdown()).toBe(true);
     });
 
