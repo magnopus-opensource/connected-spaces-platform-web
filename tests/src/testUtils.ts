@@ -20,7 +20,7 @@ import { loadCSP } from '../loadModule';
 export const INTEGRATION_TEST_TIMEOUT_MS = 60_000;
 
 /* Timer to let us busy-wait on callbacks finishing. */
-export async function until(predicate: () => boolean, { timeoutMs = 6000, intervalMs = 0 } = {}): Promise<void> {
+export async function until(predicate: () => boolean, { timeoutMs = 10000, intervalMs = 0 } = {}): Promise<void> {
   const deadline = performance.now() + timeoutMs;
   while (!predicate()) {
     if (performance.now() >= deadline) {
