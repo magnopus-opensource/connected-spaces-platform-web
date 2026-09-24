@@ -55,16 +55,23 @@ export function makeConfig({ debug = false } = {}) {
         {
           extends: true, // Inherit the root config above
           test: {
-            name: 'unit',
-            include: ['src/unit/**/*.test.ts'],
+            name: 'types',
+            include: [],
             typecheck: {
-              // Vitest doesn't forward the `--typecheck` command line flag to projects, so we check
-              // manually here
-              enabled: process.argv.includes('--typecheck'),
+              enabled: true,
               include: ['src/**/*.test-d.ts'],
               only: true
             },
+            browser: { enabled: false },
             sequence: { groupOrder: 0 }
+          }
+        },
+        {
+          extends: true,
+          test: {
+            name: 'unit',
+            include: ['src/unit/**/*.test.ts'],
+            sequence: { groupOrder: 1 }
           }
         },
         {
@@ -72,7 +79,7 @@ export function makeConfig({ debug = false } = {}) {
           test: {
             name: 'integration',
             include: ['src/integration/**/*.test.ts'],
-            sequence: { groupOrder: 1 }
+            sequence: { groupOrder: 2 }
           }
         }
       ]
