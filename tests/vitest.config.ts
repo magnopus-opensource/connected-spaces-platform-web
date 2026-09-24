@@ -32,7 +32,6 @@ export function makeConfig({ debug = false } = {}) {
     },
     test: {
       globals: true,
-      include: ['**/*.test.ts'],
       restoreMocks: true, // Otherwise things like spies leak between tests
       testTimeout: 30_000,
       browser: {
@@ -52,10 +51,31 @@ export function makeConfig({ debug = false } = {}) {
         ),
         instances: [{ browser: 'chromium' as const }, { browser: 'webkit' as const }, { browser: 'firefox' as const }]
       },
-      typecheck: {
-        include: ['**/*.test-d.ts'],
-        only: true // Only run type tests when typecheck is enabled (--typecheck option)
-      }
+      projects: [
+        {
+          extends: true, // Inherit the root config above
+          test: {
+            name: 'unit',
+            include: ['src/unit/**/*.test.ts'],
+            typecheck: {
+              // Vitest doesn't forward the `--typecheck` command line flag to projects, so we check
+              // manually here
+              enabled: process.argv.includes('--typecheck'),
+              include: ['src/**/*.test-d.ts'],
+              only: true
+            },
+            sequence: { groupOrder: 0 }
+          }
+        },
+        {
+          extends: true,
+          test: {
+            name: 'integration',
+            include: ['src/integration/**/*.test.ts'],
+            sequence: { groupOrder: 1 }
+          }
+        }
+      ]
     },
     server: {
       // Emscripten's ES6 loader resolves its sibling .wasm via import.meta.url,
