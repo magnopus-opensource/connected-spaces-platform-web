@@ -10,7 +10,8 @@ import type {
   LogSystem,
   ScriptSystem,
   ReplicatedValue,
-  Vector3
+  Vector3,
+  ReplicatedValueType
 } from 'connected-spaces-platform-bindings';
 import {
   createTestSpace,
@@ -159,14 +160,17 @@ describe(
       let receiverID = 'TestReceiverID';
       let eventName = 'TestEventName';
       let receivedVector3: Vector3 = { x: 0, y: 0, z: 0 };
+      let receivedReplicatedValueType: ReplicatedValueType | undefined;
       let callbackFired = false;
 
       eventBus.listenCustomNetworkEvent(receiverID, eventName, (networkEventData: NetworkEventData) => {
-        //Sort of subtle, I think getEventValues is only disposable to support the potential map type that's in it, everything else is a value type. Interesting.
+        // Sort of subtle, I think getEventValues is only disposable to support the potential map type that's in it, everything else is a value type. Interesting.
         using eventValues = networkEventData.getEventValues();
         const firstValue = eventValues[0];
+
+        receivedReplicatedValueType = firstValue?.replicatedValueType;
+
         if (firstValue !== undefined) {
-          expect(firstValue.replicatedValueType).toBe(csp.ReplicatedValueType.Vector3);
           receivedVector3 = firstValue.getVector3();
         }
 
@@ -179,9 +183,10 @@ describe(
       expect(await eventBus.sendNetworkEvent(eventName, args)).toBe(csp.ErrorCode.None);
 
       await until(() => callbackFired);
+      expect(receivedReplicatedValueType).toBe(csp.ReplicatedValueType.Vector3);
       expect(receivedVector3).toEqual(vector3SentVal.getVector3());
 
-      //Cleanup
+      // Cleanup
       eventBus.stopListenAllNetworkEvents(receiverID);
       using exitResult = await spaceSystem.exitSpace();
       expect(exitResult.resultCode).toBe(csp.EResultCode.Success);

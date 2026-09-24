@@ -57,8 +57,11 @@ describe(
      * You have to logout before you login again, make sure we do that after each test
      */
     afterEach(async () => {
-      if (userSystem.getLoginState().loginStateValue === csp.ELoginState.LoggedIn) {
+      using loginState = userSystem.getLoginState();
+
+      if (loginState.loginStateValue === csp.ELoginState.LoggedIn) {
         using logoutResult = await userSystem.logout();
+
         expect(logoutResult.resultCode).toBe(csp.EResultCode.Success);
       }
     });

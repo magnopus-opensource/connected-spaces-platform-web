@@ -90,8 +90,11 @@ describe(
      * You have to logout before you login again, make sure we do that after each test
      */
     afterEach(async () => {
-      if (userSystem.getLoginState().loginStateValue === csp.ELoginState.LoggedIn) {
+      using loginState = userSystem.getLoginState();
+
+      if (loginState.loginStateValue === csp.ELoginState.LoggedIn) {
         using logoutResult = await userSystem.logout();
+
         expect(logoutResult.resultCode).toBe(csp.EResultCode.Success);
       }
     });
@@ -126,16 +129,16 @@ describe(
 
       // Script we'll use. We'll create an animated model component and have the script change its position.
       let scriptText = `
-    var entities = TheEntitySystem.getEntities();
-    var entityIndex = TheEntitySystem.getIndexOfEntity(ThisEntity.id);
+        var entities = TheEntitySystem.getEntities();
+        var entityIndex = TheEntitySystem.getIndexOfEntity(ThisEntity.id);
 
-    globalThis.onTick = () => {
-      var model = entities[entityIndex].getAnimatedModelComponents()[0];
-      model.position = [10, 10, 10];
-    }
+        globalThis.onTick = () => {
+          var model = entities[entityIndex].getAnimatedModelComponents()[0];
+          model.position = [10, 10, 10];
+        }
 
-    ThisEntity.subscribeToMessage("entityTick", "onTick");
-    `;
+        ThisEntity.subscribeToMessage("entityTick", "onTick");
+      `;
 
       let createdEntity = await realtimeEngine.createEntity(
         'EntityName',
@@ -197,15 +200,15 @@ describe(
 
       // Script we'll use. Log something
       let scriptText = `
-    var entities = TheEntitySystem.getEntities();
-    var entityIndex = TheEntitySystem.getIndexOfEntity(ThisEntity.id);
+        var entities = TheEntitySystem.getEntities();
+        var entityIndex = TheEntitySystem.getIndexOfEntity(ThisEntity.id);
 
-    globalThis.onTick = () => {
-       OKO.Log('onTick Called');
-    }
+        globalThis.onTick = () => {
+          OKO.Log('onTick Called');
+        }
 
-    ThisEntity.subscribeToMessage("entityTick", "onTick");
-    `;
+        ThisEntity.subscribeToMessage("entityTick", "onTick");
+      `;
 
       let createdEntity = await realtimeEngine.createEntity(
         'EntityName',
@@ -280,16 +283,16 @@ describe(
 
       // Script we'll use. We'll create an animated model component and have the script change its position.
       let scriptText = `
-    var entities = TheEntitySystem.getEntities();
-    var entityIndex = TheEntitySystem.getIndexOfEntity(ThisEntity.id);
+        var entities = TheEntitySystem.getEntities();
+        var entityIndex = TheEntitySystem.getIndexOfEntity(ThisEntity.id);
 
-    globalThis.onTick = () => {
-      var model = entities[entityIndex].getAnimatedModelComponents()[0];
-      model.position = [10, 10, 10];
-    }
+        globalThis.onTick = () => {
+          var model = entities[entityIndex].getAnimatedModelComponents()[0];
+          model.position = [10, 10, 10];
+        }
 
-    ThisEntity.subscribeToMessage("entityTick", "onTick");
-    `;
+        ThisEntity.subscribeToMessage("entityTick", "onTick");
+      `;
 
       let createdEntity = await realtimeEngine.createEntity(
         'EntityName',

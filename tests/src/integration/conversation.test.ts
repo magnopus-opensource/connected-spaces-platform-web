@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import type {
+  ConversationEventType,
   ConversationSpaceComponent,
   LogSystem,
   MainModule,
@@ -33,6 +34,11 @@ const pngTestData = new Uint8Array([
   0x00, 0x00, 0x00, 0x49, 0x45, 0x4e, 0x44, 0xae,
   0x42, 0x60, 0x82
 ]);
+
+interface ConversationUpdateTestEvent {
+  messageType: ConversationEventType;
+  message: string;
+}
 
 describe(
   'CSP Conversation Integration Tests',
@@ -97,7 +103,9 @@ describe(
     });
 
     afterEach(async () => {
-      if (userSystem.getLoginState().loginStateValue === csp.ELoginState.LoggedIn) {
+      using loginState = userSystem.getLoginState();
+
+      if (loginState.loginStateValue === csp.ELoginState.LoggedIn) {
         using logoutResult = await userSystem.logout();
 
         expect(logoutResult.resultCode).toBe(csp.EResultCode.Success);
@@ -300,59 +308,49 @@ describe(
 
       const conversationComponent = component as ConversationSpaceComponent;
 
-      // ------ Set the conversation update callback and check for creation events ------
+      // ------ Set the conversation update callback and store received events ------
 
-      const initialConversationMessage = 'Hello, testing conversations.';
-
-      let conversationUpdateCalled = false;
+      const conversationUpdateEvents: ConversationUpdateTestEvent[] = [];
 
       conversationComponent.setConversationUpdateCallback((conversationNetworkEventData) => {
-        conversationUpdateCalled = true;
-
-        expect(conversationNetworkEventData.messageType).toBe(csp.ConversationEventType.NewConversation);
-
         using messageInfo = conversationNetworkEventData.getMessageInfo();
 
-        expect(messageInfo.message).toBe(initialConversationMessage);
+        conversationUpdateEvents.push({
+          messageType: conversationNetworkEventData.messageType,
+          message: messageInfo.message
+        });
       });
 
       // ------ Create the conversation ------
+
+      const initialConversationMessage = 'Hello, testing conversations.';
 
       using createConversationResult = await conversationComponent.createConversation(initialConversationMessage);
       expect(createConversationResult.resultCode).toBe(csp.EResultCode.Success);
 
       testEntity.queueUpdate();
       realtimeEngine.processPendingEntityOperations();
-      csp.CSPFoundation.tick();
 
       await until(
         () => {
           csp.CSPFoundation.tick();
 
-          return conversationUpdateCalled;
+          return conversationUpdateEvents.length > 0;
         },
         { intervalMs: 10 }
       );
 
-      expect(conversationUpdateCalled).toBe(true);
+      expect(conversationUpdateEvents.length).toBeGreaterThan(0);
 
-      // ------ Set a new conversation update callback and check for update events ------
-
-      const updatedConversationMessage = 'Updated conversation message.';
-
-      conversationUpdateCalled = false;
-
-      conversationComponent.setConversationUpdateCallback((conversationNetworkEventData) => {
-        conversationUpdateCalled = true;
-
-        expect(conversationNetworkEventData.messageType).toBe(csp.ConversationEventType.ConversationInformation);
-
-        using messageInfo = conversationNetworkEventData.getMessageInfo();
-
-        expect(messageInfo.message).toBe(updatedConversationMessage);
-      });
+      expect(conversationUpdateEvents[0]?.messageType).toBe(csp.ConversationEventType.NewConversation);
+      expect(conversationUpdateEvents[0]?.message).toBe(initialConversationMessage);
 
       // ------ Update the conversation message ------
+
+      // Clear the received event array
+      conversationUpdateEvents.length = 0;
+
+      const updatedConversationMessage = 'Updated conversation message.';
 
       using messageUpdate = csp.MessageUpdateParams.create(updatedConversationMessage);
 
@@ -361,18 +359,20 @@ describe(
 
       testEntity.queueUpdate();
       realtimeEngine.processPendingEntityOperations();
-      csp.CSPFoundation.tick();
 
       await until(
         () => {
           csp.CSPFoundation.tick();
 
-          return conversationUpdateCalled;
+          return conversationUpdateEvents.length > 0;
         },
         { intervalMs: 10 }
       );
 
-      expect(conversationUpdateCalled).toBe(true);
+      expect(conversationUpdateEvents.length).toBeGreaterThan(0);
+
+      expect(conversationUpdateEvents[0]?.messageType).toBe(csp.ConversationEventType.ConversationInformation);
+      expect(conversationUpdateEvents[0]?.message).toBe(updatedConversationMessage);
 
       // Clean up by exiting and deleting the created space
       using exitResult = await spaceSystem.exitSpace();
