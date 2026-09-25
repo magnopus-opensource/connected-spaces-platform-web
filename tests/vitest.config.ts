@@ -32,7 +32,6 @@ export function makeConfig({ debug = false } = {}) {
     },
     test: {
       globals: true,
-      include: ['**/*.test.ts'],
       restoreMocks: true, // Otherwise things like spies leak between tests
       testTimeout: 30_000,
       browser: {
@@ -52,10 +51,42 @@ export function makeConfig({ debug = false } = {}) {
         ),
         instances: [{ browser: 'chromium' as const }, { browser: 'webkit' as const }, { browser: 'firefox' as const }]
       },
-      typecheck: {
-        include: ['**/*.test-d.ts'],
-        only: true // Only run type tests when typecheck is enabled (--typecheck option)
-      }
+      projects: [
+        {
+          extends: true, // Inherit the root config above
+          test: {
+            name: 'types',
+            include: [],
+            typecheck: {
+              enabled: true,
+              include: ['src/**/*.test-d.ts'],
+              only: true
+            },
+            browser: { enabled: false },
+            sequence: { groupOrder: 0 }
+          }
+        },
+        {
+          extends: true,
+          test: {
+            name: 'unit',
+            include: ['src/unit/**/*.test.ts'],
+            sequence: { groupOrder: 1 }
+          }
+        },
+        {
+          extends: true,
+          test: {
+            name: 'integration',
+            include: ['src/integration/**/*.test.ts'],
+            // Allow a longer timeout for integration tests.
+            // This matters especially for WebKit and Firefox which are slower than Chromium for some reason.
+            testTimeout: 60_000,
+            fileParallelism: false,
+            sequence: { groupOrder: 2 }
+          }
+        }
+      ]
     },
     server: {
       // Emscripten's ES6 loader resolves its sibling .wasm via import.meta.url,

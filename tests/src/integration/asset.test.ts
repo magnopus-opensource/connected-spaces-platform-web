@@ -4,19 +4,10 @@ import type {
   SystemsManager,
   UserSystem,
   AssetSystem,
-  SpaceSystem
+  SpaceSystem,
+  MultiplayerConnection
 } from 'connected-spaces-platform-bindings';
-import {
-  createTestSpace,
-  enterOnlineSpace,
-  generatedTestAccountPassword,
-  initCsp,
-  makeTestUser,
-  registerLogSystemCallback
-} from '../testUtils';
-
-const ENDPOINT_ROOT_URI = 'https://ogs.magnopus-dev.cloud';
-const TENANT = 'OKO_TESTS';
+import { createTestSpace, initCsp, loginTestUser, makeTestUser, registerLogSystemCallback } from '../testUtils';
 
 describe('CSP Asset Integrations', () => {
   let csp: MainModule;
@@ -24,6 +15,7 @@ describe('CSP Asset Integrations', () => {
   let userSystem: UserSystem;
   let assetSystem: AssetSystem;
   let spaceSystem: SpaceSystem;
+  let multiplayerConnection: MultiplayerConnection;
 
   beforeAll(async () => {
     csp = await initCsp();
@@ -51,6 +43,13 @@ describe('CSP Asset Integrations', () => {
       spaceSystem = spaceSystemOrNull;
     }
 
+    let multiplayerConnectionOrNull = systemsManager.getMultiplayerConnection();
+    if (multiplayerConnectionOrNull === null) {
+      throw new Error('Could not get MultiplayerConnection');
+    } else {
+      multiplayerConnection = multiplayerConnectionOrNull;
+    }
+
     registerLogSystemCallback(csp);
   });
 
@@ -58,8 +57,11 @@ describe('CSP Asset Integrations', () => {
    * You have to logout before you login again, make sure we do that after each test
    */
   afterEach(async () => {
-    if (userSystem.getLoginState().loginStateValue === csp.ELoginState.LoggedIn) {
+    using loginState = userSystem.getLoginState();
+
+    if (loginState.loginStateValue === csp.ELoginState.LoggedIn) {
       using logoutResult = await userSystem.logout();
+
       expect(logoutResult.resultCode).toBe(csp.EResultCode.Success);
     }
   });
@@ -96,8 +98,8 @@ describe('CSP Asset Integrations', () => {
 
   it('Asset Collection In Space', async () => {
     using profile = await makeTestUser(userSystem);
-    using loginResult = await userSystem.login(profile.email, generatedTestAccountPassword, true, true);
-    expect(loginResult.resultCode).toBe(csp.EResultCode.Success);
+
+    await loginTestUser(csp, userSystem, multiplayerConnection, profile.email);
 
     using newSpace = await createTestSpace(csp, spaceSystem);
 
@@ -130,16 +132,14 @@ describe('CSP Asset Integrations', () => {
     expect(deleteAssetcollectionResult.resultCode).toBe(csp.EResultCode.Success);
 
     // Cleanup
-    using exitResult = await spaceSystem.exitSpace();
-    expect(exitResult.resultCode).toBe(csp.EResultCode.Success);
     using deleteResult = await spaceSystem.deleteSpace(newSpace.id);
     expect(deleteResult.resultCode).toBe(csp.EResultCode.Success);
   });
 
   it('Upload Asset', async () => {
     using profile = await makeTestUser(userSystem);
-    using loginResult = await userSystem.login(profile.email, generatedTestAccountPassword, true, true);
-    expect(loginResult.resultCode).toBe(csp.EResultCode.Success);
+
+    await loginTestUser(csp, userSystem, multiplayerConnection, profile.email);
 
     using newSpace = await createTestSpace(csp, spaceSystem);
 
@@ -204,8 +204,6 @@ describe('CSP Asset Integrations', () => {
     expect(deleteAssetcollectionResult.resultCode).toBe(csp.EResultCode.Success);
 
     // Cleanup
-    using exitResult = await spaceSystem.exitSpace();
-    expect(exitResult.resultCode).toBe(csp.EResultCode.Success);
     using deleteResult = await spaceSystem.deleteSpace(newSpace.id);
     expect(deleteResult.resultCode).toBe(csp.EResultCode.Success);
   });
