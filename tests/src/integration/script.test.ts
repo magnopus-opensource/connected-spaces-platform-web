@@ -16,15 +16,12 @@ import type {
 import {
   createTestSpace,
   enterOnlineSpace,
-  generatedTestAccountPassword,
   initCsp,
+  loginTestUser,
   makeTestUser,
   registerLogSystemCallback,
   until
 } from '../testUtils';
-
-const ENDPOINT_ROOT_URI = 'https://ogs.magnopus-dev.cloud';
-const TENANT = 'OKO_TESTS';
 
 describe('CSP Script Integrations', () => {
   let csp: MainModule;
@@ -90,8 +87,11 @@ describe('CSP Script Integrations', () => {
    * You have to logout before you login again, make sure we do that after each test
    */
   afterEach(async () => {
-    if (userSystem.getLoginState().loginStateValue === csp.ELoginState.LoggedIn) {
+    using loginState = userSystem.getLoginState();
+
+    if (loginState.loginStateValue === csp.ELoginState.LoggedIn) {
       using logoutResult = await userSystem.logout();
+
       expect(logoutResult.resultCode).toBe(csp.EResultCode.Success);
     }
   });
@@ -102,8 +102,8 @@ describe('CSP Script Integrations', () => {
 
   it('Run Script', async () => {
     using profile = await makeTestUser(userSystem);
-    using loginResult = await userSystem.login(profile.email, generatedTestAccountPassword, true, true);
-    expect(loginResult.resultCode).toBe(csp.EResultCode.Success);
+
+    await loginTestUser(csp, userSystem, multiplayerConnection, profile.email);
 
     let scriptSystemReady: boolean = false;
 
@@ -126,16 +126,16 @@ describe('CSP Script Integrations', () => {
 
     // Script we'll use. We'll create an animated model component and have the script change its position.
     let scriptText = `
-    var entities = TheEntitySystem.getEntities();
-		var entityIndex = TheEntitySystem.getIndexOfEntity(ThisEntity.id);
+        var entities = TheEntitySystem.getEntities();
+        var entityIndex = TheEntitySystem.getIndexOfEntity(ThisEntity.id);
 
-		globalThis.onTick = () => {
-			var model = entities[entityIndex].getAnimatedModelComponents()[0];
-			model.position = [10, 10, 10];
-		}
+        globalThis.onTick = () => {
+          var model = entities[entityIndex].getAnimatedModelComponents()[0];
+          model.position = [10, 10, 10];
+        }
 
-		ThisEntity.subscribeToMessage("entityTick", "onTick");
-    `;
+        ThisEntity.subscribeToMessage("entityTick", "onTick");
+      `;
 
     let createdEntity = await realtimeEngine.createEntity(
       'EntityName',
@@ -173,8 +173,8 @@ describe('CSP Script Integrations', () => {
 
   it('Scripts Can Log', async () => {
     using profile = await makeTestUser(userSystem);
-    using loginResult = await userSystem.login(profile.email, generatedTestAccountPassword, true, true);
-    expect(loginResult.resultCode).toBe(csp.EResultCode.Success);
+
+    await loginTestUser(csp, userSystem, multiplayerConnection, profile.email);
 
     let scriptSystemReady: boolean = false;
 
@@ -197,15 +197,15 @@ describe('CSP Script Integrations', () => {
 
     // Script we'll use. Log something
     let scriptText = `
-    var entities = TheEntitySystem.getEntities();
-		var entityIndex = TheEntitySystem.getIndexOfEntity(ThisEntity.id);
+        var entities = TheEntitySystem.getEntities();
+        var entityIndex = TheEntitySystem.getIndexOfEntity(ThisEntity.id);
 
-		globalThis.onTick = () => {
-       OKO.Log('onTick Called');
-		}
+        globalThis.onTick = () => {
+          OKO.Log('onTick Called');
+        }
 
-		ThisEntity.subscribeToMessage("entityTick", "onTick");
-    `;
+        ThisEntity.subscribeToMessage("entityTick", "onTick");
+      `;
 
     let createdEntity = await realtimeEngine.createEntity(
       'EntityName',
@@ -253,8 +253,8 @@ describe('CSP Script Integrations', () => {
 
   it('Script Changes Invoke Entity Update Callbacks', async () => {
     using profile = await makeTestUser(userSystem);
-    using loginResult = await userSystem.login(profile.email, generatedTestAccountPassword, true, true);
-    expect(loginResult.resultCode).toBe(csp.EResultCode.Success);
+
+    await loginTestUser(csp, userSystem, multiplayerConnection, profile.email);
 
     let scriptSystemReady: boolean = false;
 
@@ -280,16 +280,16 @@ describe('CSP Script Integrations', () => {
 
     // Script we'll use. We'll create an animated model component and have the script change its position.
     let scriptText = `
-    var entities = TheEntitySystem.getEntities();
-		var entityIndex = TheEntitySystem.getIndexOfEntity(ThisEntity.id);
+        var entities = TheEntitySystem.getEntities();
+        var entityIndex = TheEntitySystem.getIndexOfEntity(ThisEntity.id);
 
-		globalThis.onTick = () => {
-			var model = entities[entityIndex].getAnimatedModelComponents()[0];
-			model.position = [10, 10, 10];
-		}
+        globalThis.onTick = () => {
+          var model = entities[entityIndex].getAnimatedModelComponents()[0];
+          model.position = [10, 10, 10];
+        }
 
-		ThisEntity.subscribeToMessage("entityTick", "onTick");
-    `;
+        ThisEntity.subscribeToMessage("entityTick", "onTick");
+      `;
 
     let createdEntity = await realtimeEngine.createEntity(
       'EntityName',

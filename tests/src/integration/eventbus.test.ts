@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import type {
   MainModule,
   SystemsManager,
@@ -9,23 +9,19 @@ import type {
   MultiplayerConnection,
   LogSystem,
   ScriptSystem,
-  OnlineRealtimeEngine,
   ReplicatedValue,
-  Space,
-  Vector3
+  Vector3,
+  ReplicatedValueType
 } from 'connected-spaces-platform-bindings';
 import {
   createTestSpace,
   enterOnlineSpace,
-  generatedTestAccountPassword,
   initCsp,
+  loginTestUser,
   makeTestUser,
   registerLogSystemCallback,
   until
 } from '../testUtils';
-
-const ENDPOINT_ROOT_URI = 'https://ogs.magnopus-dev.cloud';
-const TENANT = 'OKO_TESTS';
 
 describe('CSP EventBus Integrations', () => {
   let csp: MainModule;
@@ -138,9 +134,7 @@ describe('CSP EventBus Integrations', () => {
   it('Send-Receive Custom Event', async () => {
     using profile = await makeTestUser(csp.SystemsManager.get().getUserSystem());
 
-    using loginResult = await userSystem.login(profile.email, generatedTestAccountPassword, true, true);
-    expect(loginResult.resultCode).toBe(csp.EResultCode.Success);
-    expect(userSystem.getLoginState().loginStateValue).toBe(csp.ELoginState.LoggedIn);
+    await loginTestUser(csp, userSystem, multiplayerConnection, profile.email);
 
     // Important if we want to get messages from ourself.
     expect(await multiplayerConnection.setAllowSelfMessagingFlag(true)).toBe(csp.ErrorCode.None);
@@ -163,14 +157,17 @@ describe('CSP EventBus Integrations', () => {
     let receiverID = 'TestReceiverID';
     let eventName = 'TestEventName';
     let receivedVector3: Vector3 = { x: 0, y: 0, z: 0 };
+    let receivedReplicatedValueType: ReplicatedValueType | undefined;
     let callbackFired = false;
 
     eventBus.listenCustomNetworkEvent(receiverID, eventName, (networkEventData: NetworkEventData) => {
-      //Sort of subtle, I think getEventValues is only disposable to support the potential map type that's in it, everything else is a value type. Interesting.
+      // Sort of subtle, I think getEventValues is only disposable to support the potential map type that's in it, everything else is a value type. Interesting.
       using eventValues = networkEventData.getEventValues();
       const firstValue = eventValues[0];
+
+      receivedReplicatedValueType = firstValue?.replicatedValueType;
+
       if (firstValue !== undefined) {
-        expect(firstValue.replicatedValueType).toBe(csp.ReplicatedValueType.Vector3);
         receivedVector3 = firstValue.getVector3();
       }
 
@@ -183,9 +180,10 @@ describe('CSP EventBus Integrations', () => {
     expect(await eventBus.sendNetworkEvent(eventName, args)).toBe(csp.ErrorCode.None);
 
     await until(() => callbackFired);
+    expect(receivedReplicatedValueType).toBe(csp.ReplicatedValueType.Vector3);
     expect(receivedVector3).toEqual(vector3SentVal.getVector3());
 
-    //Cleanup
+    // Cleanup
     eventBus.stopListenAllNetworkEvents(receiverID);
     using exitResult = await spaceSystem.exitSpace();
     expect(exitResult.resultCode).toBe(csp.EResultCode.Success);

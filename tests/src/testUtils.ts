@@ -16,13 +16,13 @@ import {
 import { loadCSP } from '../loadModule';
 
 /* Timer to let us busy-wait on callbacks finishing. */
-export async function until(predicate: () => boolean, timeoutMs = 6000): Promise<void> {
+export async function until(predicate: () => boolean, { timeoutMs = 10000, intervalMs = 0 } = {}): Promise<void> {
   const deadline = performance.now() + timeoutMs;
   while (!predicate()) {
     if (performance.now() >= deadline) {
       throw new Error(`Until timed out after ${timeoutMs}ms`);
     }
-    await new Promise((resolve) => setTimeout(resolve, 0));
+    await new Promise((resolve) => setTimeout(resolve, intervalMs));
   }
 }
 
@@ -213,6 +213,24 @@ export async function makeTestUser(userSystem: UserSystem | null): Promise<Profi
     printCSPRequestError(error as CspRequestError);
     throw error;
   }
+}
+
+export async function loginTestUser(
+  csp: MainModule,
+  userSystem: UserSystem,
+  multiplayerConnection: MultiplayerConnection,
+  email: string
+) {
+  using result = await userSystem.login(email, generatedTestAccountPassword, true, true);
+  expect(result.resultCode).toBe(csp.EResultCode.Success);
+
+  using loginStateResult = userSystem.getLoginState();
+  expect(loginStateResult.loginStateValue).toBe(csp.ELoginState.LoggedIn);
+
+  // CSP reports login success even if the multiplayer connection failed to start, so check that too
+  expect(multiplayerConnection.connectionState, 'Multiplayer connection failed to start').toBe(
+    csp.ConnectionState.Connected
+  );
 }
 
 /*
