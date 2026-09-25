@@ -185,6 +185,12 @@ export const generatedTestAccountEmailFormat = 'testnopus.pokemon{}@magnopus.com
 export const generatedTestAccountPassword = '3R{d2}3C<x[J7=jU';
 export const generatedTestAccountDisplayName = 'WasmBindingsTestUser';
 
+const generatedTestSpaceNameFormat = 'WASM-INTEROP-TESTSPACE-{%s}';
+
+export const generateTestSpaceName = () => {
+  return generatedTestSpaceNameFormat.replace('{%s}', crypto.randomUUID());
+};
+
 /**
  * Make a test user on the test tenant.
  */
@@ -239,7 +245,7 @@ export async function loginTestUser(
 export async function createTestSpace(csp: MainModule, spaceSystem: SpaceSystem): Promise<Space> {
   try {
     using createSpaceResult = await spaceSystem.createSpace(
-      'WASM-INTEROP-TESTSPACE-{}'.replace('{}', crypto.randomUUID()),
+      generateTestSpaceName(),
       'Test space in WASM interop tests',
       csp.SpaceAttributes.Public,
       undefined,
