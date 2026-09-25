@@ -12,6 +12,7 @@ import {
   generatedTestAccountPassword,
   generateTestSpaceName,
   initCsp,
+  loginTestUser,
   makeTestUser,
   registerLogSystemCallback
 } from '../testUtils';
@@ -77,7 +78,9 @@ describe('Space', () => {
   });
 
   afterEach(async () => {
-    if (userSystem.getLoginState().loginStateValue === csp.ELoginState.LoggedIn) {
+    using loginState = userSystem.getLoginState();
+
+    if (loginState.loginStateValue === csp.ELoginState.LoggedIn) {
       using logoutResult = await userSystem.logout();
 
       expect(logoutResult.resultCode).toBe(csp.EResultCode.Success);
@@ -94,8 +97,7 @@ describe('Space', () => {
     // Create a test user and log in
     using userProfile = await makeTestUser(userSystem);
 
-    using loginResult = await userSystem.login(userProfile.email, generatedTestAccountPassword, true, true);
-    expect(loginResult.resultCode).toBe(csp.EResultCode.Success);
+    await loginTestUser(csp, userSystem, multiplayerConnection, userProfile.email);
 
     // ------ Create a test space ------
 
@@ -174,8 +176,7 @@ describe('Space', () => {
     // Create a test user and log in
     using userProfile = await makeTestUser(userSystem);
 
-    using loginResult = await userSystem.login(userProfile.email, generatedTestAccountPassword, true, true);
-    expect(loginResult.resultCode).toBe(csp.EResultCode.Success);
+    await loginTestUser(csp, userSystem, multiplayerConnection, userProfile.email);
 
     // Create a test space
     const spaceName = generateTestSpaceName();
@@ -220,8 +221,7 @@ describe('Space', () => {
     // Create a test user and log in
     using userProfile = await makeTestUser(userSystem);
 
-    using loginResult = await userSystem.login(userProfile.email, generatedTestAccountPassword, true, true);
-    expect(loginResult.resultCode).toBe(csp.EResultCode.Success);
+    await loginTestUser(csp, userSystem, multiplayerConnection, userProfile.email);
 
     // Create a test space
     const spaceName = generateTestSpaceName();
