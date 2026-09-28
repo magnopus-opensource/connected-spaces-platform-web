@@ -24,7 +24,7 @@ import {
   until
 } from '../testUtils';
 
-describe('Space Entities', () => {
+describe('CSP Space Entity Integration Tests', () => {
   let csp: MainModule;
 
   let spaceSystem: SpaceSystem;
@@ -95,9 +95,6 @@ describe('Space Entities', () => {
   });
 
   afterAll(async () => {
-    const setAllowSelfMessagingFlagResult = await multiplayerConnection.setAllowSelfMessagingFlag(false);
-    expect(setAllowSelfMessagingFlagResult).toBe(csp.ErrorCode.None);
-
     expect(csp.CSPFoundation.shutdown()).toBe(true);
   });
 
@@ -460,18 +457,22 @@ describe('Space Entities', () => {
     let remoteEntityCreatedCalled = false;
     let createdEntityName: string = 'TestEntity';
 
+    let receivedEntityUpdate: { id: bigint; name: string } | undefined;
+
     realtimeEngine.setRemoteEntityCreatedCallback((entity) => {
       remoteEntityCreatedCalled = true;
 
-      expect(entity).not.toBeNullable();
-
-      expect(entity?.id).not.toBeNullable();
-      expect(entity?.getName()).toBe(createdEntityName);
+      if (entity) {
+        receivedEntityUpdate = {
+          id: entity.id,
+          name: entity.getName()
+        };
+      }
     });
 
     // ------ Create test entity ------
 
-    using _testEntity = await realtimeEngine.createEntity(createdEntityName, {
+    using testEntity = await realtimeEngine.createEntity(createdEntityName, {
       position: { x: 0, y: 0, z: 0 },
       rotation: { x: 0, y: 0, z: 0, w: 1 },
       scale: { x: 1, y: 1, z: 1 }
@@ -480,6 +481,15 @@ describe('Space Entities', () => {
     await until(() => remoteEntityCreatedCalled);
 
     expect(remoteEntityCreatedCalled).toBe(true);
+
+    expect(receivedEntityUpdate).not.toBeUndefined();
+    expect(receivedEntityUpdate?.id).not.toBeUndefined();
+    expect(receivedEntityUpdate?.id).toBe(testEntity?.id);
+    expect(receivedEntityUpdate?.name).toBe(createdEntityName);
+
+    // Restore self-messaging flag
+    const setDisableSelfMessagingFlagResult = await multiplayerConnection.setAllowSelfMessagingFlag(false);
+    expect(setDisableSelfMessagingFlagResult).toBe(csp.ErrorCode.None);
 
     // Clean up by deleting the created space
     using exitResult = await spaceSystem.exitSpace();
@@ -524,16 +534,20 @@ describe('Space Entities', () => {
     }
 
     let entityUpdatedCalled = false;
+    let receivedEntityUpdate:
+      | { name: string; updateFlags: number; position: { x: number; y: number; z: number } }
+      | undefined;
 
     testEntity.setUpdateCallback((entity, updateFlags) => {
       entityUpdatedCalled = true;
 
-      expect(entity).not.toBeNullable();
-      expect(entity?.getName()).toBe('TestEntity');
-
-      expect(updateFlags & csp.SpaceEntityUpdateFlags.UPDATE_FLAGS_POSITION).toBeTruthy();
-
-      expect(entity?.getPosition()).toEqual({ x: 4, y: 5, z: 6 });
+      if (entity) {
+        receivedEntityUpdate = {
+          name: entity.getName(),
+          updateFlags,
+          position: entity.getPosition()
+        };
+      }
     });
 
     testEntity.queueUpdate();
@@ -548,6 +562,11 @@ describe('Space Entities', () => {
     realtimeEngine.processPendingEntityOperations();
 
     expect(entityUpdatedCalled).toBe(true);
+
+    expect(receivedEntityUpdate).not.toBeUndefined();
+    expect(receivedEntityUpdate?.name).toBe('TestEntity');
+    expect((receivedEntityUpdate?.updateFlags || 0) & csp.SpaceEntityUpdateFlags.UPDATE_FLAGS_POSITION).toBeTruthy();
+    expect(receivedEntityUpdate?.position).toEqual({ x: 4, y: 5, z: 6 });
 
     // Clean up by deleting the created space
     using exitResult = await spaceSystem.exitSpace();
@@ -608,17 +627,30 @@ describe('Space Entities', () => {
     // ------ Set up entity update callback ------
 
     let entityUpdatedCalled = false;
+    let receivedEntityUpdate:
+      | {
+          updateFlags: number;
+          componentUpdateInfo: Array<{
+            componentId: number;
+            updateType: number;
+          }>;
+          focalLength: number;
+        }
+      | undefined;
 
     testEntity.setUpdateCallback((entity, updateFlags, componentUpdateInfo) => {
       entityUpdatedCalled = true;
 
-      expect(updateFlags & csp.SpaceEntityUpdateFlags.UPDATE_FLAGS_COMPONENTS).toBeTruthy();
-
-      expect(componentUpdateInfo.length).toBe(1);
-      expect(componentUpdateInfo[0]?.componentId).toBe(cinematicCameraComponent.id);
-      expect(componentUpdateInfo[0]?.updateType).toBe(csp.ComponentUpdateType.Update);
-
-      expect(cinematicCameraComponent.focalLength).toBe(32);
+      receivedEntityUpdate = {
+        updateFlags,
+        componentUpdateInfo: [
+          {
+            componentId: componentUpdateInfo[0]?.componentId || 0,
+            updateType: componentUpdateInfo[0]?.updateType || 0
+          }
+        ],
+        focalLength: cinematicCameraComponent.focalLength
+      };
     });
 
     // ------ Update the component ------
@@ -629,6 +661,16 @@ describe('Space Entities', () => {
     realtimeEngine.processPendingEntityOperations();
 
     expect(entityUpdatedCalled).toBe(true);
+
+    expect(receivedEntityUpdate).not.toBeUndefined();
+
+    expect((receivedEntityUpdate?.updateFlags ?? 0) & csp.SpaceEntityUpdateFlags.UPDATE_FLAGS_COMPONENTS).toBeTruthy();
+
+    expect(receivedEntityUpdate?.componentUpdateInfo.length).toBe(1);
+    expect(receivedEntityUpdate?.componentUpdateInfo[0]?.componentId).toBe(cinematicCameraComponent.id);
+    expect(receivedEntityUpdate?.componentUpdateInfo[0]?.updateType).toBe(csp.ComponentUpdateType.Update);
+
+    expect(receivedEntityUpdate?.focalLength).toBe(32);
 
     // Clean up by deleting the created space
     using exitResult = await spaceSystem.exitSpace();

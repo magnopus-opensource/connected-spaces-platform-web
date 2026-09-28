@@ -17,7 +17,7 @@ import {
   registerLogSystemCallback
 } from '../testUtils';
 
-describe('Space', () => {
+describe('CSP Space Integration Tests', () => {
   let csp: MainModule;
 
   let spaceSystem: SpaceSystem;
