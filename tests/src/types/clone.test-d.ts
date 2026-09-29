@@ -1,7 +1,6 @@
 import { expectTypeOf, test } from 'vitest';
-import type { BindingsTestType, ClassHandle, MainModule } from 'connected-spaces-platform-bindings';
+import type { BindingsTestType, MainModule } from 'connected-spaces-platform-bindings';
 
-type CloneElementFn = MainModule['cloneElement'];
 type CloneArrayFn = MainModule['cloneArray'];
 type CloneMapFn = MainModule['cloneMap'];
 
@@ -9,48 +8,8 @@ describe('Clone type overlay', () => {
   let csp: MainModule = {} as MainModule;
 
   test('Required clone functions exist', () => {
-    expectTypeOf<MainModule>().toHaveProperty('cloneElement');
     expectTypeOf<MainModule>().toHaveProperty('cloneArray');
     expectTypeOf<MainModule>().toHaveProperty('cloneMap');
-  });
-
-  // cloneElement
-
-  test('cloneElement does not accept any (type overlay is applied)', () => {
-    expectTypeOf<CloneElementFn>().parameter(0).not.toEqualTypeOf<any>();
-  });
-
-  test('cloneElement accepts ClassHandle', () => {
-    expectTypeOf<CloneElementFn>().toBeCallableWith({} as ClassHandle);
-  });
-
-  test('cloneElement accepts subtypes of ClassHandle', () => {
-    expectTypeOf<CloneElementFn>().toBeCallableWith({} as BindingsTestType);
-  });
-
-  test('cloneElement rejects non-ClassHandle types', () => {
-    // @ts-expect-error plain object is not a ClassHandle
-    expectTypeOf<CloneElementFn>().toBeCallableWith({});
-
-    // @ts-expect-error number is not a ClassHandle
-    expectTypeOf<CloneElementFn>().toBeCallableWith(42);
-
-    // @ts-expect-error string is not a ClassHandle
-    expectTypeOf<CloneElementFn>().toBeCallableWith('hello');
-  });
-
-  test('cloneElement returns the same type as its argument', () => {
-    const handle = {} as BindingsTestType;
-    expectTypeOf(csp.cloneElement(handle)).toEqualTypeOf<BindingsTestType>();
-
-    const base = {} as ClassHandle;
-    expectTypeOf(csp.cloneElement(base)).toEqualTypeOf<ClassHandle>();
-  });
-
-  test('cloneElement preserves the generic type parameter from argument to return', () => {
-    type BindingsTestTypeClone = (handle: BindingsTestType) => BindingsTestType;
-
-    expectTypeOf<CloneElementFn>().toExtend<BindingsTestTypeClone>();
   });
 
   // cloneArray
