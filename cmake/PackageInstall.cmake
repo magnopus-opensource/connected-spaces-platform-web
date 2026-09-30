@@ -18,5 +18,9 @@ install(FILES
       "$<TARGET_FILE_DIR:connected-spaces-platform-bindings>/$<TARGET_FILE_BASE_NAME:connected-spaces-platform-bindings>.wasm" # The wasm, not a target output, always adjacent
       "${MERGED_DTS}" # Single merged TypeScript declaration file produced above
       "${CMAKE_CURRENT_BINARY_DIR}/package.json" # Configured above, makes this an npm package
+      # Runtime release/debug selector. It expects the release build alongside it and the debug build
+      # under debug/, which is only true of the assembled npm package (see make-release.yml).
+      "${CMAKE_SOURCE_DIR}/src/loader/loader.js"
+      "${CMAKE_SOURCE_DIR}/src/loader/loader.d.ts"
       DESTINATION .
   )
