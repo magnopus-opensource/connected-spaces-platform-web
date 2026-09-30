@@ -156,6 +156,20 @@ jobs:
         working-directory: ./tests
         run: npm run test:firefox
 
+      # The tests above ran against a build with a lowered CSP_WASM_MAXIMUM_MEMORY. Drop that
+      # override so the packaged build uses the default from CMakeLists.txt. MAXIMUM_MEMORY is
+      # only a link flag, so this just relinks rather than recompiling.
+      - name: Reconfigure with default maximum memory
+        shell: bash
+        run: cmake --preset ${{ matrix.config }} -UCSP_WASM_MAXIMUM_MEMORY
+
+      - name: Rebuild and install for packaging
+        shell: bash
+        run: |
+          set -eux
+          cmake --build --preset ${{ matrix.config }}
+          cmake --build --preset ${{ matrix.config }} --target install
+
       - name: Package install dir
         shell: pwsh
         run: |
