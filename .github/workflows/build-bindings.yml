@@ -34,6 +34,13 @@ jobs:
           version: 5.0.2
           actions-cache-folder: 'emsdk-cache'
 
+      # Needed before the build: emcc's --emit-tsd runs `tsc`, and the install step runs the
+      # merge dts script (tools/merge-dts) with node.
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+
       # emcc's --emit-tsd shells out to `tsc`. emsdk 5.0.2 invokes it with
       # `--outFile`, which errors under TypeScript 6.x. Pin to the latest 5.x
       # globally so emcc finds a compatible compiler on PATH. Drop this when
@@ -41,6 +48,16 @@ jobs:
       - name: Install TypeScript (for emcc --emit-tsd)
         shell: bash
         run: npm install -g typescript@5.9.3
+
+      # Install dependencies for TypeScript build scripts
+      - name: Install build tooling
+        shell: bash
+        run: npm ci
+
+      # Run a type check on the TypeScript build scripts
+      - name: Type Check build tooling
+        shell: bash
+        run: npm run typecheck
 
       # Builds CSP as a static emscripten archive and installs to CSP/install.
       # Requires emsdk to already be on PATH (above).
@@ -90,11 +107,6 @@ jobs:
       - name: Install
         shell: bash
         run: cmake --build --preset ${{ matrix.config }} --target install
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: '24'
 
       - name: Install Test dependencies
         shell: bash

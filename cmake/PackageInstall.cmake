@@ -6,20 +6,17 @@
 # even so the @ONLY is merely defensive
 configure_file(package.json.in package.json @ONLY)
 
+# Merge hand-written TypeScript type overlays and declarations into the Embind-generated .d.ts output.
+include(${CMAKE_CURRENT_LIST_DIR}/MergeDts.cmake)
+merge_dts(TARGET connected-spaces-platform-bindings OUTPUT_VARIABLE MERGED_DTS)
+
 # Note that this isn't a package install. As far as cmake is concerned, the target only produces a .js, we'd still have to install additional files.
 # Might as well just do it all as a FILES install.
 # Could theoretically use BYPRODUCT to tie them together in the target, but I don't think that buys us much here, would still have to do this. Might be a better way I'm no expert.
 install(FILES
       "$<TARGET_FILE:connected-spaces-platform-bindings>" # This is the .js file that is actually our target output
       "$<TARGET_FILE_DIR:connected-spaces-platform-bindings>/$<TARGET_FILE_BASE_NAME:connected-spaces-platform-bindings>.wasm" # The wasm, not a target output, always adjacent
-      "$<TARGET_FILE_DIR:connected-spaces-platform-bindings>/$<TARGET_FILE_BASE_NAME:connected-spaces-platform-bindings>.d.ts" # Embind-generated TS declarations via --emit-tsd, always adjacent
+      "${MERGED_DTS}" # Single merged TypeScript declaration file produced above
       "${CMAKE_CURRENT_BINARY_DIR}/package.json" # Configured above, makes this an npm package
       DESTINATION .
-  )
-
-# Hand-written type overlays with generics and better parameter names.
-# One .d.ts per C++ source file, combined via type-overlays/index.d.ts.
-install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/src/type-overlays/"
-      DESTINATION type-overlays
-      FILES_MATCHING PATTERN "*.d.ts"
   )

@@ -1,51 +1,26 @@
 /**
- * Type overlay for auto-generated emscripten bindings.
+ * Manifest of the hand-written type overlays for the auto-generated Emscripten bindings.
  *
- * The `--emit-tsd` flag produces loosely-typed signatures for functions with `emscripten::val`
- * parameters.
- * This file combines custom per-source-file type overlays and re-exports the generated declarations
- * with the improved types included.
+ * The Embind `--emit-tsd` flag produces loosely-typed signatures for functions with
+ * `emscripten::val` parameters which appear as `any` in TypeScript. Each file in this folder
+ * replaces those signatures for one C++ source file.
  *
- * To add new overlays for a new C++ file:
+ * The type overlays included here will be merged into the generated declarations file.
+ *
+ * To add overlays for a new C++ file:
  * - Create a new .d.ts in this folder with the same name as the C++ source file
- * - Export an interface with the improved signatures,
- * - Import the interface here and add it to `TypeOverrides` below.
+ * - Export an interface with the improved signatures
+ * - Import the interface here and add it to `TypeOverrides` below
+ *
+ * Every member of those interfaces must match a member Embind generated, or the build fails.
+ * For the public API defined in JavaScript rather than C++, see src/js-declarations instead.
  */
-
-// @ts-expect-error Error with import as this is the path for the installed version of the generated
-// bindings JS file.
-import type { MainModule as _GeneratedMainModule } from '../connected-spaces-platform-bindings.js';
-
-//==================================================================================================
 
 // ADD NEW INTERFACES HERE
 
 import type { EqualityOverrides } from './equality.d.ts';
 import type { DisposalOverrides } from './disposal.d.ts';
 import type { CloneOverrides } from './clone.d.ts';
-import type { CspRequestErrorOverrides } from './csp-request-error.d.ts';
 
-// Union of all type overlay interfaces.
-type TypeOverrides = EqualityOverrides & DisposalOverrides & CloneOverrides & CspRequestErrorOverrides;
-
-//==================================================================================================
-
-// MainModule with hand-written type overrides applied.
-export type MainModule = Omit<_GeneratedMainModule, keyof TypeOverrides> & TypeOverrides;
-
-// Re-export all other generated types.
-// The generated MainModule will be skipped as the local MainModule shadows the generated one.
-// @ts-expect-error This is the path for the installed version of the generated bindings JS file.
-export * from '../connected-spaces-platform-bindings.js';
-
-// Re-export the factory function with the narrowed MainModule return type
-declare function MainModuleFactory(options?: unknown): Promise<MainModule>;
-export default MainModuleFactory;
-
-//==================================================================================================
-
-// Re-export any additional types that are not part of MainModule
-
-// ADD NEW EXPORTS HERE
-
-export type { CspRequestError } from './csp-request-error.d.ts';
+// Intersection of all type overlay interfaces. Add new interfaces to the intersection below.
+export type TypeOverrides = EqualityOverrides & DisposalOverrides & CloneOverrides;
