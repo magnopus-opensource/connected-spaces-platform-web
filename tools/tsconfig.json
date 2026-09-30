@@ -1,0 +1,27 @@
+{
+  // Build-time tooling - use to type check build scripts that are run directly with Node.
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": ["ES2022"],
+    "types": ["node"],
+
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "exactOptionalPropertyTypes": true,
+
+    // Node strips types rather than compiling them, so anything it cannot erase - enums,
+    // namespaces, parameter properties - would parse here but fail at install time. This turns
+    // that class of mistake into a typecheck error instead.
+    "erasableSyntaxOnly": true,
+    // Keeps type-only imports explicit. Without it, importing a type alias as a value binding
+    // typechecks but throws at runtime, because stripping leaves the import in place.
+    "verbatimModuleSyntax": true,
+
+    "noEmit": true,
+    "skipLibCheck": true
+  },
+  "include": ["**/*.ts"]
+}
