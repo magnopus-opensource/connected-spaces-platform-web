@@ -21,6 +21,10 @@
 #include "emscripten/bind.h"
 #include "emscripten/val.h"
 
+// TODO(TG): temporarily suppress deprecated warnings until we have migrated all usages
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+
 namespace emscripten::internal {
 template <> void raw_destructor<csp::systems::AssetSystem>(csp::systems::AssetSystem*) { }
 }
@@ -246,3 +250,5 @@ EMSCRIPTEN_BINDINGS(CSPAssetSystem)
             "setMaterialChangedCallback(callback)",
             +[](csp::systems::AssetSystem& self, MaterialChangedCallback callback) { self.SetMaterialChangedCallback(ToNativeCallback(callback)); });
 }
+
+#pragma clang diagnostic pop
