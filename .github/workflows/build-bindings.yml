@@ -3,7 +3,19 @@ name: Build WASM Bindings
 on:
   pull_request:
   workflow_dispatch:
+    inputs:
+      csp_branch:
+        description: 'CSP tag or branch to use (e.g., v0.0.1)'
+        required: false
+        default: 'main'
+        type: string
   workflow_call:
+    inputs:
+      csp_branch:
+        description: 'CSP tag or branch to use (e.g., v0.0.1)'
+        required: false
+        default: 'main'
+        type: string
   push:
     branches:
       [main] # This is really just to seed the cache on main so PR's can reuse the same cache entries.
@@ -65,6 +77,7 @@ jobs:
       - name: Build CSP (emsdk)
         uses: ./.github/actions/build-csp-emsdk
         with:
+          csp_branch: ${{ inputs.csp_branch || 'main' }}
           build_type: ${{ matrix.config == 'debug' && 'Debug' || 'Release' }}
 
       - name: Install Conan
