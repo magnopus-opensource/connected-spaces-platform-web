@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.28)
 
-project(ConnectedSpacesPlatformWeb VERSION 1.0
+project(ConnectedSpacesPlatformWeb VERSION 1.0.0
     DESCRIPTION "Embind generated WASM bindings to the connected spaces platform"
     LANGUAGES CXX)
 

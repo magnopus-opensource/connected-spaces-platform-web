@@ -1,5 +1,5 @@
-# Make a release. Currently, this just uploads to the github release.
-# It probably wants to be extended in the future to push an npm release.
+# Make a release. Publishes the bindings (release and debug builds) as an npm package to
+# GitHub Packages, then uploads the build artifacts to a GitHub release.
 name: Make Release
 
 on:
@@ -8,9 +8,11 @@ on:
       version:
         description: 'Version label (e.g., v0.0.1)'
         required: true
-        default: 'v0.0.1'
-      releaseName:
+      release_name:
         description: 'Name of the release'
+        required: true
+      csp_tag:
+        description: 'Tag of CSP to use for the release (e.g., v0.0.1)'
         required: true
 
 permissions:
@@ -20,10 +22,84 @@ jobs:
   # Build the bindings
   build-bindings:
     uses: ./.github/workflows/build-bindings.yml
+    with:
+      csp_branch: ${{ inputs.csp_tag }}
+
+  # Publish the bindings to GitHub Packages (npm). This runs before the GitHub release because a
+  # published npm version can't be reused, whereas the release step can safely be re-run.
+  publish-npm:
+    needs: [build-bindings]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Download bindings artifacts
+        uses: actions/download-artifact@v8
+        with:
+          pattern: CSP-WASM-Bindings-*
+          path: npm-package
+
+      # The release build goes at the package root and the debug build under debug/,
+      # exposed as the "." and "./debug" entry points (see package.json.in).
+      - name: Assemble package
+        shell: bash
+        working-directory: npm-package
+        run: |
+          set -eux
+          unzip -o CSP-WASM-Bindings-release/CSP-WASM-Bindings-release.zip -d package
+          unzip -o CSP-WASM-Bindings-debug/CSP-WASM-Bindings-debug.zip -d package/debug
+          # The root package.json (from the release build) describes the whole package.
+          rm package/debug/package.json
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          registry-url: https://npm.pkg.github.com
+          scope: '@magnopus-opensource'
+
+      - name: Set package version
+        shell: bash
+        working-directory: npm-package/package
+        env:
+          VERSION: ${{ github.event.inputs.version }}
+        # Strip an optional leading "v" (e.g. v1.2.3 -> 1.2.3) to get a valid semver.
+        run: npm version --no-git-tag-version --allow-same-version "${VERSION#v}"
+
+      - name: Validate npm package
+        working-directory: npm-package/package
+        shell: bash
+        run: |
+          set -euxo pipefail
+
+          PACKAGE_NAME="$(node -p "require('./package.json').name")"
+          PACKAGE_VERSION="$(node -p "require('./package.json').version")"
+
+          test -n "$PACKAGE_NAME"
+          test -n "$PACKAGE_VERSION"
+
+          echo "Publishing ${PACKAGE_NAME}@${PACKAGE_VERSION}"
+
+          # Every file listed in package.json "files" must be present, including the debug build.
+          node -e "
+            const fs = require('fs');
+            const missing = require('./package.json').files.filter(f => !fs.existsSync(f));
+            if (missing.length) { console.error('Missing package files:', missing); process.exit(1); }
+          "
+
+          npm pack --dry-run
+
+      - name: Publish npm package
+        working-directory: npm-package/package
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: npm publish
 
   # Then make the release
   publish-release:
-    needs: [build-bindings]
+    needs: [build-bindings, publish-npm]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -37,7 +113,7 @@ jobs:
         uses: softprops/action-gh-release@v3
         with:
           # Fallback name for push events
-          name: ${{ github.event.inputs.releaseName }}
+          name: ${{ github.event.inputs.release_name }}
           tag_name: ${{ github.event.inputs.version }}
           target_commitish: ${{ github.sha }}
           generate_release_notes: true

@@ -12,7 +12,7 @@ description: |
 
 inputs:
   csp_branch:
-    description: CSP branch to build, defaults to main.
+    description: CSP branch or tag to build, defaults to main.
     required: false
     default: 'main'
   build_type:
@@ -23,7 +23,6 @@ inputs:
 runs:
   using: composite
   steps:
-
     - name: Checkout connected-spaces-platform
       uses: actions/checkout@v7
       with:
@@ -37,7 +36,7 @@ runs:
     - name: Resolve CSP commit SHA
       id: csp-sha
       shell: pwsh
-      working-directory: "./CSP"
+      working-directory: './CSP'
       run: |
         "sha=$(git rev-parse HEAD)" >> $env:GITHUB_OUTPUT
 
@@ -76,7 +75,7 @@ runs:
     - name: Conan install
       if: steps.csp-install-cache.outputs.cache-hit != 'true'
       shell: pwsh
-      working-directory: "./CSP"
+      working-directory: './CSP'
       env:
         # CMake 4 dropped support for cmake_minimum_required(VERSION <3.5), which
         # some older transitive Conan recipes (e.g. asyncplusplus/1.2) still
@@ -103,19 +102,19 @@ runs:
     - name: Configure
       if: steps.csp-install-cache.outputs.cache-hit != 'true'
       shell: pwsh
-      working-directory: "./CSP"
+      working-directory: './CSP'
       run: cmake --preset ${{ inputs.build_type == 'Debug' && 'debug-static' || 'release-static' }}
 
     - name: Build
       if: steps.csp-install-cache.outputs.cache-hit != 'true'
       shell: pwsh
-      working-directory: "./CSP"
+      working-directory: './CSP'
       run: cmake --build --preset ${{ inputs.build_type == 'Debug' && 'debug-static' || 'release-static' }} --parallel 2
 
     - name: Install
       if: steps.csp-install-cache.outputs.cache-hit != 'true'
       shell: pwsh
-      working-directory: "./CSP"
+      working-directory: './CSP'
       run: cmake --install build/${{ inputs.build_type }} --prefix install
 
     # Save only on a clean build (success + we actually built) so a failed run

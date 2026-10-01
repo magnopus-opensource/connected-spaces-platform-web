@@ -1,14 +1,42 @@
 {
-  "name": "connected-spaces-platform-bindings",
+  "name": "@magnopus-opensource/connected-spaces-platform-bindings-web",
   "version": "@PROJECT_VERSION@",
   "description": "@PROJECT_DESCRIPTION@",
   "type": "module",
   "main": "./connected-spaces-platform-bindings.js",
-  "types": "./type-overlays/index.d.ts",
+  "types": "./connected-spaces-platform-bindings.d.ts",
+  "exports": {
+    ".": {
+      "types": "./connected-spaces-platform-bindings.d.ts",
+      "default": "./connected-spaces-platform-bindings.js"
+    },
+    "./connected-spaces-platform-bindings.wasm": "./connected-spaces-platform-bindings.wasm",
+    "./debug": {
+      "types": "./debug/connected-spaces-platform-bindings.d.ts",
+      "default": "./debug/connected-spaces-platform-bindings.js"
+    },
+    "./debug/connected-spaces-platform-bindings.wasm": "./debug/connected-spaces-platform-bindings.wasm",
+    "./loader": {
+      "types": "./loader.d.ts",
+      "default": "./loader.js"
+    }
+  },
   "files": [
     "connected-spaces-platform-bindings.js",
     "connected-spaces-platform-bindings.wasm",
     "connected-spaces-platform-bindings.d.ts",
-    "type-overlays"
-  ]
+    "debug/connected-spaces-platform-bindings.js",
+    "debug/connected-spaces-platform-bindings.wasm",
+    "debug/connected-spaces-platform-bindings.d.ts",
+    "loader.js",
+    "loader.d.ts"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/magnopus-opensource/connected-spaces-platform-web.git"
+  },
+  "publishConfig": {
+    "access": "restricted",
+    "registry": "https://npm.pkg.github.com"
+  }
 }
