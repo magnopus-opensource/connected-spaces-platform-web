@@ -174,4 +174,32 @@ target_link_options(connected-spaces-platform-bindings PRIVATE
   >
 )
 
+# The CSP version these bindings were built against, recorded in the generated package.json.
+# THe CI passes these in explicitly from the CSP checkout it actually built, otherwise they default to the values in CSP_VERSION.
+set(CSP_VERSION "" CACHE STRING "CSP tag the bindings are built against (defaults to the tag in the CSP_VERSION file)")
+set(CSP_COMMIT "" CACHE STRING "CSP commit the bindings are built against (defaults to the sha in the CSP_VERSION file)")
+
+set(CSP_PIN_FILE "${CMAKE_SOURCE_DIR}/CSP_VERSION")
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${CSP_PIN_FILE}")
+if(EXISTS "${CSP_PIN_FILE}")
+  file(STRINGS "${CSP_PIN_FILE}" CSP_PIN_LINES)
+  foreach(CSP_PIN_LINE IN LISTS CSP_PIN_LINES)
+    if(CSP_PIN_LINE MATCHES "^tag=(.+)$")
+      set(CSP_PIN_TAG "${CMAKE_MATCH_1}")
+    elseif(CSP_PIN_LINE MATCHES "^sha=(.+)$")
+      set(CSP_PIN_SHA "${CMAKE_MATCH_1}")
+    endif()
+  endforeach()
+endif()
+if(NOT CSP_VERSION)
+  set(CSP_VERSION "${CSP_PIN_TAG}")
+endif()
+if(NOT CSP_COMMIT)
+  set(CSP_COMMIT "${CSP_PIN_SHA}")
+endif()
+if(NOT CSP_VERSION OR NOT CSP_COMMIT)
+  message(FATAL_ERROR "CSP_VERSION and CSP_COMMIT must be set, either via -D or in the ${CSP_PIN_FILE} file")
+endif()
+message(STATUS "Building bindings against CSP ${CSP_VERSION} (${CSP_COMMIT})")
+
 include(cmake/PackageInstall.cmake)

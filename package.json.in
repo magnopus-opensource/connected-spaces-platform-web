@@ -5,7 +5,12 @@
   "type": "module",
   "main": "./connected-spaces-platform-bindings.js",
   "types": "./connected-spaces-platform-bindings.d.ts",
+  "csp": {
+    "version": "@CSP_VERSION@",
+    "commit": "@CSP_COMMIT@"
+  },
   "exports": {
+    "./package.json": "./package.json",
     ".": {
       "types": "./connected-spaces-platform-bindings.d.ts",
       "default": "./connected-spaces-platform-bindings.js"

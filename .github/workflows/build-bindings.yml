@@ -5,16 +5,16 @@ on:
   workflow_dispatch:
     inputs:
       csp_branch:
-        description: 'CSP tag or branch to use (e.g., v0.0.1)'
+        description: 'Override the CSP tag/branch/SHA to build (leave empty to use the version pinned in CSP_VERSION)'
         required: false
-        default: 'main'
+        default: ''
         type: string
   workflow_call:
     inputs:
       csp_branch:
-        description: 'CSP tag or branch to use (e.g., v0.0.1)'
+        description: 'Override the CSP tag/branch/SHA to build (leave empty to use the version pinned in CSP_VERSION)'
         required: false
-        default: 'main'
+        default: ''
         type: string
   push:
     branches:
@@ -75,9 +75,10 @@ jobs:
       # Requires emsdk to already be on PATH (above).
       # Might be nice to cache this as well.
       - name: Build CSP (emsdk)
+        id: csp
         uses: ./.github/actions/build-csp-emsdk
         with:
-          csp_branch: ${{ inputs.csp_branch || 'main' }}
+          csp_branch: ${{ inputs.csp_branch }}
           build_type: ${{ matrix.config == 'debug' && 'Debug' || 'Release' }}
 
       - name: Install Conan
@@ -107,9 +108,16 @@ jobs:
         env:
           # Tell Cmake where CSP is
           CMAKE_PREFIX_PATH: ${{ github.workspace }}/CSP/install
+          CSP_TAG: ${{ steps.csp.outputs.csp_tag }}
+          CSP_SHA: ${{ steps.csp.outputs.csp_sha }}
         # Lower CSP_MAXIMUM_MEMORY for the tests. Because of shared array buffer, I believe we reserve the entire range regardless of whether we use it.
         # Since we start a bunch of CSP runtimes in the tests, we're saturating the runners.
-        run: cmake --preset ${{ matrix.config }} -DCSP_WASM_MAXIMUM_MEMORY=268435456
+        # CSP_VERSION/CSP_COMMIT are recorded in the package.json so consumers can tell which CSP the package was built from.
+        run: >
+          cmake --preset ${{ matrix.config }}
+          -DCSP_WASM_MAXIMUM_MEMORY=268435456
+          "-DCSP_VERSION=$CSP_TAG"
+          "-DCSP_COMMIT=$CSP_SHA"
 
       - name: Build
         shell: bash

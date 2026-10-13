@@ -12,24 +12,74 @@ description: |
 
 inputs:
   csp_branch:
-    description: CSP branch or tag to build, defaults to main.
+    description: |
+      Optional CSP branch, tag or SHA to build instead of the version pinned in the CSP_VERSION
+      file at the repository root. Leave empty to build the pinned version.
     required: false
-    default: 'main'
+    default: ''
   build_type:
     description: Debug or Release
     required: true
     default: 'Release'
 
+outputs:
+  csp_tag:
+    description: The CSP tag that was built (the pinned tag, or the override ref).
+    value: ${{ steps.csp-meta.outputs.tag }}
+  csp_sha:
+    description: The CSP commit SHA that was built.
+    value: ${{ steps.csp-meta.outputs.sha }}
+
 runs:
   using: composite
   steps:
+    # The CSP_VERSION file pins the CSP version with two lines: `tag=` and `sha=`
+    - name: Read pinned CSP version
+      id: csp-pin
+      shell: bash
+      env:
+        CSP_OVERRIDE: ${{ inputs.csp_branch }}
+      run: |
+        set -eu
+        pin_tag="$(sed -n 's/^tag=//p' CSP_VERSION | tr -d '\r')"
+        pin_sha="$(sed -n 's/^sha=//p' CSP_VERSION | tr -d '\r')"
+        if [ -z "$pin_tag" ] || [ -z "$pin_sha" ]; then
+          echo "::error::CSP_VERSION must contain tag= and sha= lines"
+          exit 1
+        fi
+        echo "pin_tag=$pin_tag" >> "$GITHUB_OUTPUT"
+        echo "pin_sha=$pin_sha" >> "$GITHUB_OUTPUT"
+        if [ -n "$CSP_OVERRIDE" ]; then
+          echo "ref=$CSP_OVERRIDE" >> "$GITHUB_OUTPUT"
+          echo "pinned=false" >> "$GITHUB_OUTPUT"
+        else
+          echo "ref=$pin_sha" >> "$GITHUB_OUTPUT"
+          echo "pinned=true" >> "$GITHUB_OUTPUT"
+        fi
+
     - name: Checkout connected-spaces-platform
       uses: actions/checkout@v7
       with:
         repository: magnopus-opensource/connected-spaces-platform
         path: CSP
-        ref: ${{ inputs.csp_branch }}
-        fetch-depth: 0 # Required for git describe to find version tags, which we need for CSP_VERSION
+        ref: ${{ steps.csp-pin.outputs.ref }}
+        fetch-depth: 0 # Required for git describe to find version tags, and to resolve the pinned tag below
+
+    # Guard against a mistyped bump or an upstream tag that has been moved.
+    - name: Verify pinned tag matches pinned SHA
+      if: steps.csp-pin.outputs.pinned == 'true'
+      shell: bash
+      working-directory: './CSP'
+      env:
+        PIN_TAG: ${{ steps.csp-pin.outputs.pin_tag }}
+        PIN_SHA: ${{ steps.csp-pin.outputs.pin_sha }}
+      run: |
+        set -eu
+        tag_sha="$(git rev-parse "refs/tags/${PIN_TAG}^{commit}")"
+        if [ "$tag_sha" != "$PIN_SHA" ]; then
+          echo "::error::CSP tag ${PIN_TAG} resolves to ${tag_sha}, but CSP_VERSION pins ${PIN_SHA}"
+          exit 1
+        fi
 
     # Resolve the actual commit SHA so the install cache key is pinned to commit
     # content rather than the (mutable) branch name.
@@ -39,6 +89,17 @@ runs:
       working-directory: './CSP'
       run: |
         "sha=$(git rev-parse HEAD)" >> $env:GITHUB_OUTPUT
+
+    # Exposed as the action's outputs, and baked into the published package.json by the bindings build.
+    - name: Record CSP version metadata
+      id: csp-meta
+      shell: bash
+      env:
+        TAG: ${{ steps.csp-pin.outputs.pinned == 'true' && steps.csp-pin.outputs.pin_tag || inputs.csp_branch }}
+        SHA: ${{ steps.csp-sha.outputs.sha }}
+      run: |
+        echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+        echo "sha=$SHA" >> "$GITHUB_OUTPUT"
 
     # If we already have a matching install tree, skip Conan, wrapper generation,
     # configure, build, and install entirely. The key includes a hash of this
