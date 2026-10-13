@@ -2,5 +2,5 @@
 # Update this to move to another version of CSP. To get the commit hash for the, run:
 # git ls-remote https://github.com/magnopus-opensource/connected-spaces-platform.git "refs/tags/<tag>^{}" "refs/tags/<tag>"
 
-tag=v6.48.0
-sha=323974b6106e944e060c3a893fa7b7ceb4d23a8f
+tag=v6.49.0
+sha=d50eb61fc72396439e5d12989d086cd57e99b28f
