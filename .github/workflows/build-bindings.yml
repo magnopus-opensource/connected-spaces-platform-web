@@ -22,7 +22,7 @@ on:
       # We could add a concurrency group if the redundancy bothers us for this, but I'm not fussed.
 jobs:
   emscripten-build:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
 
     strategy:
       fail-fast: false
@@ -173,7 +173,7 @@ jobs:
       - name: Package install dir
         shell: pwsh
         run: |
-          Compress-Archive -Path CSP-WASM-Bindings\* -DestinationPath CSP-WASM-Bindings-${{ matrix.config }}.zip
+          Compress-Archive -Path CSP-WASM-Bindings/* -DestinationPath CSP-WASM-Bindings-${{ matrix.config }}.zip
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v7
