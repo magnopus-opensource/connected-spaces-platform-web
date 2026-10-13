@@ -9,17 +9,22 @@ on:
         required: false
         default: 'main'
         type: string
-  workflow_call:
+  workflow_call: # Allows other workflows to call this one and wait for its artifacts
     inputs:
       csp_branch:
         description: 'CSP tag or branch to use (e.g., v0.0.1)'
         required: false
         default: 'main'
         type: string
+      binding_repo_branch: # Branch of this (web bindings) repo to check out. Required when called from another repo so the local actions resolve correctly. Leave empty when running this workflow natively.
+        type: string
+        required: false
+        default: ''
   push:
     branches:
       [main] # This is really just to seed the cache on main so PR's can reuse the same cache entries.
       # We could add a concurrency group if the redundancy bothers us for this, but I'm not fussed.
+
 jobs:
   emscripten-build:
     runs-on: windows-latest
@@ -30,6 +35,17 @@ jobs:
         config: [release, debug]
 
     steps:
+      # When called from another repo (workflow_call), we need to target the branch specifically to this repository
+      # (because by default github would target the calling repo), and the specific branch we're interested in.
+      - name: Checkout (called from another repo)
+        if: inputs.binding_repo_branch != ''
+        uses: actions/checkout@v4
+        with:
+          repository: magnopus-opensource/connected-spaces-platform-web
+          ref: ${{ inputs.binding_repo_branch }}
+
+      - name: Checkout (native)
+        if: inputs.binding_repo_branch == ''
       - uses: actions/checkout@v7
 
       # MSVC is the build-context compiler used by profiles/build/windows.
