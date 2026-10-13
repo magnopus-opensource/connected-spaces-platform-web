@@ -139,7 +139,7 @@ jobs:
       - name: Install Playwright browsers
         shell: bash
         working-directory: ./tests
-        run: npx playwright install chromium webkit firefox
+        run: npx playwright install --with-deps chromium webkit firefox
 
       - name: Test (Chromium)
         shell: bash
