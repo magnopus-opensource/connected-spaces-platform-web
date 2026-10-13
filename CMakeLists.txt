@@ -123,8 +123,12 @@ add_executable(connected-spaces-platform-bindings
 )
 set_target_properties(connected-spaces-platform-bindings PROPERTIES SUFFIX ".js")
 
-# Project uses C++17
-target_compile_features(connected-spaces-platform-bindings PUBLIC cxx_std_17)
+# Project uses C++20
+target_compile_features(connected-spaces-platform-bindings PUBLIC cxx_std_20)
+
+# We don't use C++20 modules. With CMake >= 3.28, C++20 targets are scanned for them by default,
+# which requires clang-scan-deps, and emsdk doesn't provide it.
+set_target_properties(connected-spaces-platform-bindings PROPERTIES CXX_SCAN_FOR_MODULES OFF)
 
 # Configure with CMAKE_PREFIX_PATH to be an install directory
 find_package(CSP CONFIG REQUIRED)
