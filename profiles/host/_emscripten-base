@@ -10,7 +10,7 @@
 [settings]
 arch=wasm
 compiler=emcc
-compiler.cppstd=17
+compiler.cppstd=20
 compiler.libcxx=libc++
 compiler.version=5.0.2
 os=Emscripten
