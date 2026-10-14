@@ -9,6 +9,16 @@ on:
         required: false
         default: ''
         type: string
+      test_browser:
+        description: 'Browser to run the tests in'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - chromium
+          - webkit
+          - firefox
   workflow_call: # Allows other workflows to call this one and wait for its artifacts
     inputs:
       csp_branch:
@@ -16,6 +26,10 @@ on:
         required: false
         default: ''
         type: string
+      test_browser: # One of all, chromium, webkit or firefox.
+        type: string
+        required: false
+        default: 'all'
       binding_repo_branch: # Branch of this (web bindings) repo to check out. Required when called from another repo so the local actions resolve correctly. Leave empty when running this workflow natively.
         type: string
         required: false
@@ -27,6 +41,8 @@ on:
 env:
   # Tell Cmake where CSP is, it's nowhere if we're not building from branch as we'll use the automatic pinned download in the cmake
   CMAKE_PREFIX_PATH: ${{ inputs.csp_branch != '' && format('{0}/CSP/install', github.workspace) || '' }}
+  # Which browser(s) to test in. inputs is empty for pull_request and push, so those test all of them.
+  TEST_BROWSER: ${{ inputs.test_browser || 'all' }}
 
 jobs:
   emscripten-build:
@@ -156,19 +172,22 @@ jobs:
       - name: Install Playwright browsers
         shell: bash
         working-directory: ./tests
-        run: npx playwright install chromium webkit firefox
+        run: npx playwright install ${{ env.TEST_BROWSER == 'all' && 'chromium webkit firefox' || env.TEST_BROWSER }}
 
       - name: Test (Chromium)
+        if: env.TEST_BROWSER == 'all' || env.TEST_BROWSER == 'chromium'
         shell: bash
         working-directory: ./tests
         run: npm run test:chromium
 
       - name: Test (WebKit)
+        if: env.TEST_BROWSER == 'all' || env.TEST_BROWSER == 'webkit'
         shell: bash
         working-directory: ./tests
         run: npm run test:webkit
 
       - name: Test (Firefox)
+        if: env.TEST_BROWSER == 'all' || env.TEST_BROWSER == 'firefox'
         shell: bash
         working-directory: ./tests
         run: npm run test:firefox
