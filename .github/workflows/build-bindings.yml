@@ -154,43 +154,10 @@ jobs:
         shell: bash
         run: cmake --build --preset ${{ matrix.config }} --target install
 
-      - name: Install Test dependencies
-        shell: bash
-        working-directory: ./tests
-        run: npm ci
-
-      - name: Type Check Tests
-        shell: bash
-        working-directory: ./tests
-        run: npm run typecheck
-
-      - name: Lint Tests
-        shell: bash
-        working-directory: ./tests
-        run: npm run lint
-
-      - name: Install Playwright browsers
-        shell: bash
-        working-directory: ./tests
-        run: npx playwright install ${{ env.TEST_BROWSER == 'all' && 'chromium webkit firefox' || env.TEST_BROWSER }}
-
-      - name: Test (Chromium)
-        if: env.TEST_BROWSER == 'all' || env.TEST_BROWSER == 'chromium'
-        shell: bash
-        working-directory: ./tests
-        run: npm run test:chromium
-
-      - name: Test (WebKit)
-        if: env.TEST_BROWSER == 'all' || env.TEST_BROWSER == 'webkit'
-        shell: bash
-        working-directory: ./tests
-        run: npm run test:webkit
-
-      - name: Test (Firefox)
-        if: env.TEST_BROWSER == 'all' || env.TEST_BROWSER == 'firefox'
-        shell: bash
-        working-directory: ./tests
-        run: npm run test:firefox
+      - name: Test
+        uses: ./.github/actions/run-bindings-tests
+        with:
+          test_browser: env.TEST_BROWSER
 
       # The tests above ran against a build with a lowered CSP_WASM_MAXIMUM_MEMORY. Drop that
       # override so the packaged build uses the default from CMakeLists.txt. MAXIMUM_MEMORY is
