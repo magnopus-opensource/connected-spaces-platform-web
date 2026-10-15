@@ -24,6 +24,8 @@ jobs:
     uses: ./.github/workflows/build-bindings.yml
     with:
       csp_branch: ${{ inputs.csp_tag }}
+    # For the local MCS the tests run against
+    secrets: inherit
 
   # Publish the bindings to GitHub Packages (npm). This runs before the GitHub release because a
   # published npm version can't be reused, whereas the release step can safely be re-run.
@@ -104,9 +106,11 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Download all artifacts
+      # Only the packaged builds, not the test builds build-bindings also uploads.
+      - name: Download build artifacts
         uses: actions/download-artifact@v8
         with:
+          pattern: CSP-WASM-Bindings-*
           path: release-artifacts
 
       - name: Create GitHub Release
