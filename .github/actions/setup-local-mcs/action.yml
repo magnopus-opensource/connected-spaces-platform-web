@@ -1,0 +1,103 @@
+name: Setup Local MCS
+description: |
+  Composite action that checks out Magnopus.Services and starts the local MCS Docker stack,
+  so tests can run against local services instead of the online ones.
+  Outputs the services endpoint.
+
+  This works for Linux runners only. With the MCS images are Linux container images, which GitHub's
+  Windows runners can't run (Docker fails with "no matching manifest for windows/amd64").
+
+  Composite actions can't read the `secrets` context, so the secrets are passed in as inputs.
+  The action fails if any of them are empty.
+
+inputs:
+  mcs_deploy_key:
+    description: SSH deploy key with read access to magnopus/Magnopus.Services.
+    required: true
+  docker_username:
+    description: Docker Hub username used to pull the MCS images.
+    required: true
+  docker_password:
+    description: Docker Hub password used to pull the MCS images.
+    required: true
+
+outputs:
+  endpoint:
+    description: Root URI of the local MCS services.
+    value: ${{ steps.start-mcs.outputs.endpoint }}
+
+runs:
+  using: composite
+  steps:
+    - name: Validate environment
+      shell: bash
+      env:
+        MCS_DEPLOY_KEY: ${{ inputs.mcs_deploy_key }}
+        DOCKER_USERNAME: ${{ inputs.docker_username }}
+        DOCKER_PASSWORD: ${{ inputs.docker_password }}
+      run: |
+        failed=0
+        if [ "$RUNNER_OS" != "Linux" ]; then
+          echo "::error::setup-local-mcs needs a Linux runner, this is $RUNNER_OS"
+          failed=1
+        fi
+        for name in MCS_DEPLOY_KEY DOCKER_USERNAME DOCKER_PASSWORD; do
+          if [ -z "${!name}" ]; then
+            echo "::error::Secret for $name is empty. Check it's configured in the repo and passed to this action."
+            failed=1
+          fi
+        done
+        exit $failed
+
+    # Checked out into a subdirectory so it doesn't clobber this repo at the workspace root.
+    - name: Checkout Magnopus.Services
+      uses: actions/checkout@v7
+      with:
+        repository: magnopus/Magnopus.Services
+        path: .local-mcs
+        ssh-key: ${{ inputs.mcs_deploy_key }}
+        persist-credentials: false
+
+    - name: Set up Docker
+      uses: docker/setup-docker-action@v5
+
+    - name: Set up Docker Compose
+      uses: docker/setup-compose-action@v1
+
+    - name: Login to Docker Hub
+      uses: docker/login-action@v4
+      with:
+        username: ${{ inputs.docker_username }}
+        password: ${{ inputs.docker_password }}
+
+    - name: Docker diagnostics
+      shell: bash
+      run: |
+        set -euxo pipefail
+
+        docker version
+        docker info
+        docker compose version
+
+    - name: Pull and run MCS container
+      id: start-mcs
+      shell: bash
+      working-directory: .local-mcs
+      env:
+        COMPOSE_ANSI: never
+        COMPOSE_PROGRESS: plain
+      run: |
+        set -euo pipefail
+
+        pip install requests
+        python Build/LocalContainers/start_current_o2dev.py
+
+        echo "endpoint=http://localhost:8081" >> "$GITHUB_OUTPUT"
+
+    # Don't start the tests against a stack that isn't accepting connections yet.
+    # Listen for any HTTP response before finishing.
+    - name: Wait for MCS
+      shell: bash
+      env:
+        ENDPOINT: ${{ steps.start-mcs.outputs.endpoint }}
+      run: curl --silent --show-error --output /dev/null --retry 30 --retry-delay 2 --retry-connrefused "$ENDPOINT"
