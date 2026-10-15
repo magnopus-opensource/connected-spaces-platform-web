@@ -157,7 +157,7 @@ jobs:
       - name: Test
         uses: ./.github/actions/run-bindings-tests
         with:
-          test_browser: env.TEST_BROWSER
+          test_browser: ${{ env.TEST_BROWSER }}
 
       # The tests above ran against a build with a lowered CSP_WASM_MAXIMUM_MEMORY. Drop that
       # override so the packaged build uses the default from CMakeLists.txt. MAXIMUM_MEMORY is

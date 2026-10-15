@@ -1,18 +1,18 @@
 name: Run Bindings Tests
 description: |
   Composite action that type checks, lints and runs the bindings test suite.
-  Can runs on both Windows and Linux runners.
+  Can run on both Windows and Linux runners.
 
   The following needs to have been done before invoking this action:
     * Checked out this repo at the workspace root.
     * Node.js on PATH (`actions/setup-node`).
     * Built and installed the bindings to "CSP-WASM-Bindings" at the repo root, which is where
       vitest.config.ts expects to find them.
-    * Started the services if an local MCS `endpoint` is provided.
+    * Started the services if a local MCS `endpoint` is provided.
 
 inputs:
-  test_browser: # One of all, chromium, webkit or firefox.
-    type: string
+  test_browser:
+    description: Browser to run the tests in. One of all, chromium, webkit or firefox.
     required: false
     default: 'all'
   endpoint:
@@ -31,6 +31,16 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Validate inputs
+      shell: bash
+      env:
+        TEST_BROWSER: ${{ inputs.test_browser }}
+      run: |
+        case "$TEST_BROWSER" in
+          all|chromium|webkit|firefox) ;;
+          *) echo "::error::Invalid test_browser '$TEST_BROWSER' (expected all, chromium, webkit or firefox)"; exit 1 ;;
+        esac
+
     - name: Install Test dependencies
       shell: bash
       working-directory: ./tests
