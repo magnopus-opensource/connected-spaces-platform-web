@@ -4,6 +4,8 @@ project(ConnectedSpacesPlatformWeb VERSION 1.0.0
     DESCRIPTION "Embind generated WASM bindings to the connected spaces platform"
     LANGUAGES CXX)
 
+include(cmake/GetCSP.cmake)
+
 add_executable(connected-spaces-platform-bindings
     src/bindings/csp/AssetHash.cpp
     src/bindings/csp/CSPFoundation.cpp
@@ -126,8 +128,6 @@ set_target_properties(connected-spaces-platform-bindings PROPERTIES SUFFIX ".js"
 # Project uses C++17
 target_compile_features(connected-spaces-platform-bindings PUBLIC cxx_std_17)
 
-# Configure with CMAKE_PREFIX_PATH to be an install directory
-find_package(CSP CONFIG REQUIRED)
 
 target_link_libraries(connected-spaces-platform-bindings
   PRIVATE

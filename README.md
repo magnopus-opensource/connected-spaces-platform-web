@@ -18,21 +18,25 @@ You will also need the build system [CMake](https://cmake.org/download/) (**3.28
 
 ### Building CSP
 
-You will need an install of [CSP](https://github.com/magnopus-opensource/connected-spaces-platform) to build against. At time of writing, CSP was in the process of transitioning to a newer, cmake based build system. These bindings use the new build systems. Produce an install directory somewhere on your local system. Refer to the CSP repo for instructions on how to do this, or as always, look at our [build automation](.github/actions/build-csp-emsdk/action.yml) for an example.
+If you wish, you can build against an install of [CSP](https://github.com/magnopus-opensource/connected-spaces-platform) Produce an install directory somewhere on your local system. Refer to the CSP repo for instructions on how to do this, or as always, look at our [build automation](.github/actions/build-csp-emsdk/action.yml) for an example.
 
-> [!NOTE]
->
-> During the transition to the new CSP build system, dependent projects are required to fetch dependencies, although this should not be the case for very long. Presuming you wish to make a debug build, run the following from the root directory to do so : 
->
-> ```
-> conan install . --profile:host=profiles/host/emscripten-debug --build=missing
+However, this is not necessary, and if you provide no CSP install in `CMAKE_PREFIX_PATH`, the cmake configure will download the last pinned release automatically.
+
+### Fetching dependencies
+
+Presuming you wish to make a debug build, run the following from the root directory to fetch necessary dependencies and generate necessary conan presets.
+
+```
+conan profile detect # Only necessary if this is first time setup.
+conan install . --profile:host=profiles/host/emscripten-debug --build=missing
+```
 
 ### Building the Bindings
 
 From here on out, it is a regular Cmake triad.
 
 ```
-export CMAKE_PREFIX_PATH="path/to/csp/install/dir"
+export CMAKE_PREFIX_PATH="path/to/csp/install/dir" # Optional, only if you want to use a specific built CSP version.
 cmake --preset debug
 cmake --build --preset debug
 cmake --build --preset debug --target install
