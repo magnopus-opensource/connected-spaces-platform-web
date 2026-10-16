@@ -72,8 +72,9 @@ runs:
           npx playwright install $BROWSERS
         fi
 
-    # The tests run with memory use logged every few seconds (see with-memory-log.sh), to diagnose
-    # runs that exhaust the runner's memory.
+    # Each browser runs the type and unit tests, then the integration tests, as separate Vitest runs
+    # so its memory is released in between, with memory use logged throughout. See
+    # run-browser-tests.sh.
     - name: Test (Chromium)
       if: inputs.test_browser == 'all' || inputs.test_browser == 'chromium'
       shell: bash
@@ -81,7 +82,7 @@ runs:
       env:
         CSP_TEST_ENDPOINT: ${{ inputs.endpoint }}
         CSP_TEST_TENANT: ${{ inputs.tenant }}
-      run: bash "$GITHUB_ACTION_PATH/with-memory-log.sh" npm run test:chromium
+      run: bash "$GITHUB_ACTION_PATH/run-browser-tests.sh" chromium
 
     - name: Test (WebKit)
       if: inputs.test_browser == 'all' || inputs.test_browser == 'webkit'
@@ -90,7 +91,7 @@ runs:
       env:
         CSP_TEST_ENDPOINT: ${{ inputs.endpoint }}
         CSP_TEST_TENANT: ${{ inputs.tenant }}
-      run: bash "$GITHUB_ACTION_PATH/with-memory-log.sh" npm run test:webkit
+      run: bash "$GITHUB_ACTION_PATH/run-browser-tests.sh" webkit
 
     - name: Test (Firefox)
       if: inputs.test_browser == 'all' || inputs.test_browser == 'firefox'
@@ -99,4 +100,4 @@ runs:
       env:
         CSP_TEST_ENDPOINT: ${{ inputs.endpoint }}
         CSP_TEST_TENANT: ${{ inputs.tenant }}
-      run: bash "$GITHUB_ACTION_PATH/with-memory-log.sh" npm run test:firefox
+      run: bash "$GITHUB_ACTION_PATH/run-browser-tests.sh" firefox
