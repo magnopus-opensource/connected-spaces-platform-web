@@ -99,13 +99,26 @@ runs:
       shell: bash
       run: docker ps --format 'table {{.Names}}\t{{.Image}}\t{{.Ports}}'
 
-    # Don't start the tests against a stack that isn't accepting connections yet.
-    # Listen for any HTTP response before finishing.
+    # Don't start the tests against a stack that isn't ready yet (make sure to poll the services
+    # and not just nginx). Any response other than a gateway error (e.g. 404) means the service is
+    # up.
     - name: Wait for MCS
       shell: bash
       env:
         ENDPOINT: ${{ steps.start-mcs.outputs.endpoint }}
-      run: curl --silent --show-error --output /dev/null --retry 30 --retry-delay 2 --retry-connrefused "$ENDPOINT"
+      run: |
+        set -euo pipefail
+        for service in mag-user mag-prototype mag-multiplayer oly-aggregation; do
+          for attempt in $(seq 1 90); do
+            status=$(curl --silent --output /dev/null --write-out '%{http_code}' "$ENDPOINT/$service/" || true)
+            case "$status" in
+              000|502|503|504) sleep 2 ;;
+              *) echo "$service is up (HTTP $status)"; continue 2 ;;
+            esac
+          done
+          echo "::error::$service didn't become ready after 3 minutes (last status: HTTP $status)"
+          exit 1
+        done
 
     # TEMP: diagnosing blob downloads failing in the browser. Compares the CORS headers on an API
     # route against a file route (a 404 is fine, we only want the headers), then dumps the nginx
