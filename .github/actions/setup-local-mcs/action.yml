@@ -189,23 +189,3 @@ runs:
         echo "$headers"
         echo "::error::The CORS stopgap didn't take effect (Access-Control-Allow-Origin values: '${values//$'\n'/, }')"
         exit 1
-
-    # TEMP: diagnosing blob downloads failing in the browser. Compares the CORS headers on an API
-    # route against a file route (a 404 is fine, we only want the headers), then dumps the nginx
-    # config. Never fails the action. Remove once fixed.
-    - name: Check CORS on MCS routes
-      shell: bash
-      env:
-        ENDPOINT: ${{ steps.start-mcs.outputs.endpoint }}
-      run: |
-        for path in mag-prototype/api/v1/prototypes mag-prototype/files/assets/t-OKO_TESTS/x/y/1/z.txt; do
-          echo "=== GET /$path"
-          curl -sS -o /dev/null -D - -H "Origin: http://localhost:63315" "$ENDPOINT/$path" || true
-          echo "=== OPTIONS /$path"
-          curl -sS -o /dev/null -D - -X OPTIONS -H "Origin: http://localhost:63315" \
-            -H "Access-Control-Request-Method: GET" \
-            -H "Access-Control-Request-Headers: x-auth-token,content-type,x-assetplatform" \
-            "$ENDPOINT/$path" || true
-        done
-        echo "=== nginx config"
-        docker exec maglocal-nginx-1 nginx -T || true
