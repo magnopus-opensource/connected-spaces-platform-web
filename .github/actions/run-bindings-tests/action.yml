@@ -72,6 +72,8 @@ runs:
           npx playwright install $BROWSERS
         fi
 
+    # The tests run with memory use logged every few seconds (see with-memory-log.sh), to diagnose
+    # runs that exhaust the runner's memory.
     - name: Test (Chromium)
       if: inputs.test_browser == 'all' || inputs.test_browser == 'chromium'
       shell: bash
@@ -79,7 +81,7 @@ runs:
       env:
         CSP_TEST_ENDPOINT: ${{ inputs.endpoint }}
         CSP_TEST_TENANT: ${{ inputs.tenant }}
-      run: npm run test:chromium
+      run: bash "$GITHUB_ACTION_PATH/with-memory-log.sh" npm run test:chromium
 
     - name: Test (WebKit)
       if: inputs.test_browser == 'all' || inputs.test_browser == 'webkit'
@@ -88,7 +90,7 @@ runs:
       env:
         CSP_TEST_ENDPOINT: ${{ inputs.endpoint }}
         CSP_TEST_TENANT: ${{ inputs.tenant }}
-      run: npm run test:webkit
+      run: bash "$GITHUB_ACTION_PATH/with-memory-log.sh" npm run test:webkit
 
     - name: Test (Firefox)
       if: inputs.test_browser == 'all' || inputs.test_browser == 'firefox'
@@ -97,4 +99,4 @@ runs:
       env:
         CSP_TEST_ENDPOINT: ${{ inputs.endpoint }}
         CSP_TEST_TENANT: ${{ inputs.tenant }}
-      run: npm run test:firefox
+      run: bash "$GITHUB_ACTION_PATH/with-memory-log.sh" npm run test:firefox
