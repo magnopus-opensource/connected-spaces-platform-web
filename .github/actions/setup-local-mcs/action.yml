@@ -94,6 +94,11 @@ runs:
 
         echo "endpoint=http://localhost:8081" >> "$GITHUB_OUTPUT"
 
+    # Log which services are running and which ports they publish to the host.
+    - name: Show MCS containers
+      shell: bash
+      run: docker ps --format 'table {{.Names}}\t{{.Image}}\t{{.Ports}}'
+
     # Don't start the tests against a stack that isn't accepting connections yet.
     # Listen for any HTTP response before finishing.
     - name: Wait for MCS

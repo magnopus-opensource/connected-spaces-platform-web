@@ -189,6 +189,9 @@ describe('CSP Asset Integrations', () => {
     );
     expect(uploadDataResult.resultCode).toBe(csp.EResultCode.Success);
 
+    // TODO(TG): remove when test passes
+    console.log(`Upload URI: ${uploadDataResult.uri}`);
+
     // Download the uploaded text
     let response = await fetch(uploadDataResult.uri);
     expect(response.ok).toBeTruthy();
