@@ -247,3 +247,24 @@ jobs:
         with:
           test_browser: ${{ env.TEST_BROWSER }}
           endpoint: ${{ steps.local-mcs.outputs.endpoint }}
+
+      # TEMP: diagnosing blob downloads failing in the browser. Failed asset/material tests skip their
+      # cleanup, so their uploads are still on the stack. Request one with an Origin header to see
+      # whether a real file (rather than a 404) gets CORS headers. Remove once fixed.
+      - name: Check CORS on a real file
+        if: always() && steps.local-mcs.outcome == 'success'
+        shell: bash
+        env:
+          ENDPOINT: ${{ steps.local-mcs.outputs.endpoint }}
+        run: |
+          files=$(docker exec maglocal-mag-prototype-1 sh -c "find / -path '*/assets/t-OKO_TESTS/*' -type f 2>/dev/null" || true)
+          if [ -z "$files" ]; then
+            echo "No uploaded files found on the mag-prototype container's filesystem"
+            exit 0
+          fi
+          echo "=== Uploaded files"
+          echo "$files"
+          file=$(echo "$files" | head -1)
+          url="$ENDPOINT/mag-prototype/files/assets/${file#*/assets/}"
+          echo "=== GET $url"
+          curl -sS -o /dev/null -D - -H "Origin: http://localhost:63315" "$url" || true
