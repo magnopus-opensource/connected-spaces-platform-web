@@ -120,6 +120,56 @@ runs:
           exit 1
         done
 
+    # Mitigation to add CORS headers to the files served by mag-prototype, needed for browser tests
+    # to download uploaded assets and materials. Patches the running nginx gateway's config to add
+    # them, see nginx-files-cors.conf.
+    - name: Add CORS headers to MCS file downloads
+      shell: bash
+      env:
+        ENDPOINT: ${{ steps.start-mcs.outputs.endpoint }}
+        NGINX_CONTAINER: maglocal-nginx-1
+      run: |
+        set -euo pipefail
+        CORS_BLOCK="$GITHUB_ACTION_PATH/nginx-files-cors.conf"
+        original="$RUNNER_TEMP/nginx.conf"
+        patched="$RUNNER_TEMP/nginx.patched.conf"
+
+        docker exec "$NGINX_CONTAINER" cat /etc/nginx/nginx.conf > "$original"
+
+        # Insert the block at the top of the 8081 server, before the generic service location.
+        if [ "$(grep -c '^[[:space:]]*listen 8081;' "$original")" != 1 ]; then
+          echo "::error::Expected exactly one 'listen 8081;' in the MCS nginx config, its layout has changed"
+          exit 1
+        fi
+        awk -v block="$CORS_BLOCK" '
+          { print }
+          /^[[:space:]]*listen 8081;/ { print ""; while ((getline line < block) > 0) print line; close(block) }
+        ' "$original" > "$patched"
+
+        # Validate before using it. Overwrite in place rather than replacing the file, as it's likely
+        # a single-file bind mount, which wouldn't see a replaced file.
+        docker exec -i "$NGINX_CONTAINER" sh -c 'cat > /tmp/nginx.conf' < "$patched"
+        docker exec "$NGINX_CONTAINER" nginx -t -c /tmp/nginx.conf
+        docker exec -i "$NGINX_CONTAINER" sh -c 'cat > /etc/nginx/nginx.conf' < "$patched"
+        docker exec "$NGINX_CONTAINER" nginx -s reload
+
+        # Check it took effect. The service's own header echoes the Origin, so exactly one `*` means
+        # the request went through the new location and the service's header was hidden. Retry
+        # briefly, as the reload is asynchronous.
+        for attempt in $(seq 1 10); do
+          headers=$(curl --silent --output /dev/null --dump-header - -H "Origin: http://localhost:1" \
+            "$ENDPOINT/mag-prototype/files/assets/cors-check.txt" || true)
+          values=$(echo "$headers" | grep -i '^access-control-allow-origin:' | tr -d '\r' | sed 's/^[^:]*:[[:space:]]*//' || true)
+          if [ "$values" = "*" ]; then
+            echo "CORS headers added to file downloads"
+            exit 0
+          fi
+          sleep 1
+        done
+        echo "$headers"
+        echo "::error::The CORS stopgap didn't take effect (Access-Control-Allow-Origin values: '${values//$'\n'/, }')"
+        exit 1
+
     # TEMP: diagnosing blob downloads failing in the browser. Compares the CORS headers on an API
     # route against a file route (a 404 is fine, we only want the headers), then dumps the nginx
     # config. Never fails the action. Remove once fixed.
