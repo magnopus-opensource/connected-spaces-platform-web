@@ -1,4 +1,4 @@
-import { describe } from 'vitest';
+import { describe, inject } from 'vitest';
 import {
   CspRequestError,
   LogLevel,
@@ -108,8 +108,9 @@ export const describeOnAndOffThread = (name: string, describeFn: (offThread: boo
   }
 };
 
-const ENDPOINT_ROOT_URI = 'https://ogs.magnopus-dev.cloud';
-const TENANT = 'OKO_TESTS';
+// Configured by CSP_TEST_ENDPOINT / CSP_TEST_TENANT in vitest.config.ts
+const ENDPOINT_ROOT_URI = inject('endpoint');
+const TENANT = inject('tenant');
 
 const USER_AGENT_CLIENT_OS = 'WASMTestsOS';
 const USER_AGENT_CLIENT_SKU = 'connected-spaces-platform-web-tests';
