@@ -70,22 +70,6 @@ EMSCRIPTEN_BINDINGS(CSPUserSystem)
                     [&](emscripten::val cb) { self.LoginAsGuestWithDeferredProfileCreation(userHasVerifiedAge, ToNativeCallback(cb.as<LoginStateResultCallback>())); });
             })
         .function(
-            "getThirdPartyProviderAuthorizeUrl(authProvider, redirectUrl, clientType)",
-            +[](csp::systems::UserSystem& self, csp::systems::EThirdPartyAuthenticationProviders authProvider, const csp::common::String& redirectUrl,
-                 const csp::common::Optional<csp::systems::EThirdPartyPlatform>& clientType) {
-                return Promisify<PromiseOfStringResult>(
-                    [&](emscripten::val cb) { self.GetThirdPartyProviderAuthorizeURL(authProvider, redirectUrl, clientType, ToNativeCallback(cb.as<StringResultCallback>())); });
-            })
-        .function(
-            "loginToThirdPartyAuthenticationProvider(thirdPartyToken, thirdPartyStateId, createMultiplayerConnection, userHasVerifiedAge, tokenOptions)",
-            +[](csp::systems::UserSystem& self, const csp::common::String& thirdPartyToken, const csp::common::String& thirdPartyStateId, bool createMultiplayerConnection,
-                 const csp::common::Optional<bool>& userHasVerifiedAge, const csp::common::Optional<csp::systems::TokenOptions>& tokenOptions) {
-                return Promisify<PromiseOfLoginStateResult>([&](emscripten::val cb) {
-                    self.LoginToThirdPartyAuthenticationProvider(
-                        thirdPartyToken, thirdPartyStateId, createMultiplayerConnection, userHasVerifiedAge, tokenOptions, ToNativeCallback(cb.as<LoginStateResultCallback>()));
-                });
-            })
-        .function(
             "loginToThirdPartyAuthenticationProviderWithToken(authProvider, thirdPartyToken, clientType, createMultiplayerConnection, userHasVerifiedAge)",
             +[](csp::systems::UserSystem& self, csp::systems::EThirdPartyAuthenticationProviders authProvider, const csp::common::String& thirdPartyToken,
                  const csp::common::Optional<csp::systems::EThirdPartyPlatform>& clientType, bool createMultiplayerConnection,
