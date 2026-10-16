@@ -146,11 +146,31 @@ runs:
           /^[[:space:]]*listen 8081;/ { print ""; while ((getline line < block) > 0) print line; close(block) }
         ' "$original" > "$patched"
 
-        # Validate before using it. Overwrite in place rather than replacing the file, as it's likely
-        # a single-file bind mount, which wouldn't see a replaced file.
+        # Validate before using it.
         docker exec -i "$NGINX_CONTAINER" sh -c 'cat > /tmp/nginx.conf' < "$patched"
         docker exec "$NGINX_CONTAINER" nginx -t -c /tmp/nginx.conf
-        docker exec -i "$NGINX_CONTAINER" sh -c 'cat > /etc/nginx/nginx.conf' < "$patched"
+
+        # The config is bind-mounted read-only, so patch the file it's mounted from on the runner.
+        # Overwrite it in place rather than replacing it, as a single-file bind mount wouldn't see a
+        # replaced file.
+        config_source=$(docker inspect --format \
+          '{{range .Mounts}}{{if eq .Destination "/etc/nginx/nginx.conf"}}{{.Source}}{{end}}{{end}}' \
+          "$NGINX_CONTAINER")
+        if [ -z "$config_source" ] || [ ! -f "$config_source" ]; then
+          echo "::error::Couldn't find the file the MCS nginx config is mounted from (found '$config_source')"
+          docker inspect --format '{{json .Mounts}}' "$NGINX_CONTAINER"
+          exit 1
+        fi
+        echo "Patching $config_source"
+        if [ -w "$config_source" ]; then
+          cat "$patched" > "$config_source"
+        else
+          sudo tee "$config_source" > /dev/null < "$patched"
+        fi
+        if ! docker exec "$NGINX_CONTAINER" cat /etc/nginx/nginx.conf | cmp --silent - "$patched"; then
+          echo "::error::nginx doesn't see the patched config after writing to $config_source"
+          exit 1
+        fi
         docker exec "$NGINX_CONTAINER" nginx -s reload
 
         # Check it took effect. The service's own header echoes the Origin, so exactly one `*` means
