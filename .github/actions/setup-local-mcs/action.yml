@@ -99,9 +99,8 @@ runs:
       shell: bash
       run: docker ps --format 'table {{.Names}}\t{{.Image}}\t{{.Ports}}'
 
-    # Don't start the tests against a stack that isn't ready yet (make sure to poll the services
-    # and not just nginx). Any response other than a gateway error (e.g. 404) means the service is
-    # up.
+    # Wait for the MCS stack to be ready (make sure to poll the services and not just nginx.
+    #  Any response other than a gateway error (e.g. 404) means the service is up.
     - name: Wait for MCS
       shell: bash
       env:
