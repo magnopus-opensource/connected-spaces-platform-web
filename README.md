@@ -42,7 +42,7 @@ cmake --build --preset debug
 cmake --build --preset debug --target install
 ```
 
-All going well, this should produce you an install directory containing a `.wasm`, a `.js`, a `.ts` as well as a `package.json` such that they can be installed as a node module. The install target places these at `./CSP-WASM-Bindings` by default.
+All going well, this should produce you an install directory containing a `.wasm`, a `.js`, a `.ts` as well as a `package.json` such that they can be installed as a node module. Debug builds also produce a `.debug.wasm` containing the debug symbols (see [Debugging](docs/Debugging.md)). The install target places these at `./CSP-WASM-Bindings` by default.
 
 ### Testing
 
