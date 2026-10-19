@@ -23,8 +23,10 @@ for projects in "types unit" "integration"; do
     args+=(--project "$project")
   done
 
-  echo "=== Running the $projects tests in $browser"
+  # Create a separate section for each run in the GitHub Actions log
+  echo "::group::Test - $projects ($browser)"
   bash "$script_dir/with-memory-log.sh" npm run "test:$browser" -- "${args[@]}" || status=$?
+  echo "::endgroup::"
 done
 
 exit $status
