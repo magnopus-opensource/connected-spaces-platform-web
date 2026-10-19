@@ -21,7 +21,6 @@ permissions:
   contents: write
 
 jobs:
-  # Build the bindings
   build-bindings:
     uses: ./.github/workflows/build-bindings.yml
     with:
@@ -66,7 +65,7 @@ jobs:
         working-directory: npm-package/package
         env:
           VERSION: ${{ github.event.inputs.version }}
-        # Strip an optional leading "v" (e.g. v1.2.3 -> 1.2.3) to get a valid semver.
+        # Strip an optional leading "v" (e.g. v1.2.3 -> 1.2.3) to get a valid semver
         run: npm version --no-git-tag-version --allow-same-version "${VERSION#v}"
 
       - name: Validate npm package
@@ -99,13 +98,32 @@ jobs:
         shell: bash
         run: npm publish
 
-  # Then make the release
   publish-release:
     needs: [build-bindings, publish-npm]
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
+      # Checkout needed to read the pinned CSP version
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Determine CSP version
+        id: csp
+        shell: bash
+        env:
+          CSP_TAG: ${{ inputs.csp_tag }}
+        run: |
+          set -euo pipefail
+          if [ -n "$CSP_TAG" ]; then
+            CSP_VERSION="$CSP_TAG"
+          else
+            CSP_VERSION="$(sed -n 's/.*set(CSP_TARGET_VERSION "\([^"]*\)".*/\1/p' cmake/GetCSP.cmake)"
+            # Fail loudly if the pin moves or changes format.
+            test -n "$CSP_VERSION"
+          fi
+          echo "version=$CSP_VERSION" >> "$GITHUB_OUTPUT"
+
       - name: Download all artifacts
         uses: actions/download-artifact@v8
         with:
@@ -114,10 +132,11 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v3
         with:
-          # Fallback name for push events
           name: ${{ github.event.inputs.release_name }}
           tag_name: ${{ github.event.inputs.version }}
           target_commitish: ${{ github.sha }}
+          # Prepend CSP version to the generated release notes
+          body: 'Bindings for CSP `${{ steps.csp.outputs.version }}`'
           generate_release_notes: true
           # Add the ** wildcard so it searches inside the subfolders too
           files: release-artifacts/**/*.zip
