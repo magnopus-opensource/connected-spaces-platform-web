@@ -1,10 +1,7 @@
 #!/usr/bin/env bash
-# Runs the bindings tests in one browser as two separate Vitest runs: the type and unit tests, then
-# the integration tests. Each run starts a fresh browser.
-#
-# WebKit and Firefox keep the memory of every test file they've run until the browser closes, so
-# running all the tests in one browser ran the runner out of memory with the debug build. Splitting
-# the run releases what the unit tests built up before the integration tests start.
+# Runs the bindings tests for one browser as two separate Vitest runs for the type and unit tests,
+# then the integration tests. Each run starts a fresh browser, which avoids running out of memory
+# for WebKit and Firefox.
 #
 # Both runs happen even if the first fails, and the script fails if either does.
 #
