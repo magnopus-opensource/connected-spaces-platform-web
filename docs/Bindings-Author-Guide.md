@@ -60,6 +60,24 @@ emscripten::class_<CspClass>("CspClass")
     ...
 ```
 
+#### Class Constructors Returning Owning Pointers
+
+In some cases, a class constructor returns an owning pointer to the caller. This is notably the case when the class is non-copyable and instances must be owned by the caller, such as the _RealtimeEngine_ classes.
+If a constructor does return a pointer, make sure to include the `emscripten::nonnull` policy so that the return type does not appear with ` | null` in TypeScript.
+
+```cpp
+emscripten::class_<CspClass>("CspClass")
+    .class_function(
+        "create(value)",
+        +[](int value)
+        {
+          return new CspClass(value, std::move(name));
+        },
+        emscripten::allow_raw_pointers
+        emscripten::nonnull<emscripten::ret_val>())
+    ...
+```
+
 ### Class Inheritance and Polymorphism
 
 If a class inherits from a base class, include it in the class bindings definition using `emscripten::base`:
