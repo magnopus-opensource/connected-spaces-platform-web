@@ -1,0 +1,190 @@
+name: Setup Local MCS
+description: |
+  Composite action that checks out Magnopus.Services and starts the local MCS Docker stack,
+  so tests can run against local services instead of the online ones.
+  Outputs the services endpoint.
+
+  This works for Linux runners only. With the MCS images are Linux container images, which GitHub's
+  Windows runners can't run (Docker fails with "no matching manifest for windows/amd64").
+
+  Composite actions can't read the `secrets` context, so the secrets are passed in as inputs.
+  The action fails if any of them are empty.
+
+inputs:
+  mcs_deploy_key:
+    description: SSH deploy key with read access to magnopus/Magnopus.Services.
+    required: true
+  docker_username:
+    description: Docker Hub username used to pull the MCS images.
+    required: true
+  docker_password:
+    description: Docker Hub password used to pull the MCS images.
+    required: true
+
+outputs:
+  endpoint:
+    description: Root URI of the local MCS services.
+    value: ${{ steps.start-mcs.outputs.endpoint }}
+
+runs:
+  using: composite
+  steps:
+    - name: Validate environment
+      shell: bash
+      env:
+        MCS_DEPLOY_KEY: ${{ inputs.mcs_deploy_key }}
+        DOCKER_USERNAME: ${{ inputs.docker_username }}
+        DOCKER_PASSWORD: ${{ inputs.docker_password }}
+      run: |
+        failed=0
+        if [ "$RUNNER_OS" != "Linux" ]; then
+          echo "::error::setup-local-mcs needs a Linux runner, this is $RUNNER_OS"
+          failed=1
+        fi
+        for name in MCS_DEPLOY_KEY DOCKER_USERNAME DOCKER_PASSWORD; do
+          if [ -z "${!name}" ]; then
+            echo "::error::Secret for $name is empty. Check it's configured in the repo and passed to this action."
+            failed=1
+          fi
+        done
+        exit $failed
+
+    # Checked out into a subdirectory so it doesn't clobber this repo at the workspace root.
+    - name: Checkout Magnopus.Services
+      uses: actions/checkout@v7
+      with:
+        repository: magnopus/Magnopus.Services
+        path: .local-mcs
+        ssh-key: ${{ inputs.mcs_deploy_key }}
+        persist-credentials: false
+
+    - name: Set up Docker
+      uses: docker/setup-docker-action@v5
+
+    - name: Set up Docker Compose
+      uses: docker/setup-compose-action@v2
+
+    - name: Login to Docker Hub
+      uses: docker/login-action@v4
+      with:
+        username: ${{ inputs.docker_username }}
+        password: ${{ inputs.docker_password }}
+
+    - name: Docker diagnostics
+      shell: bash
+      run: |
+        set -euxo pipefail
+
+        docker version
+        docker info
+        docker compose version
+
+    - name: Pull and run MCS container
+      id: start-mcs
+      shell: bash
+      working-directory: .local-mcs
+      env:
+        COMPOSE_ANSI: never
+        COMPOSE_PROGRESS: plain
+      run: |
+        set -euo pipefail
+
+        pip install requests
+        python Build/LocalContainers/start_current_o2dev.py
+
+        echo "endpoint=http://localhost:8081" >> "$GITHUB_OUTPUT"
+
+    # Log which services are running and which ports they publish to the host.
+    - name: Show MCS containers
+      shell: bash
+      run: docker ps --format 'table {{.Names}}\t{{.Image}}\t{{.Ports}}'
+
+    # Wait for the MCS stack to be ready (make sure to poll the services and not just nginx.
+    #  Any response other than a gateway error (e.g. 404) means the service is up.
+    - name: Wait for MCS
+      shell: bash
+      env:
+        ENDPOINT: ${{ steps.start-mcs.outputs.endpoint }}
+      run: |
+        set -euo pipefail
+        for service in mag-user mag-prototype mag-multiplayer oly-aggregation; do
+          for attempt in $(seq 1 90); do
+            status=$(curl --silent --output /dev/null --write-out '%{http_code}' "$ENDPOINT/$service/" || true)
+            case "$status" in
+              000|502|503|504) sleep 2 ;;
+              *) echo "$service is up (HTTP $status)"; continue 2 ;;
+            esac
+          done
+          echo "::error::$service didn't become ready after 3 minutes (last status: HTTP $status)"
+          exit 1
+        done
+
+    # Mitigation to add CORS headers to the files served by mag-prototype, needed for browser tests
+    # to download uploaded assets and materials. Patches the running nginx gateway's config to add
+    # them, see nginx-files-cors.conf.
+    - name: Add CORS headers to MCS file downloads
+      shell: bash
+      env:
+        ENDPOINT: ${{ steps.start-mcs.outputs.endpoint }}
+        NGINX_CONTAINER: maglocal-nginx-1
+      run: |
+        set -euo pipefail
+        CORS_BLOCK="$GITHUB_ACTION_PATH/nginx-files-cors.conf"
+        original="$RUNNER_TEMP/nginx.conf"
+        patched="$RUNNER_TEMP/nginx.patched.conf"
+
+        docker exec "$NGINX_CONTAINER" cat /etc/nginx/nginx.conf > "$original"
+
+        # Insert the block at the top of the 8081 server, before the generic service location.
+        if [ "$(grep -c '^[[:space:]]*listen 8081;' "$original")" != 1 ]; then
+          echo "::error::Expected exactly one 'listen 8081;' in the MCS nginx config, its layout has changed"
+          exit 1
+        fi
+        awk -v block="$CORS_BLOCK" '
+          { print }
+          /^[[:space:]]*listen 8081;/ { print ""; while ((getline line < block) > 0) print line; close(block) }
+        ' "$original" > "$patched"
+
+        # Validate before using it.
+        docker exec -i "$NGINX_CONTAINER" sh -c 'cat > /tmp/nginx.conf' < "$patched"
+        docker exec "$NGINX_CONTAINER" nginx -t -c /tmp/nginx.conf
+
+        # The config is bind-mounted read-only, so patch the file it's mounted from on the runner.
+        # Overwrite it in place rather than replacing it, as a single-file bind mount wouldn't see a
+        # replaced file.
+        config_source=$(docker inspect --format \
+          '{{range .Mounts}}{{if eq .Destination "/etc/nginx/nginx.conf"}}{{.Source}}{{end}}{{end}}' \
+          "$NGINX_CONTAINER")
+        if [ -z "$config_source" ] || [ ! -f "$config_source" ]; then
+          echo "::error::Couldn't find the file the MCS nginx config is mounted from (found '$config_source')"
+          docker inspect --format '{{json .Mounts}}' "$NGINX_CONTAINER"
+          exit 1
+        fi
+        echo "Patching $config_source"
+        if [ -w "$config_source" ]; then
+          cat "$patched" > "$config_source"
+        else
+          sudo tee "$config_source" > /dev/null < "$patched"
+        fi
+        if ! docker exec "$NGINX_CONTAINER" cat /etc/nginx/nginx.conf | cmp --silent - "$patched"; then
+          echo "::error::nginx doesn't see the patched config after writing to $config_source"
+          exit 1
+        fi
+        docker exec "$NGINX_CONTAINER" nginx -s reload
+
+        # Check it took effect. The service's own header echoes the Origin, so exactly one `*` means
+        # the request went through the new location and the service's header was hidden. Retry
+        # briefly, as the reload is asynchronous.
+        for attempt in $(seq 1 10); do
+          headers=$(curl --silent --output /dev/null --dump-header - -H "Origin: http://localhost:1" \
+            "$ENDPOINT/mag-prototype/files/assets/cors-check.txt" || true)
+          values=$(echo "$headers" | grep -i '^access-control-allow-origin:' | tr -d '\r' | sed 's/^[^:]*:[[:space:]]*//' || true)
+          if [ "$values" = "*" ]; then
+            echo "CORS headers added to file downloads"
+            exit 0
+          fi
+          sleep 1
+        done
+        echo "$headers"
+        echo "::error::The CORS stopgap didn't take effect (Access-Control-Allow-Origin values: '${values//$'\n'/, }')"
+        exit 1

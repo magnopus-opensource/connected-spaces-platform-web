@@ -1,3 +1,5 @@
+/// <reference path="./providedContext.d.ts" />
+
 import type { UserWorkspaceConfig } from 'vitest/config';
 import { defineConfig } from 'vitest/config';
 import { playwright } from '@vitest/browser-playwright';
@@ -8,6 +10,10 @@ const testDir = import.meta.dirname;
 const repoRoot = resolve(testDir, '..');
 // Arbitrary install location, just what I decided to call it.
 const installDir = resolve(repoRoot, 'CSP-WASM-Bindings');
+
+// MCS base URL and tenant used when running tests
+const endpoint = process.env.CSP_TEST_ENDPOINT || 'https://ogs.magnopus-dev.cloud';
+const tenant = process.env.CSP_TEST_TENANT || 'OKO_TESTS';
 
 // Shared config body. `debug` runs headed with the Chrome DWARF extension loaded
 // for C++ source-level debugging; CSP_DWARF_EXT points at the unpacked DWARF
@@ -34,6 +40,7 @@ export function makeConfig({ debug = false } = {}) {
       globals: true,
       restoreMocks: true, // Otherwise things like spies leak between tests
       testTimeout: 30_000,
+      provide: { endpoint, tenant },
       browser: {
         enabled: true,
         headless: !debug,
