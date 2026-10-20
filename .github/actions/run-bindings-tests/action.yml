@@ -73,8 +73,7 @@ runs:
         fi
 
     # Each browser runs the type and unit tests, then the integration tests, as separate Vitest runs
-    # so its memory is released in between, with memory use logged throughout. See
-    # run-browser-tests.sh.
+    # so its memory is released in between. See run-browser-tests.sh.
     - name: Test (Chromium)
       if: inputs.test_browser == 'all' || inputs.test_browser == 'chromium'
       shell: bash

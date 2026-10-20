@@ -6,15 +6,13 @@
 # running all the tests in one browser ran the runner out of memory with the debug build. Splitting
 # the run releases what the unit tests built up before the integration tests start.
 #
-# Both runs happen even if the first fails, and the script fails if either does. Memory use is
-# logged throughout (see with-memory-log.sh).
+# Both runs happen even if the first fails, and the script fails if either does.
 #
 # Usage, from the tests directory: run-browser-tests.sh <chromium|webkit|firefox>
 
 set -uo pipefail
 
 browser="$1"
-script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 status=0
 
 for projects in "types unit" "integration"; do
@@ -25,7 +23,7 @@ for projects in "types unit" "integration"; do
 
   # Create a separate section for each run in the GitHub Actions log
   echo "::group::Test - $projects ($browser)"
-  bash "$script_dir/with-memory-log.sh" npm run "test:$browser" -- "${args[@]}" || status=$?
+  npm run "test:$browser" -- "${args[@]}" || status=$?
   echo "::endgroup::"
 done
 
