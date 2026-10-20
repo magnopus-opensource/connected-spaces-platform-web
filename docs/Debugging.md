@@ -14,16 +14,21 @@ To begin with, you are going to need a debug version of CSP compiled for emscrip
 >
 > You must build the CSP library yourself. When building in debug mode, DWARF symbol paths will be injected into the binary. These paths are specific to _your local machine_.
 
-Once you have that, go ahead and build the bindings in debug mode against the debug CSP lib. You'll know you've been succesful because the compiled WASM will be large. When I do this, it comes out at about 90MB. That's all the debug symbols.
+Once you have that, go ahead and build the bindings in debug mode against the debug CSP lib, and install it. You'll know you've been successful because alongside `connected-spaces-platform-bindings.wasm`, the install directory will contain a large `connected-spaces-platform-bindings.debug.wasm` file.
+
+> [!NOTE]
+>
+> The debug symbols (DWARF) live in the separate `.debug.wasm` rather than in the `.wasm` itself, so the `.wasm` stays small and the symbols are only downloaded when the debugger asks for them.
+> The `.wasm` records the name of its `.debug.wasm`, and the debugger looks for it next to the `.wasm`, so always keep the pair together and from the same build.
+> A `.debug.wasm` from a different build won't be detected, and will give you nonsense mappings.
 
 ### Browser Setup
 
-Debugging is performed through the test suite. This project used a vitest test suite, using a headless puppeteer chromium browser to run the tests in the browser context. What we're going to do when debugging is launch a _headed_ browser, such that we can use the developer tools.
+Debugging is performed through the test suite. This project used a vitest test suite, using a headless playwright chromium browser to run the tests in the browser context. What we're going to do when debugging is launch a _headed_ browser, such that we can use the developer tools.
 
 To get WASM debugging support, you're going to need to install the [C/C++ Devtools Support (DWARF) extension](https://chromewebstore.google.com/detail/cc++-devtools-support-dwa/pdcpmagijalfljmkmjngeonclgbbannb)
 
 <img width="1280" height="800" alt="DWARF debugger extension image" src="https://github.com/user-attachments/assets/efb8423c-935d-4b93-aa50-bb82e72717d4" />
-
 
 Once that is installed, the next step is to tell our test stack where to find it. You do this by setting the `CSP_DWARF_EXT` environment variable to the path of your extension. This path will look something like mine does : `"C:\Users\Elliot.Morris\AppData\Local\Google\Chrome\User Data\Profile 2\Extensions\pdcpmagijalfljmkmjngeonclgbbannb\0.2.5854.1_0\"`
 
@@ -71,9 +76,9 @@ A convenient way to trigger a breakpoint is to use the `debugger;` command insid
 For example :
 
 ```ts
-it("exports GetVersion", () => {
+it('exports GetVersion', () => {
   debugger; // <-- Add this to break here.
-  expect(typeof csp.GetVersion).toBe("function");
+  expect(typeof csp.GetVersion).toBe('function');
 });
 ```
 
@@ -83,3 +88,9 @@ Navigate to the `sources` tab. Once execution has stopped at your breakpoint, yo
 
 <img width="1280" height="800" alt="Gif showing the full debugging flow in action" src="https://github.com/user-attachments/assets/eb7caf94-2363-4f81-ba89-894548cfaf27" />
 
+> [!TIP]
+>
+> If you can't find any C++ sources, check the `Console` for the extension's message about loading debug symbols.
+> If they failed to load, check that `connected-spaces-platform-bindings.debug.wasm` is in the install directory next to the `.wasm` (make sure you installed a debug build).
+
+To debug the bindings from your own application rather than the test suite, see [Clients](Clients.md#debugging) for how to serve the `.debug.wasm`.
