@@ -11,7 +11,7 @@
     "test:unit": "vitest run --project unit",
     "test:integration": "vitest run --project integration",
     "test:watch": "vitest",
-    "test:debug": "vitest --config vitest.debug.config.ts --no-file-parallelism",
+    "test:debug": "vitest --config vitest.debug.config.ts --no-file-parallelism --browser=chromium",
     "typecheck": "tsc --noEmit",
     "lint": "eslint ."
   },
