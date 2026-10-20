@@ -148,8 +148,9 @@ set(CSP_WASM_MAXIMUM_MEMORY "1073741824" CACHE STRING "Maximum wasm heap size, i
 
 target_link_options(connected-spaces-platform-bindings PRIVATE
    $<$<PLATFORM_ID:Emscripten>:
-    # Emit DWARF in the final .wasm for Debug builds only.
-    $<$<CONFIG:Debug>:-g>
+    # Emit DWARF for Debug builds only, into a separate .debug.wasm next to the .wasm rather than baking it in.
+    # The .wasm records the DWARF file's name relative to the .wasm's URL, so the two must be served side-by-side.
+    $<$<CONFIG:Debug>:-gseparate-dwarf=$<TARGET_FILE_DIR:connected-spaces-platform-bindings>/$<TARGET_FILE_BASE_NAME:connected-spaces-platform-bindings>.debug.wasm>
     -pthread
     -fwasm-exceptions
     -lembind

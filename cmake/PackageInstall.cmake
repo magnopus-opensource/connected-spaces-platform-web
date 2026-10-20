@@ -24,3 +24,10 @@ install(FILES
       "${CMAKE_SOURCE_DIR}/src/loader/loader.d.ts"
       DESTINATION .
   )
+
+# Debug builds put their DWARF in a separate file (see -gseparate-dwarf in CMakeLists.txt), which must sit next to the .wasm.
+install(FILES
+      "$<TARGET_FILE_DIR:connected-spaces-platform-bindings>/$<TARGET_FILE_BASE_NAME:connected-spaces-platform-bindings>.debug.wasm"
+      CONFIGURATIONS Debug
+      DESTINATION .
+  )

@@ -16,6 +16,7 @@
       "default": "./debug/connected-spaces-platform-bindings.js"
     },
     "./debug/connected-spaces-platform-bindings.wasm": "./debug/connected-spaces-platform-bindings.wasm",
+    "./debug/connected-spaces-platform-bindings.debug.wasm": "./debug/connected-spaces-platform-bindings.debug.wasm",
     "./loader": {
       "types": "./loader.d.ts",
       "default": "./loader.js"
@@ -27,6 +28,7 @@
     "connected-spaces-platform-bindings.d.ts",
     "debug/connected-spaces-platform-bindings.js",
     "debug/connected-spaces-platform-bindings.wasm",
+    "debug/connected-spaces-platform-bindings.debug.wasm",
     "debug/connected-spaces-platform-bindings.d.ts",
     "loader.js",
     "loader.d.ts"

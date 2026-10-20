@@ -66,3 +66,81 @@ For client applications using TypeScript, version 5.2 or higher must be used to 
   }
 }
 ```
+
+## Debugging
+
+The package contains a debug build of the bindings alongside the release build, available via the `./debug` entry point or `loadCsp({ debug: true })` from `./loader`. This build can be debugged at the C++ level in Chrome with the [C/C++ DevTools Support (DWARF) extension](https://chromewebstore.google.com/detail/cc++-devtools-support-dwa/pdcpmagijalfljmkmjngeonclgbbannb). See [Debugging](Debugging.md) for more on the debugging workflow itself.
+
+### Serving the Debug Symbols
+
+The debug symbols are in a separate file to not inside `debug/connected-spaces-platform-bindings.wasm`, `debug/connected-spaces-platform-bindings.debug.wasm`, which the DevTools extension downloads only when DevTools is open. The `.wasm` records the filename of its accompanying `.debug.wasm`, and the extension looks for it in the same directory as the URL the `.wasm` was loaded from. So the application must serve the `.debug.wasm` next to the `.wasm`, keeping the name `connected-spaces-platform-bindings.debug.wasm`.
+
+If the `.debug.wasm` can't be found, the bindings still run normally, but DevTools will not show any C++ sources.
+
+> [!NOTE]
+>
+> The `.debug.wasm` is a large file (> 100 MB). As it is only needed for debugging, serve it with debug builds only.
+
+Bundlers find the `.wasm` through a `new URL('connected-spaces-platform-bindings.wasm', import.meta.url)` reference in the bindings JavaScript, and usually emit it into an output directory under a hashed name, e.g. `assets/connected-spaces-platform-bindings-a1b2c3d4.wasm`. Nothing in the JavaScript references the `.debug.wasm`, so the bundler will not emit it. You need to copy it into the same output directory as the emitted `.wasm`, keeping its original (unhashed) name.
+
+#### Vite
+
+If the Vite dev server serves the bindings package directly out of `node_modules`, the `.debug.wasm` is already next to the `.wasm`, and nothing more is needed.
+
+For a build, emit the `.debug.wasm` into the assets directory (`build.assetsDir`, `assets` by default) with a small plugin:
+
+```js
+import { defineConfig } from 'vite';
+import { readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
+
+const require = createRequire(import.meta.url);
+
+// Emits the CSP debug symbols next to the bundled debug .wasm.
+function cspDebugSymbols() {
+  return {
+    name: 'csp-debug-symbols',
+    apply: 'build',
+    generateBundle() {
+      this.emitFile({
+        type: 'asset',
+        fileName: 'assets/connected-spaces-platform-bindings.debug.wasm',
+        source: readFileSync(
+          require.resolve('@magnopus-opensource/connected-spaces-platform-bindings-web/debug/connected-spaces-platform-bindings.debug.wasm')
+        )
+      });
+    }
+  };
+}
+
+export default defineConfig({
+  // Only include this in the builds you want to debug.
+  plugins: [cspDebugSymbols()]
+});
+```
+
+#### Webpack
+
+Webpack emits the `.wasm` as an asset module, by default to the root of the output directory (see `output.assetModuleFilename`). Copy the `.debug.wasm` to the same place, for example with [copy-webpack-plugin](https://webpack.js.org/plugins/copy-webpack-plugin/):
+
+```js
+const CopyPlugin = require('copy-webpack-plugin');
+
+module.exports = {
+  plugins: [
+    new CopyPlugin({
+      patterns: [
+        {
+          from: require.resolve('@magnopus-opensource/connected-spaces-platform-bindings-web/debug/connected-spaces-platform-bindings.debug.wasm')
+          // `to` defaults to the root of the output directory. Set it to wherever the .wasm is
+          // emitted if you have changed output.assetModuleFilename.
+        }
+      ]
+    })
+  ]
+};
+```
+
+### Checking It Works
+
+With DevTools open, the extension logs a message in the console when it loads (or fails to load) the debug symbols. If they fail to load, find the URL the `.wasm` was loaded from in the `Network` tab, replace the filename with `connected-spaces-platform-bindings.debug.wasm`, and open that URL in the browser. If it doesn't download, the file has not been copied to the right place.
