@@ -23,6 +23,7 @@
 #include "CSP/Systems/Assets/Asset.h"
 #include "CSP/Systems/Assets/AssetCollection.h"
 #include "CSP/Systems/Assets/LOD.h"
+#include "CSP/Systems/Assets/Material.h"
 #include "CSP/Systems/ECommerce/ECommerce.h"
 #include "CSP/Systems/EventTicketing/EventTicketing.h"
 #include "CSP/Systems/HotspotSequence/HotspotGroup.h"
@@ -126,6 +127,8 @@ EMSCRIPTEN_BINDINGS(CSPContainerDeclarations)
     emscripten::register_type<bindings::utils::JSDisposable<csp::common::Array<csp::systems::Asset>>>("(Asset[] & Disposable)");
     emscripten::register_type<csp::common::Array<csp::systems::AssetCollection>>("AssetCollection[]");
     emscripten::register_type<bindings::utils::JSDisposable<csp::common::Array<csp::systems::AssetCollection>>>("(AssetCollection[] & Disposable)");
+    emscripten::register_type<csp::common::Array<csp::systems::MaterialInfo>>("MaterialInfo[]");
+    emscripten::register_type<bindings::utils::JSDisposable<csp::common::Array<csp::systems::MaterialInfo>>>("(MaterialInfo[] & Disposable)");
     emscripten::register_type<csp::common::Array<csp::systems::LODAsset>>("LODAsset[]");
     emscripten::register_type<bindings::utils::JSDisposable<csp::common::Array<csp::systems::LODAsset>>>("(LODAsset[] & Disposable)");
     emscripten::register_type<csp::common::Array<csp::systems::GeoLocation>>("GeoLocation[]");

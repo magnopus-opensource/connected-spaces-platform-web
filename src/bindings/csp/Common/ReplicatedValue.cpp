@@ -20,7 +20,8 @@ EMSCRIPTEN_BINDINGS(CSPReplicatedValue)
         .value("Vector3", csp::common::ReplicatedValueType::Vector3)
         .value("Vector4", csp::common::ReplicatedValueType::Vector4)
         .value("Vector2", csp::common::ReplicatedValueType::Vector2)
-        .value("StringMap", csp::common::ReplicatedValueType::StringMap);
+        .value("StringMap", csp::common::ReplicatedValueType::StringMap)
+        .value("Double", csp::common::ReplicatedValueType::Double);
 
     emscripten::class_<csp::common::ReplicatedValue>("ReplicatedValue")
         .class_function(
@@ -41,6 +42,8 @@ EMSCRIPTEN_BINDINGS(CSPReplicatedValue)
             "createVector4(value)", +[](const csp::common::Vector4& value) { return csp::common::ReplicatedValue(value); })
         .class_function(
             "createStringMap(value)", +[](const csp::common::Map<csp::common::String, csp::common::ReplicatedValue>& value) { return csp::common::ReplicatedValue(value); })
+        .class_function(
+            "createDouble(value)", +[](double value) { return csp::common::ReplicatedValue(value); })
         .property("replicatedValueType", &csp::common::ReplicatedValue::GetReplicatedValueType)
         .function("getBool", &csp::common::ReplicatedValue::GetBool)
         .function("setBool(value)", &csp::common::ReplicatedValue::SetBool)
@@ -62,5 +65,7 @@ EMSCRIPTEN_BINDINGS(CSPReplicatedValue)
                 return bindings::utils::JSDisposable<csp::common::Map<csp::common::String, csp::common::ReplicatedValue>> { self.GetStringMap() };
             })
         .function("setStringMap(value)", &csp::common::ReplicatedValue::SetStringMap)
+        .function("getDouble", &csp::common::ReplicatedValue::GetDouble)
+        .function("setDouble(value)", &csp::common::ReplicatedValue::SetDouble)
         .function("equals(other)", &csp::common::ReplicatedValue::operator==);
 }
