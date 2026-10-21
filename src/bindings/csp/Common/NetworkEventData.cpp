@@ -49,7 +49,7 @@ EMSCRIPTEN_BINDINGS(CSPNetworkEventData)
         .function(
             "setEventValues(value)", +[](csp::common::NetworkEventData& self, csp::common::Array<csp::common::ReplicatedValue> value) { self.EventValues = std::move(value); });
 
-    emscripten::class_<csp::common::AssetDetailBlobChangedNetworkEventData, emscripten::base<csp::common::NetworkEventData>>("AssetDetailBlobChangedNetworkEventData")
+    emscripten::class_<csp::common::AssetDetailBlobChangedNetworkEventData>("AssetDetailBlobChangedNetworkEventData")
         .class_function(
             "create", +[]() { return csp::common::AssetDetailBlobChangedNetworkEventData(); })
         .property("changeType", &csp::common::AssetDetailBlobChangedNetworkEventData::ChangeType)
@@ -58,7 +58,7 @@ EMSCRIPTEN_BINDINGS(CSPNetworkEventData)
         .property("assetType", &csp::common::AssetDetailBlobChangedNetworkEventData::AssetType)
         .property("assetCollectionId", &csp::common::AssetDetailBlobChangedNetworkEventData::AssetCollectionId);
 
-    emscripten::class_<csp::common::ConversationNetworkEventData, emscripten::base<csp::common::NetworkEventData>>("ConversationNetworkEventData")
+    emscripten::class_<csp::common::ConversationNetworkEventData>("ConversationNetworkEventData")
         .class_function(
             "create", +[]() { return csp::common::ConversationNetworkEventData(); })
         .property("messageType", &csp::common::ConversationNetworkEventData::MessageType)
@@ -67,7 +67,7 @@ EMSCRIPTEN_BINDINGS(CSPNetworkEventData)
         .function(
             "setMessageInfo(value)", +[](csp::common::ConversationNetworkEventData& self, csp::multiplayer::MessageInfo value) { self.MessageInfo = std::move(value); });
 
-    emscripten::class_<csp::common::AccessControlChangedNetworkEventData, emscripten::base<csp::common::NetworkEventData>>("AccessControlChangedNetworkEventData")
+    emscripten::class_<csp::common::AccessControlChangedNetworkEventData>("AccessControlChangedNetworkEventData")
         .class_function(
             "create", +[]() { return csp::common::AccessControlChangedNetworkEventData(); })
         .property("spaceId", &csp::common::AccessControlChangedNetworkEventData::SpaceId)
@@ -75,7 +75,7 @@ EMSCRIPTEN_BINDINGS(CSPNetworkEventData)
         .property("changeType", &csp::common::AccessControlChangedNetworkEventData::ChangeType)
         .property("userId", &csp::common::AccessControlChangedNetworkEventData::UserId);
 
-    emscripten::class_<csp::common::SequenceChangedNetworkEventData, emscripten::base<csp::common::NetworkEventData>>("SequenceChangedNetworkEventData")
+    emscripten::class_<csp::common::SequenceChangedNetworkEventData>("SequenceChangedNetworkEventData")
         .class_function(
             "create", +[]() { return csp::common::SequenceChangedNetworkEventData(); })
         .property("updateType", &csp::common::SequenceChangedNetworkEventData::UpdateType)
@@ -84,7 +84,7 @@ EMSCRIPTEN_BINDINGS(CSPNetworkEventData)
         .property("newKey", &csp::common::SequenceChangedNetworkEventData::NewKey)
         .property("spaceId", &csp::common::SequenceChangedNetworkEventData::SpaceId);
 
-    emscripten::class_<csp::common::AsyncCallCompletedEventData, emscripten::base<csp::common::NetworkEventData>>("AsyncCallCompletedEventData")
+    emscripten::class_<csp::common::AsyncCallCompletedEventData>("AsyncCallCompletedEventData")
         .class_function(
             "create", +[]() { return csp::common::AsyncCallCompletedEventData(); })
         .property("operationName", &csp::common::AsyncCallCompletedEventData::OperationName)
