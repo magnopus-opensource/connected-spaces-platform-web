@@ -1,0 +1,102 @@
+name: Run Bindings Tests
+description: |
+  Composite action that type checks, lints and runs the bindings test suite.
+  Can run on both Windows and Linux runners.
+
+  The following needs to have been done before invoking this action:
+    * Checked out this repo at the workspace root.
+    * Node.js on PATH (`actions/setup-node`).
+    * Built and installed the bindings to "CSP-WASM-Bindings" at the repo root, which is where
+      vitest.config.ts expects to find them.
+    * Started the services if a local MCS `endpoint` is provided.
+
+inputs:
+  test_browser:
+    description: Browser to run the tests in. One of all, chromium, webkit or firefox.
+    required: false
+    default: 'all'
+  endpoint:
+    description: Root URI of the services the integration tests run against. Uses the default in tests/vitest.config.ts if empty.
+    required: false
+    default: ''
+  tenant:
+    description: Tenant the integration tests run against. Uses the default in tests/vitest.config.ts if empty.
+    required: false
+    default: ''
+  static_checks:
+    description: Whether to type check and lint the tests before running them.
+    required: false
+    default: 'true'
+
+runs:
+  using: composite
+  steps:
+    - name: Validate inputs
+      shell: bash
+      env:
+        TEST_BROWSER: ${{ inputs.test_browser }}
+      run: |
+        case "$TEST_BROWSER" in
+          all|chromium|webkit|firefox) ;;
+          *) echo "::error::Invalid test_browser '$TEST_BROWSER' (expected all, chromium, webkit or firefox)"; exit 1 ;;
+        esac
+
+    - name: Install Test dependencies
+      shell: bash
+      working-directory: ./tests
+      run: npm ci
+
+    - name: Type Check Tests
+      if: inputs.static_checks == 'true'
+      shell: bash
+      working-directory: ./tests
+      run: npm run typecheck
+
+    - name: Lint Tests
+      if: inputs.static_checks == 'true'
+      shell: bash
+      working-directory: ./tests
+      run: npm run lint
+
+    # On Linux, Playwright also needs the browsers' system dependencies (WebKit in particular).
+    - name: Install Playwright browsers
+      shell: bash
+      working-directory: ./tests
+      env:
+        BROWSERS: ${{ inputs.test_browser == 'all' && 'chromium webkit firefox' || inputs.test_browser }}
+      run: |
+        set -euxo pipefail
+        if [ "$RUNNER_OS" = "Linux" ]; then
+          npx playwright install --with-deps $BROWSERS
+        else
+          npx playwright install $BROWSERS
+        fi
+
+    # Each browser runs the type and unit tests, then the integration tests, as separate Vitest runs
+    # so its memory is released in between. See run-browser-tests.sh.
+    - name: Test (Chromium)
+      if: inputs.test_browser == 'all' || inputs.test_browser == 'chromium'
+      shell: bash
+      working-directory: ./tests
+      env:
+        CSP_TEST_ENDPOINT: ${{ inputs.endpoint }}
+        CSP_TEST_TENANT: ${{ inputs.tenant }}
+      run: bash "$GITHUB_ACTION_PATH/run-browser-tests.sh" chromium
+
+    - name: Test (WebKit)
+      if: inputs.test_browser == 'all' || inputs.test_browser == 'webkit'
+      shell: bash
+      working-directory: ./tests
+      env:
+        CSP_TEST_ENDPOINT: ${{ inputs.endpoint }}
+        CSP_TEST_TENANT: ${{ inputs.tenant }}
+      run: bash "$GITHUB_ACTION_PATH/run-browser-tests.sh" webkit
+
+    - name: Test (Firefox)
+      if: inputs.test_browser == 'all' || inputs.test_browser == 'firefox'
+      shell: bash
+      working-directory: ./tests
+      env:
+        CSP_TEST_ENDPOINT: ${{ inputs.endpoint }}
+        CSP_TEST_TENANT: ${{ inputs.tenant }}
+      run: bash "$GITHUB_ACTION_PATH/run-browser-tests.sh" firefox

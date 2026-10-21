@@ -5,21 +5,53 @@ on:
   workflow_dispatch:
     inputs:
       csp_branch:
-        description: 'CSP tag or branch to use (e.g., v0.0.1)'
+        description: 'CSP tag or branch to use (e.g., v0.0.1). If not provided, defaults to pinned release version'
         required: false
-        default: 'main'
+        default: ''
         type: string
-  workflow_call:
+      test_browser:
+        description: 'Browser to run the tests in'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - chromium
+          - webkit
+          - firefox
+  workflow_call: # Allows other workflows to call this one and wait for its artifacts
     inputs:
       csp_branch:
-        description: 'CSP tag or branch to use (e.g., v0.0.1)'
+        description: 'CSP tag or branch to use (e.g., v0.0.1). If not provided, defaults to pinned release version'
         required: false
-        default: 'main'
+        default: ''
         type: string
+      test_browser: # One of all, chromium, webkit or firefox.
+        type: string
+        required: false
+        default: 'all'
+      binding_repo_branch: # Branch of this (web bindings) repo to check out. Required when called from another repo so the local actions resolve correctly. Leave empty when running this workflow natively.
+        type: string
+        required: false
+        default: ''
+    # Needed to start the local MCS the tests run against. Callers can pass them with `secrets: inherit`.
+    secrets:
+      MCS_DEPLOY_KEY: # SSH deploy key with read access to magnopus/Magnopus.Services
+        required: true
+      DOCKER_USERNAME:
+        required: true
+      DOCKER_PASSWORD:
+        required: true
   push:
     branches:
       [main] # This is really just to seed the cache on main so PR's can reuse the same cache entries.
       # We could add a concurrency group if the redundancy bothers us for this, but I'm not fussed.
+env:
+  # Tell Cmake where CSP is, it's nowhere if we're not building from branch as we'll use the automatic pinned download in the cmake
+  CMAKE_PREFIX_PATH: ${{ inputs.csp_branch != '' && format('{0}/CSP/install', github.workspace) || '' }}
+  # Which browser(s) to test in. inputs is empty for pull_request and push, so those test all of them.
+  TEST_BROWSER: ${{ inputs.test_browser || 'all' }}
+
 jobs:
   emscripten-build:
     runs-on: ubuntu-latest
@@ -30,9 +62,20 @@ jobs:
         config: [release, debug]
 
     steps:
-      - uses: actions/checkout@v7
+      # When called from another repo (workflow_call), we need to target the branch specifically to this repository
+      # (because by default github would target the calling repo), and the specific branch we're interested in.
+      - name: Checkout (called from another repo)
+        if: inputs.binding_repo_branch != ''
+        uses: actions/checkout@v7
+        with:
+          repository: magnopus-opensource/connected-spaces-platform-web
+          ref: ${{ inputs.binding_repo_branch }}
 
-      # MSVC is the build-context compiler used by profiles/build/windows.
+      - name: Checkout (native)
+        if: inputs.binding_repo_branch == ''
+        uses: actions/checkout@v7
+
+      # MSVC is the build-context compiler used by profiles/build/windows
       # Needed if Conan has to compile any tool_requires from source.
       - name: Set up MSVC
         uses: ilammy/msvc-dev-cmd@v1
@@ -75,9 +118,10 @@ jobs:
       # Requires emsdk to already be on PATH (above).
       # Might be nice to cache this as well.
       - name: Build CSP (emsdk)
+        if: inputs.csp_branch != ''
         uses: ./.github/actions/build-csp-emsdk
         with:
-          csp_branch: ${{ inputs.csp_branch || 'main' }}
+          csp_branch: ${{ inputs.csp_branch }}
           build_type: ${{ matrix.config == 'debug' && 'Debug' || 'Release' }}
 
       - name: Install Conan
@@ -104,9 +148,6 @@ jobs:
 
       - name: Configure
         shell: bash
-        env:
-          # Tell Cmake where CSP is
-          CMAKE_PREFIX_PATH: ${{ github.workspace }}/CSP/install
         # Lower CSP_MAXIMUM_MEMORY for the tests. Because of shared array buffer, I believe we reserve the entire range regardless of whether we use it.
         # Since we start a bunch of CSP runtimes in the tests, we're saturating the runners.
         run: cmake --preset ${{ matrix.config }} -DCSP_WASM_MAXIMUM_MEMORY=268435456
@@ -121,40 +162,16 @@ jobs:
         shell: bash
         run: cmake --build --preset ${{ matrix.config }} --target install
 
-      - name: Install Test dependencies
-        shell: bash
-        working-directory: ./tests
-        run: npm ci
-
-      - name: Type Check Tests
-        shell: bash
-        working-directory: ./tests
-        run: npm run typecheck
-
-      - name: Lint Tests
-        shell: bash
-        working-directory: ./tests
-        run: npm run lint
-
-      - name: Install Playwright browsers
-        shell: bash
-        working-directory: ./tests
-        run: npx playwright install --with-deps chromium webkit firefox
-
-      - name: Test (Chromium)
-        shell: bash
-        working-directory: ./tests
-        run: npm run test:chromium
-
-      - name: Test (WebKit)
-        shell: bash
-        working-directory: ./tests
-        run: npm run test:webkit
-
-      - name: Test (Firefox)
-        shell: bash
-        working-directory: ./tests
-        run: npm run test:firefox
+      # The install dir will be overwritten by the packaging build below, so upload this lower
+      # memory build for testing with the test-local-mcs job below. Named so it doesn't match the
+      # CSP-WASM-Bindings-* pattern make-release uses to find the packages.
+      - name: Upload test build
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-bindings-${{ matrix.config }}
+          path: CSP-WASM-Bindings/
+          if-no-files-found: error
+          retention-days: 1
 
       # The tests above ran against a build with a lowered CSP_WASM_MAXIMUM_MEMORY. Drop that
       # override so the packaged build uses the default from CMakeLists.txt. MAXIMUM_MEMORY is
@@ -181,3 +198,52 @@ jobs:
           name: CSP-WASM-Bindings-${{ matrix.config }}
           path: CSP-WASM-Bindings-${{ matrix.config }}.zip
           if-no-files-found: error
+
+  # Runs the tests against a local MCS (on Linux because the MCS Docker images are Linux-only)
+  test-local-mcs:
+    needs: emscripten-build
+    runs-on: ubuntu-24.04
+
+    strategy:
+      fail-fast: false
+      matrix:
+        config: [release, debug]
+
+    steps:
+      # See the checkout steps in emscripten-build
+      - name: Checkout (called from another repo)
+        if: inputs.binding_repo_branch != ''
+        uses: actions/checkout@v7
+        with:
+          repository: magnopus-opensource/connected-spaces-platform-web
+          ref: ${{ inputs.binding_repo_branch }}
+
+      - name: Checkout (native)
+        if: inputs.binding_repo_branch == ''
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+
+      # The tests are hardcoded to find the package at <repo>/CSP-WASM-Bindings.
+      - name: Download test build
+        uses: actions/download-artifact@v8
+        with:
+          name: test-bindings-${{ matrix.config }}
+          path: CSP-WASM-Bindings
+
+      - name: Setup local MCS
+        id: local-mcs
+        uses: ./.github/actions/setup-local-mcs
+        with:
+          mcs_deploy_key: ${{ secrets.MCS_DEPLOY_KEY }}
+          docker_username: ${{ secrets.DOCKER_USERNAME }}
+          docker_password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Test
+        uses: ./.github/actions/run-bindings-tests
+        with:
+          test_browser: ${{ env.TEST_BROWSER }}
+          endpoint: ${{ steps.local-mcs.outputs.endpoint }}

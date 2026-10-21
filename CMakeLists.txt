@@ -4,6 +4,8 @@ project(ConnectedSpacesPlatformWeb VERSION 1.0.0
     DESCRIPTION "Embind generated WASM bindings to the connected spaces platform"
     LANGUAGES CXX)
 
+include(cmake/GetCSP.cmake)
+
 add_executable(connected-spaces-platform-bindings
     src/bindings/csp/AssetHash.cpp
     src/bindings/csp/CSPFoundation.cpp
@@ -126,8 +128,6 @@ set_target_properties(connected-spaces-platform-bindings PROPERTIES SUFFIX ".js"
 # Project uses C++17
 target_compile_features(connected-spaces-platform-bindings PUBLIC cxx_std_17)
 
-# Configure with CMAKE_PREFIX_PATH to be an install directory
-find_package(CSP CONFIG REQUIRED)
 
 target_link_libraries(connected-spaces-platform-bindings
   PRIVATE
@@ -148,8 +148,9 @@ set(CSP_WASM_MAXIMUM_MEMORY "1073741824" CACHE STRING "Maximum wasm heap size, i
 
 target_link_options(connected-spaces-platform-bindings PRIVATE
    $<$<PLATFORM_ID:Emscripten>:
-    # Emit DWARF in the final .wasm for Debug builds only.
-    $<$<CONFIG:Debug>:-g>
+    # Emit DWARF for Debug builds only, into a separate .debug.wasm next to the .wasm rather than baking it in.
+    # The .wasm records the DWARF file's name relative to the .wasm's URL, so the two must be served side-by-side.
+    $<$<CONFIG:Debug>:-gseparate-dwarf=$<TARGET_FILE_DIR:connected-spaces-platform-bindings>/$<TARGET_FILE_BASE_NAME:connected-spaces-platform-bindings>.debug.wasm>
     -pthread
     -fwasm-exceptions
     -lembind
