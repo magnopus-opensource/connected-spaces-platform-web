@@ -34,5 +34,12 @@ EMSCRIPTEN_DECLARE_VAL_TYPE(HotspotSequenceSystemPointer);
 EMSCRIPTEN_DECLARE_VAL_TYPE(AnalyticsSystemPointer);
 EMSCRIPTEN_DECLARE_VAL_TYPE(ExternalServiceProxySystemPointer);
 
+/*
+ * Materials are the one place the API hands back an owning pointer, so unlike every other pointer
+ * here this one must keep its disposal behaviours. See the asset system and material bindings for
+ * usage.
+ */
+EMSCRIPTEN_DECLARE_VAL_TYPE(OwnedMaterialPointer);
+
 EMSCRIPTEN_DECLARE_VAL_TYPE(EntityScriptReference);
 EMSCRIPTEN_DECLARE_VAL_TYPE(SystemsManagerReference);

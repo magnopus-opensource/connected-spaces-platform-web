@@ -36,6 +36,8 @@ EMSCRIPTEN_BINDINGS(CSPPointerDeclarations)
     emscripten::register_type<AnalyticsSystemPointer>("AnalyticsSystem | null");
     emscripten::register_type<ExternalServiceProxySystemPointer>("ExternalServiceProxySystem | null");
 
+    emscripten::register_type<OwnedMaterialPointer>("Material | null");
+
     emscripten::register_type<EntityScriptReference>("EntityScript");
     emscripten::register_type<SystemsManagerReference>("SystemsManager");
 }

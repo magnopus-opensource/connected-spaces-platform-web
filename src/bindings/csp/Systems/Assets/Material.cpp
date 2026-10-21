@@ -1,5 +1,8 @@
+#include "../../../containers/Array.h"
 #include "../../../containers/Disposal.h"
 #include "../../../containers/String.h"
+#include "../../../utils/JSDisposable.h"
+#include "../../PointerDeclarations.h"
 
 #include "CSP/Common/Array.h"
 #include "CSP/Common/String.h"
@@ -10,14 +13,12 @@
 #include "emscripten/val.h"
 #include <cstddef>
 
-EMSCRIPTEN_DECLARE_VAL_TYPE(OwnedMaterialPointer);
 EMSCRIPTEN_DECLARE_VAL_TYPE(OwnedMaterialArray);
 
 EMSCRIPTEN_BINDINGS(CSPMaterial)
 {
-    // These are unique to materials since they are the only place where have owning pointers
-    // returned from the API.
-    emscripten::register_type<OwnedMaterialPointer>("Material | null");
+    // Unique to materials, since they are the only place we have owning pointers returned from the
+    // API, along OwnedMaterialPointer which is shared with the asset system.
     emscripten::register_type<OwnedMaterialArray>("(Material[] & Disposable)");
 
     emscripten::enum_<csp::systems::EShaderType>("EShaderType", emscripten::enum_value_type::number)
@@ -66,5 +67,24 @@ EMSCRIPTEN_BINDINGS(CSPMaterial)
                 bindings::containers::attach_disposer_to_container(jsArray.as_handle());
 
                 return OwnedMaterialArray { jsArray };
+            });
+
+    emscripten::class_<csp::systems::MaterialInfo>("MaterialInfo")
+        .class_function(
+            "create", +[]() { return csp::systems::MaterialInfo(); })
+        .property("uri", &csp::systems::MaterialInfo::Uri)
+        .property("shaderType", &csp::systems::MaterialInfo::ShaderType)
+        .property("materialCollectionId", &csp::systems::MaterialInfo::MaterialCollectionId)
+        .property("materialId", &csp::systems::MaterialInfo::MaterialId)
+        .function("equals(other)", &csp::systems::MaterialInfo::operator==);
+
+    emscripten::class_<csp::systems::MaterialInfoResult, emscripten::base<csp::systems::ResultBase>>("MaterialInfoResult")
+        .function(
+            "getMaterialInfo", +[](const csp::systems::MaterialInfoResult& self) { return self.GetMaterialInfo(); });
+
+    emscripten::class_<csp::systems::MaterialInfosResult, emscripten::base<csp::systems::ResultBase>>("MaterialInfosResult")
+        .function(
+            "getMaterialInfos", +[](const csp::systems::MaterialInfosResult& self) {
+                return bindings::utils::JSDisposable<csp::common::Array<csp::systems::MaterialInfo>> { self.GetMaterialInfos() };
             });
 }
