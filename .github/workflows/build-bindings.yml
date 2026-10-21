@@ -34,6 +34,14 @@ on:
         type: string
         required: false
         default: ''
+    # Needed to start the local MCS the tests run against. Callers can pass them with `secrets: inherit`.
+    secrets:
+      MCS_DEPLOY_KEY: # SSH deploy key with read access to magnopus/Magnopus.Services
+        required: true
+      DOCKER_USERNAME:
+        required: true
+      DOCKER_PASSWORD:
+        required: true
   push:
     branches:
       [main] # This is really just to seed the cache on main so PR's can reuse the same cache entries.
@@ -154,43 +162,16 @@ jobs:
         shell: bash
         run: cmake --build --preset ${{ matrix.config }} --target install
 
-      - name: Install Test dependencies
-        shell: bash
-        working-directory: ./tests
-        run: npm ci
-
-      - name: Type Check Tests
-        shell: bash
-        working-directory: ./tests
-        run: npm run typecheck
-
-      - name: Lint Tests
-        shell: bash
-        working-directory: ./tests
-        run: npm run lint
-
-      - name: Install Playwright browsers
-        shell: bash
-        working-directory: ./tests
-        run: npx playwright install ${{ env.TEST_BROWSER == 'all' && 'chromium webkit firefox' || env.TEST_BROWSER }}
-
-      - name: Test (Chromium)
-        if: env.TEST_BROWSER == 'all' || env.TEST_BROWSER == 'chromium'
-        shell: bash
-        working-directory: ./tests
-        run: npm run test:chromium
-
-      - name: Test (WebKit)
-        if: env.TEST_BROWSER == 'all' || env.TEST_BROWSER == 'webkit'
-        shell: bash
-        working-directory: ./tests
-        run: npm run test:webkit
-
-      - name: Test (Firefox)
-        if: env.TEST_BROWSER == 'all' || env.TEST_BROWSER == 'firefox'
-        shell: bash
-        working-directory: ./tests
-        run: npm run test:firefox
+      # The install dir will be overwritten by the packaging build below, so upload this lower
+      # memory build for testing with the test-local-mcs job below. Named so it doesn't match the
+      # CSP-WASM-Bindings-* pattern make-release uses to find the packages.
+      - name: Upload test build
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-bindings-${{ matrix.config }}
+          path: CSP-WASM-Bindings/
+          if-no-files-found: error
+          retention-days: 1
 
       # The tests above ran against a build with a lowered CSP_WASM_MAXIMUM_MEMORY. Drop that
       # override so the packaged build uses the default from CMakeLists.txt. MAXIMUM_MEMORY is
@@ -217,3 +198,52 @@ jobs:
           name: CSP-WASM-Bindings-${{ matrix.config }}
           path: CSP-WASM-Bindings-${{ matrix.config }}.zip
           if-no-files-found: error
+
+  # Runs the tests against a local MCS (on Linux because the MCS Docker images are Linux-only)
+  test-local-mcs:
+    needs: emscripten-build
+    runs-on: ubuntu-24.04
+
+    strategy:
+      fail-fast: false
+      matrix:
+        config: [release, debug]
+
+    steps:
+      # See the checkout steps in emscripten-build
+      - name: Checkout (called from another repo)
+        if: inputs.binding_repo_branch != ''
+        uses: actions/checkout@v7
+        with:
+          repository: magnopus-opensource/connected-spaces-platform-web
+          ref: ${{ inputs.binding_repo_branch }}
+
+      - name: Checkout (native)
+        if: inputs.binding_repo_branch == ''
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+
+      # The tests are hardcoded to find the package at <repo>/CSP-WASM-Bindings.
+      - name: Download test build
+        uses: actions/download-artifact@v8
+        with:
+          name: test-bindings-${{ matrix.config }}
+          path: CSP-WASM-Bindings
+
+      - name: Setup local MCS
+        id: local-mcs
+        uses: ./.github/actions/setup-local-mcs
+        with:
+          mcs_deploy_key: ${{ secrets.MCS_DEPLOY_KEY }}
+          docker_username: ${{ secrets.DOCKER_USERNAME }}
+          docker_password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Test
+        uses: ./.github/actions/run-bindings-tests
+        with:
+          test_browser: ${{ env.TEST_BROWSER }}
+          endpoint: ${{ steps.local-mcs.outputs.endpoint }}
