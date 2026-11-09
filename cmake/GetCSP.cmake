@@ -21,7 +21,7 @@ if(CSP_FOUND)
     message(STATUS "Using CSP from discovered path: ${CSP_DIR}")
 else()
     # Specify the CSP version we want to use.
-    set(CSP_TARGET_VERSION "7.0.0" CACHE STRING "The CSP release version to download")
+    set(CSP_TARGET_VERSION "7.1.0" CACHE STRING "The CSP release version to download")
 
     if(CMAKE_BUILD_TYPE STREQUAL "Debug")
         set(_CSP_BUILD_TYPE "debug")

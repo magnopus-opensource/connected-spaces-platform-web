@@ -218,13 +218,22 @@ describe('CSP Custom Material Integration Tests', () => {
 
     expect(updateMaterialResult.resultCode).toBe(csp.EResultCode.Success);
 
-    // ------ Update the test material and re-retrieve it ------
+    // ------Re-retrieve the material ------
 
-    using getMaterialResult = await assetSystem.getMaterial(material.materialCollectionId, material.materialId);
+    using getMaterialInfoResult = await assetSystem.getMaterialInfo(material.materialCollectionId, material.materialId);
 
-    expect(getMaterialResult.resultCode).toBe(csp.EResultCode.Success);
+    expect(getMaterialInfoResult.resultCode).toBe(csp.EResultCode.Success);
 
-    using retrievedMaterial = getMaterialResult.getMaterial();
+    using materialInfo = getMaterialInfoResult.getMaterialInfo();
+
+    const materialResponse = await fetch(materialInfo.uri);
+    expect(materialResponse.ok).toBe(true);
+
+    using materialBuffer = csp.NativeBuffer.createFromByteArray(new Uint8Array(await materialResponse.arrayBuffer()));
+    using materialData = csp.BufferAssetDataSource.create();
+    materialData.setBuffer(materialBuffer);
+
+    using retrievedMaterial = assetSystem.parseMaterial(materialInfo, materialData);
     expect(retrievedMaterial).not.toBeNullable();
 
     if (!retrievedMaterial) {

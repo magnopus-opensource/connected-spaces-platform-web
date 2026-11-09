@@ -4,6 +4,7 @@
 #include "../../../containers/Optional.h"
 #include "../../../containers/String.h"
 #include "../../CallbackDeclarations.h"
+#include "../../PointerDeclarations.h"
 #include "../../PromiseDeclarations.h"
 
 #include "CSP/Common/Array.h"
@@ -177,23 +178,6 @@ EMSCRIPTEN_BINDINGS(CSPAssetSystem)
                     progressCallback);
             })
         .function(
-            "downloadAssetData(asset)",
-            +[](csp::systems::AssetSystem& self, const csp::systems::Asset& asset) {
-                return Promisify<PromiseOfAssetDataResult>(
-                    [&](emscripten::val cb) { self.DownloadAssetData(asset, ToNativeCallback(cb.as<AssetDataResultCallback>())); });
-            })
-        .function(
-            "downloadAssetDataEx(asset, cancellationToken)",
-            +[](csp::systems::AssetSystem& self, const csp::systems::Asset& asset, csp::common::CancellationToken& cancellationToken) {
-                return Promisify<PromiseOfAssetDataResult>(
-                    [&](emscripten::val cb) { self.DownloadAssetDataEx(asset, cancellationToken, ToNativeCallback(cb.as<AssetDataResultCallback>())); });
-            })
-        .function(
-            "getAssetDataSize(asset)",
-            +[](csp::systems::AssetSystem& self, const csp::systems::Asset& asset) {
-                return Promisify<PromiseOfUInt64Result>([&](emscripten::val cb) { self.GetAssetDataSize(asset, ToNativeCallback(cb.as<UInt64ResultCallback>())); });
-            })
-        .function(
             "getLodChain(assetCollection)",
             +[](csp::systems::AssetSystem& self, const csp::systems::AssetCollection& assetCollection) {
                 return Promisify<PromiseOfLODChainResult>(
@@ -226,22 +210,28 @@ EMSCRIPTEN_BINDINGS(CSPAssetSystem)
                 return Promisify<PromiseOfNullResult>([&](emscripten::val cb) { self.DeleteMaterial(material, ToNativeCallback(cb.as<NullResultCallback>())); });
             })
         .function(
-            "getMaterials(spaceId)",
-            +[](csp::systems::AssetSystem& self, const csp::common::String& spaceId) {
-                return Promisify<PromiseOfMaterialsResult>([&](emscripten::val cb) { self.GetMaterials(spaceId, ToNativeCallback(cb.as<MaterialsResultCallback>())); });
-            })
-        .function(
-            "getMaterial(assetCollectionId, assetId)",
+            "getMaterialInfo(assetCollectionId, assetId)",
             +[](csp::systems::AssetSystem& self, const csp::common::String& assetCollectionId, const csp::common::String& assetId) {
-                return Promisify<PromiseOfMaterialResult>(
-                    [&](emscripten::val cb) { self.GetMaterial(assetCollectionId, assetId, ToNativeCallback(cb.as<MaterialResultCallback>())); });
+                return Promisify<PromiseOfMaterialInfoResult>(
+                    [&](emscripten::val cb) { self.GetMaterialInfo(assetCollectionId, assetId, ToNativeCallback(cb.as<MaterialInfoResultCallback>())); });
             })
         .function(
-            "getMaterialFromUri(assetCollection, assetId, uri)",
+            "getMaterialInfos(spaceId)",
+            +[](csp::systems::AssetSystem& self, const csp::common::String& spaceId) {
+                return Promisify<PromiseOfMaterialInfosResult>(
+                    [&](emscripten::val cb) { self.GetMaterialInfos(spaceId, ToNativeCallback(cb.as<MaterialInfosResultCallback>())); });
+            })
+        .function(
+            "parseMaterial(info, materialData)",
+            +[](csp::systems::AssetSystem& self, const csp::systems::MaterialInfo& info, const csp::systems::BufferAssetDataSource& materialData) {
+                return OwnedMaterialPointer { emscripten::val(self.ParseMaterial(info, materialData), emscripten::return_value_policy::take_ownership()) };
+            })
+        .function(
+            "parseMaterialFromAssetCollection(assetCollection, assetId, materialData)",
             +[](csp::systems::AssetSystem& self, const csp::systems::AssetCollection& assetCollection, const csp::common::String& assetId,
-                 const csp::common::String& uri) {
-                return Promisify<PromiseOfMaterialResult>(
-                    [&](emscripten::val cb) { self.GetMaterialFromUri(assetCollection, assetId, uri, ToNativeCallback(cb.as<MaterialResultCallback>())); });
+                 const csp::systems::BufferAssetDataSource& materialData) {
+                return OwnedMaterialPointer { emscripten::val(
+                    self.ParseMaterialFromAssetCollection(assetCollection, assetId, materialData), emscripten::return_value_policy::take_ownership()) };
             })
         .function(
             "setAssetDetailBlobChangedCallback(callback)",

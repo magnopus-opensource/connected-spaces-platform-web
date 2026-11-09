@@ -34,6 +34,8 @@ EMSCRIPTEN_BINDINGS(CSPPromiseDeclarations)
     emscripten::register_type<PromiseOfLODChainResult>("Promise<LODChainResult>");
     emscripten::register_type<PromiseOfMaterialResult>("Promise<MaterialResult>");
     emscripten::register_type<PromiseOfMaterialsResult>("Promise<MaterialsResult>");
+    emscripten::register_type<PromiseOfMaterialInfoResult>("Promise<MaterialInfoResult>");
+    emscripten::register_type<PromiseOfMaterialInfosResult>("Promise<MaterialInfosResult>");
     emscripten::register_type<PromiseOfSpaceResult>("Promise<SpaceResult>");
     emscripten::register_type<PromiseOfSpacesResult>("Promise<SpacesResult>");
     emscripten::register_type<PromiseOfBasicSpaceResult>("Promise<BasicSpaceResult>");

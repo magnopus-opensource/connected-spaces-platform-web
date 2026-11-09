@@ -84,6 +84,8 @@ DECLARE_CALLBACK(csp::systems::AssetCollectionCountResultCallback, AssetCollecti
 DECLARE_CALLBACK(csp::systems::LODChainResultCallback, LODChainResultCallback)
 DECLARE_CALLBACK(csp::systems::MaterialResultCallback, MaterialResultCallback)
 DECLARE_CALLBACK(csp::systems::MaterialsResultCallback, MaterialsResultCallback)
+DECLARE_CALLBACK(csp::systems::MaterialInfoResultCallback, MaterialInfoResultCallback)
+DECLARE_CALLBACK(csp::systems::MaterialInfosResultCallback, MaterialInfosResultCallback)
 DECLARE_CALLBACK(csp::systems::AssetSystem::MaterialChangedCallbackHandler, MaterialChangedCallback)
 DECLARE_CALLBACK(csp::systems::SpaceResultCallback, SpaceResultCallback)
 DECLARE_CALLBACK(csp::systems::SpacesResultCallback, SpacesResultCallback)
