@@ -30,7 +30,6 @@ EMSCRIPTEN_BINDINGS(CSPPointerDeclarations)
     emscripten::register_type<MaintenanceSystemPointer>("MaintenanceSystem | null");
     emscripten::register_type<EventTicketingSystemPointer>("EventTicketingSystem | null");
     emscripten::register_type<ECommerceSystemPointer>("ECommerceSystem | null");
-    emscripten::register_type<QuotaSystemPointer>("QuotaSystem | null");
     emscripten::register_type<SequenceSystemPointer>("SequenceSystem | null");
     emscripten::register_type<HotspotSequenceSystemPointer>("HotspotSequenceSystem | null");
     emscripten::register_type<AnalyticsSystemPointer>("AnalyticsSystem | null");

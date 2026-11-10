@@ -28,7 +28,6 @@ EMSCRIPTEN_DECLARE_VAL_TYPE(GraphQLSystemPointer);
 EMSCRIPTEN_DECLARE_VAL_TYPE(MaintenanceSystemPointer);
 EMSCRIPTEN_DECLARE_VAL_TYPE(EventTicketingSystemPointer);
 EMSCRIPTEN_DECLARE_VAL_TYPE(ECommerceSystemPointer);
-EMSCRIPTEN_DECLARE_VAL_TYPE(QuotaSystemPointer);
 EMSCRIPTEN_DECLARE_VAL_TYPE(SequenceSystemPointer);
 EMSCRIPTEN_DECLARE_VAL_TYPE(HotspotSequenceSystemPointer);
 EMSCRIPTEN_DECLARE_VAL_TYPE(AnalyticsSystemPointer);
