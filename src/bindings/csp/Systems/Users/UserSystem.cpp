@@ -10,7 +10,6 @@
 #include "CSP/Common/Optional.h"
 #include "CSP/Common/SharedEnums.h"
 #include "CSP/Common/String.h"
-#include "CSP/Systems/Quota/Quota.h"
 #include "CSP/Systems/SystemBase.h"
 #include "CSP/Systems/Users/Authentication.h"
 #include "CSP/Systems/Users/ThirdPartyAuthentication.h"
@@ -158,7 +157,7 @@ EMSCRIPTEN_BINDINGS(CSPUserSystem)
                 return Promisify<PromiseOfStringResult>([&](emscripten::val cb) { self.GetCustomerPortalUrl(userId, ToNativeCallback(cb.as<StringResultCallback>())); });
             })
         .function(
-            "getCheckoutSessionUrl(tier)", +[](csp::systems::UserSystem& self, csp::systems::TierNames tier) {
-                return Promisify<PromiseOfStringResult>([&](emscripten::val cb) { self.GetCheckoutSessionUrl(tier, ToNativeCallback(cb.as<StringResultCallback>())); });
+            "getCheckoutSessionUrl(tierName)", +[](csp::systems::UserSystem& self, const csp::common::String& tierName) {
+                return Promisify<PromiseOfStringResult>([&](emscripten::val cb) { self.GetCheckoutSessionUrl(tierName, ToNativeCallback(cb.as<StringResultCallback>())); });
             });
 }

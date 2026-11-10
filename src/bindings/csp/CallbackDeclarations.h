@@ -20,7 +20,6 @@
 #include "CSP/Systems/GraphQL/GraphQL.h"
 #include "CSP/Systems/HotspotSequence/HotspotGroup.h"
 #include "CSP/Systems/Maintenance/Maintenance.h"
-#include "CSP/Systems/Quota/Quota.h"
 #include "CSP/Systems/Sequence/Sequence.h"
 #include "CSP/Systems/Settings/ApplicationSettings.h"
 #include "CSP/Systems/Settings/SettingsCollection.h"
@@ -103,11 +102,6 @@ DECLARE_CALLBACK(csp::systems::ProfileResultCallback, ProfileResultCallback)
 DECLARE_CALLBACK(csp::systems::BasicProfilesResultCallback, BasicProfilesResultCallback)
 DECLARE_CALLBACK(csp::systems::LoginStateResultCallback, LoginStateResultCallback)
 DECLARE_CALLBACK(csp::systems::LoginTokenInfoResultCallback, LoginTokenInfoResultCallback)
-DECLARE_CALLBACK(csp::systems::FeaturesLimitCallback, FeaturesLimitCallback)
-DECLARE_CALLBACK(csp::systems::FeatureLimitCallback, FeatureLimitCallback)
-DECLARE_CALLBACK(csp::systems::UserTierCallback, UserTierCallback)
-DECLARE_CALLBACK(csp::systems::FeatureQuotaCallback, FeatureQuotaCallback)
-DECLARE_CALLBACK(csp::systems::FeaturesQuotaCallback, FeaturesQuotaCallback)
 DECLARE_CALLBACK(csp::systems::SequenceResultCallback, SequenceResultCallback)
 DECLARE_CALLBACK(csp::systems::SequencesResultCallback, SequencesResultCallback)
 DECLARE_CALLBACK(csp::systems::HotspotGroupResultCallback, HotspotGroupResultCallback)

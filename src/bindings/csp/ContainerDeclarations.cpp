@@ -29,7 +29,6 @@
 #include "CSP/Systems/HotspotSequence/HotspotGroup.h"
 #include "CSP/Systems/Maintenance/Maintenance.h"
 #include "CSP/Systems/Multiplayer/Scope.h"
-#include "CSP/Systems/Quota/Quota.h"
 #include "CSP/Systems/Sequence/Sequence.h"
 #include "CSP/Systems/ServiceStatus.h"
 #include "CSP/Systems/Spaces/Site.h"
@@ -121,7 +120,6 @@ EMSCRIPTEN_BINDINGS(CSPContainerDeclarations)
     emscripten::register_type<csp::common::Array<csp::systems::EAssetType>>("EAssetType[]");
     emscripten::register_type<csp::common::Array<csp::systems::EAssetCollectionType>>("EAssetCollectionType[]");
     emscripten::register_type<csp::common::Array<csp::systems::EThirdPartyAuthenticationProviders>>("EThirdPartyAuthenticationProviders[]");
-    emscripten::register_type<csp::common::Array<csp::systems::TierFeatures>>("TierFeatures[]");
 
     emscripten::register_type<csp::common::Array<csp::systems::Asset>>("Asset[]");
     emscripten::register_type<bindings::utils::JSDisposable<csp::common::Array<csp::systems::Asset>>>("(Asset[] & Disposable)");
@@ -145,10 +143,6 @@ EMSCRIPTEN_BINDINGS(CSPContainerDeclarations)
     emscripten::register_type<bindings::utils::JSDisposable<csp::common::Array<csp::systems::InviteUserRoleInfo>>>("(InviteUserRoleInfo[] & Disposable)");
     emscripten::register_type<csp::common::Array<csp::systems::BasicProfile>>("BasicProfile[]");
     emscripten::register_type<bindings::utils::JSDisposable<csp::common::Array<csp::systems::BasicProfile>>>("(BasicProfile[] & Disposable)");
-    emscripten::register_type<csp::common::Array<csp::systems::FeatureLimitInfo>>("FeatureLimitInfo[]");
-    emscripten::register_type<bindings::utils::JSDisposable<csp::common::Array<csp::systems::FeatureLimitInfo>>>("(FeatureLimitInfo[] & Disposable)");
-    emscripten::register_type<csp::common::Array<csp::systems::FeatureQuotaInfo>>("FeatureQuotaInfo[]");
-    emscripten::register_type<bindings::utils::JSDisposable<csp::common::Array<csp::systems::FeatureQuotaInfo>>>("(FeatureQuotaInfo[] & Disposable)");
     emscripten::register_type<csp::common::Array<csp::systems::Sequence>>("Sequence[]");
     emscripten::register_type<bindings::utils::JSDisposable<csp::common::Array<csp::systems::Sequence>>>("(Sequence[] & Disposable)");
     emscripten::register_type<csp::common::Array<csp::systems::HotspotGroup>>("HotspotGroup[]");
