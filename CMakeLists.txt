@@ -89,8 +89,6 @@ add_executable(connected-spaces-platform-bindings
     src/bindings/csp/Systems/Maintenance/MaintenanceSystem.cpp
     src/bindings/csp/Systems/Multiplayer/Scope.cpp
     src/bindings/csp/Systems/Multiplayer/ScopeLeader.cpp
-    src/bindings/csp/Systems/Quota/Quota.cpp
-    src/bindings/csp/Systems/Quota/QuotaSystem.cpp
     src/bindings/csp/Systems/Script/ScriptSystem.cpp
     src/bindings/csp/Systems/Sequence/Sequence.cpp
     src/bindings/csp/Systems/Sequence/SequenceSystem.cpp

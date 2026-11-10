@@ -51,11 +51,6 @@ EMSCRIPTEN_BINDINGS(CSPPromiseDeclarations)
     emscripten::register_type<PromiseOfProfileResult>("Promise<ProfileResult>");
     emscripten::register_type<PromiseOfBasicProfilesResult>("Promise<BasicProfilesResult>");
     emscripten::register_type<PromiseOfLoginStateResult>("Promise<LoginStateResult>");
-    emscripten::register_type<PromiseOfFeaturesLimitResult>("Promise<FeaturesLimitResult>");
-    emscripten::register_type<PromiseOfFeatureLimitResult>("Promise<FeatureLimitResult>");
-    emscripten::register_type<PromiseOfUserTierResult>("Promise<UserTierResult>");
-    emscripten::register_type<PromiseOfFeatureQuotaResult>("Promise<FeatureQuotaResult>");
-    emscripten::register_type<PromiseOfFeaturesQuotaResult>("Promise<FeaturesQuotaResult>");
     emscripten::register_type<PromiseOfSequenceResult>("Promise<SequenceResult>");
     emscripten::register_type<PromiseOfSequencesResult>("Promise<SequencesResult>");
     emscripten::register_type<PromiseOfHotspotGroupResult>("Promise<HotspotGroupResult>");
