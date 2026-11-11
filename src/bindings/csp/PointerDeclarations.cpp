@@ -20,7 +20,6 @@ EMSCRIPTEN_BINDINGS(CSPPointerDeclarations)
     emscripten::register_type<UserSystemPointer>("UserSystem | null");
     emscripten::register_type<SpaceSystemPointer>("SpaceSystem | null");
     emscripten::register_type<AssetSystemPointer>("AssetSystem | null");
-    emscripten::register_type<VoipSystemPointer>("VoipSystem | null");
     emscripten::register_type<ScriptSystemPointer>("ScriptSystem | null");
     emscripten::register_type<PointOfInterestSystemPointer>("PointOfInterestSystem | null");
     emscripten::register_type<AnchorSystemPointer>("AnchorSystem | null");

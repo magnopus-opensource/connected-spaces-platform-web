@@ -109,7 +109,6 @@ add_executable(connected-spaces-platform-bindings
     src/bindings/csp/Systems/Users/Authentication.cpp
     src/bindings/csp/Systems/Users/ThirdPartyAuthentication.cpp
     src/bindings/csp/Systems/Users/UserSystem.cpp
-    src/bindings/csp/Systems/Voip/VoipSystem.cpp
     src/bindings/testtypes/BindingsTestType.cpp
     src/bindings/testtypes/TestContainerBindings.cpp
     src/bindings/testtypes/TestCallbackBindings.cpp
