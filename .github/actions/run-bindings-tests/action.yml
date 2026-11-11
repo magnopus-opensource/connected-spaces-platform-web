@@ -58,19 +58,51 @@ runs:
       working-directory: ./tests
       run: npm run lint
 
-    # On Linux, Playwright also needs the browsers' system dependencies (WebKit in particular).
-    - name: Install Playwright browsers
+    # On Linux, Playwright's browsers also need system packages (mostly for WebKit and Firefox).
+    # These are cached, as Ubuntu's package mirror can be very slow (see install-playwright-deps.sh).
+    # The cache key includes the runner image and Playwright versions, as either can change which
+    # packages are needed.
+    - name: Prepare Playwright install
+      id: playwright
       shell: bash
       working-directory: ./tests
       env:
         BROWSERS: ${{ inputs.test_browser == 'all' && 'chromium webkit firefox' || inputs.test_browser }}
       run: |
-        set -euxo pipefail
+        set -euo pipefail
+        version=$(node -p "require('playwright/package.json').version")
+        echo "browsers=$BROWSERS" >> "$GITHUB_OUTPUT"
+        echo "deps-cache-key=playwright-deps-${ImageOS:-unknown}-${ImageVersion:-unknown}-$version-${BROWSERS// /-}" >> "$GITHUB_OUTPUT"
+
+    - name: Restore cached system packages for Playwright
+      id: deps-cache
+      if: runner.os == 'Linux'
+      uses: actions/cache/restore@v6
+      with:
+        path: ${{ runner.temp }}/playwright-deps
+        key: ${{ steps.playwright.outputs.deps-cache-key }}
+
+    - name: Install Playwright browsers
+      id: install
+      shell: bash
+      working-directory: ./tests
+      env:
+        BROWSERS: ${{ steps.playwright.outputs.browsers }}
+        DEPS_DIR: ${{ runner.temp }}/playwright-deps
+        DEPS_CACHE_HIT: ${{ steps.deps-cache.outputs.cache-hit }}
+      run: |
+        set -euo pipefail
         if [ "$RUNNER_OS" = "Linux" ]; then
-          npx playwright install --with-deps $BROWSERS
-        else
-          npx playwright install $BROWSERS
+          bash "$GITHUB_ACTION_PATH/install-playwright-deps.sh"
         fi
+        npx playwright install $BROWSERS
+
+    - name: Save system packages for Playwright to the cache
+      if: runner.os == 'Linux' && steps.deps-cache.outputs.cache-hit != 'true' && steps.install.outputs.cacheable == 'true'
+      uses: actions/cache/save@v6
+      with:
+        path: ${{ runner.temp }}/playwright-deps
+        key: ${{ steps.playwright.outputs.deps-cache-key }}
 
     # Each browser runs the type and unit tests, then the integration tests, as separate Vitest runs
     # so its memory is released in between. See run-browser-tests.sh.
