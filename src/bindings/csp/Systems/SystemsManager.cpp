@@ -19,7 +19,6 @@
 #include "CSP/Systems/Spatial/PointOfInterestSystem.h"
 #include "CSP/Systems/SystemsManager.h"
 #include "CSP/Systems/Users/UserSystem.h"
-#include "CSP/Systems/Voip/VoipSystem.h"
 
 #include "emscripten/bind.h"
 #include "emscripten/val.h"
@@ -41,8 +40,6 @@ EMSCRIPTEN_BINDINGS(CSPSystemsManager)
             "getSpaceSystem", +[](csp::systems::SystemsManager& self) { return bindings::utils::NonOwningVal<SpaceSystemPointer>(self.GetSpaceSystem()); })
         .function(
             "getAssetSystem", +[](csp::systems::SystemsManager& self) { return bindings::utils::NonOwningVal<AssetSystemPointer>(self.GetAssetSystem()); })
-        .function(
-            "getVoipSystem", +[](csp::systems::SystemsManager& self) { return bindings::utils::NonOwningVal<VoipSystemPointer>(self.GetVoipSystem()); })
         .function(
             "getScriptSystem", +[](csp::systems::SystemsManager& self) { return bindings::utils::NonOwningVal<ScriptSystemPointer>(self.GetScriptSystem()); })
         .function(
