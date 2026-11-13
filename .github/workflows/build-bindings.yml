@@ -203,6 +203,9 @@ jobs:
   test-local-mcs:
     needs: emscripten-build
     runs-on: ubuntu-24.04
+    # Backstop for anything that hangs outside the test runs, which have their own time limit
+    # (BINDINGS_TEST_TIMEOUT_MINUTES below).
+    timeout-minutes: 60
 
     strategy:
       fail-fast: false
@@ -247,6 +250,10 @@ jobs:
         with:
           test_browser: ${{ env.TEST_BROWSER }}
           endpoint: ${{ steps.local-mcs.outputs.endpoint }}
+          # Optional repository variables. When this workflow is called from another repository,
+          # GitHub reads them from the calling repository.
+          timeout_minutes: ${{ vars.BINDINGS_TEST_TIMEOUT_MINUTES || '10' }}
+          browser_debug: ${{ vars.BINDINGS_TEST_BROWSER_DEBUG || 'false' }}
 
       # Collect the local MCS container logs, even if the tests failed, for diagnosing service issues.
       - name: Collect MCS logs

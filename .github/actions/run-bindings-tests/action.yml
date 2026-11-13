@@ -27,6 +27,18 @@ inputs:
     description: Whether to type check and lint the tests before running them.
     required: false
     default: 'true'
+  timeout_minutes:
+    description: |
+      How long each Vitest run may take, in minutes, before it's stopped. Stops a run that hangs
+      (e.g. a frozen browser page, where Vitest's own timeouts can't fire) instead of letting it run
+      until the job times out.
+    required: false
+    default: '10'
+  browser_debug:
+    description: Whether to log Vitest's progress through each test file in the browser for
+      diagnosing issues.
+    required: false
+    default: 'false'
 
 runs:
   using: composite
@@ -35,10 +47,19 @@ runs:
       shell: bash
       env:
         TEST_BROWSER: ${{ inputs.test_browser }}
+        TIMEOUT_MINUTES: ${{ inputs.timeout_minutes }}
+        BROWSER_DEBUG: ${{ inputs.browser_debug }}
       run: |
         case "$TEST_BROWSER" in
           all|chromium|webkit|firefox) ;;
           *) echo "::error::Invalid test_browser '$TEST_BROWSER' (expected all, chromium, webkit or firefox)"; exit 1 ;;
+        esac
+        if ! [[ "$TIMEOUT_MINUTES" =~ ^[1-9][0-9]*$ ]]; then
+          echo "::error::Invalid timeout_minutes '$TIMEOUT_MINUTES' (expected a whole number of minutes, greater than 0)"; exit 1
+        fi
+        case "${BROWSER_DEBUG,,}" in
+          true|false) ;;
+          *) echo "::error::Invalid browser_debug '$BROWSER_DEBUG' (expected true or false)"; exit 1 ;;
         esac
 
     - name: Install Test dependencies
@@ -59,6 +80,8 @@ runs:
       run: npm run lint
 
     # On Linux, Playwright also needs the browsers' system dependencies (WebKit in particular).
+    # Pass --only-shell to use Chromium's headless shell build instead of downloading the full
+    # browser.
     - name: Install Playwright browsers
       shell: bash
       working-directory: ./tests
@@ -67,13 +90,13 @@ runs:
       run: |
         set -euxo pipefail
         if [ "$RUNNER_OS" = "Linux" ]; then
-          npx playwright install --with-deps $BROWSERS
+          npx playwright install --with-deps --only-shell $BROWSERS
         else
-          npx playwright install $BROWSERS
+          npx playwright install --only-shell $BROWSERS
         fi
 
     # Each browser runs the type and unit tests, then the integration tests, as separate Vitest runs
-    # so its memory is released in between. See run-browser-tests.sh.
+    # so its memory is released in between, each with a time limit. See run-browser-tests.sh.
     - name: Test (Chromium)
       if: inputs.test_browser == 'all' || inputs.test_browser == 'chromium'
       shell: bash
@@ -81,6 +104,8 @@ runs:
       env:
         CSP_TEST_ENDPOINT: ${{ inputs.endpoint }}
         CSP_TEST_TENANT: ${{ inputs.tenant }}
+        TEST_TIMEOUT_MINUTES: ${{ inputs.timeout_minutes }}
+        TEST_BROWSER_DEBUG: ${{ inputs.browser_debug }}
       run: bash "$GITHUB_ACTION_PATH/run-browser-tests.sh" chromium
 
     - name: Test (WebKit)
@@ -90,6 +115,8 @@ runs:
       env:
         CSP_TEST_ENDPOINT: ${{ inputs.endpoint }}
         CSP_TEST_TENANT: ${{ inputs.tenant }}
+        TEST_TIMEOUT_MINUTES: ${{ inputs.timeout_minutes }}
+        TEST_BROWSER_DEBUG: ${{ inputs.browser_debug }}
       run: bash "$GITHUB_ACTION_PATH/run-browser-tests.sh" webkit
 
     - name: Test (Firefox)
@@ -99,4 +126,6 @@ runs:
       env:
         CSP_TEST_ENDPOINT: ${{ inputs.endpoint }}
         CSP_TEST_TENANT: ${{ inputs.tenant }}
+        TEST_TIMEOUT_MINUTES: ${{ inputs.timeout_minutes }}
+        TEST_BROWSER_DEBUG: ${{ inputs.browser_debug }}
       run: bash "$GITHUB_ACTION_PATH/run-browser-tests.sh" firefox
