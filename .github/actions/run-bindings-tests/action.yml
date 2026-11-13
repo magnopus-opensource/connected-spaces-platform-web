@@ -80,6 +80,8 @@ runs:
       run: npm run lint
 
     # On Linux, Playwright also needs the browsers' system dependencies (WebKit in particular).
+    # Pass --only-shell to use Chromium's headless shell build instead of downloading the full
+    # browser.
     - name: Install Playwright browsers
       shell: bash
       working-directory: ./tests
@@ -88,9 +90,9 @@ runs:
       run: |
         set -euxo pipefail
         if [ "$RUNNER_OS" = "Linux" ]; then
-          npx playwright install --with-deps $BROWSERS
+          npx playwright install --with-deps --only-shell $BROWSERS
         else
-          npx playwright install $BROWSERS
+          npx playwright install --only-shell $BROWSERS
         fi
 
     # Each browser runs the type and unit tests, then the integration tests, as separate Vitest runs
