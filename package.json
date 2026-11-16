@@ -14,5 +14,8 @@
     "@types/node": "26.4.1",
     "ts-morph": "28.0.0",
     "typescript": "5.9.3"
+  },
+  "overrides": {
+    "minimatch": "^11.0.1"
   }
 }
