@@ -2,6 +2,7 @@
   "name": "@magnopus-opensource/connected-spaces-platform-bindings-web",
   "version": "@PROJECT_VERSION@",
   "description": "@PROJECT_DESCRIPTION@",
+  "cspVersion": "@CSP_RESOLVED_VERSION@",
   "type": "module",
   "main": "./connected-spaces-platform-bindings.js",
   "types": "./connected-spaces-platform-bindings.d.ts",
@@ -20,6 +21,10 @@
     "./loader": {
       "types": "./loader.d.ts",
       "default": "./loader.js"
+    },
+    "./version": {
+      "types": "./version.d.ts",
+      "default": "./version.js"
     }
   },
   "files": [
@@ -31,7 +36,9 @@
     "debug/connected-spaces-platform-bindings.debug.wasm",
     "debug/connected-spaces-platform-bindings.d.ts",
     "loader.js",
-    "loader.d.ts"
+    "loader.d.ts",
+    "version.js",
+    "version.d.ts"
   ],
   "repository": {
     "type": "git",
