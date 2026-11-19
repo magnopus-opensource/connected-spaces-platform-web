@@ -35,8 +35,8 @@ inputs:
     required: false
     default: '10'
   browser_debug:
-    description: Whether to log Vitest's progress through each test file in the browser for
-      diagnosing issues.
+    description: Whether to log the browser pages connecting to Vitest, and which test files are
+      sent to them and finish, for diagnosing hangs.
     required: false
     default: 'false'
 
