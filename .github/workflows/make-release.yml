@@ -36,6 +36,8 @@ jobs:
     permissions:
       contents: read
       packages: write
+    outputs:
+      csp_version: ${{ steps.validate.outputs.csp_version }}
     steps:
       - name: Download bindings artifacts
         uses: actions/download-artifact@v8
@@ -71,6 +73,7 @@ jobs:
         run: npm version --no-git-tag-version --allow-same-version "${VERSION#v}"
 
       - name: Validate npm package
+        id: validate
         working-directory: npm-package/package
         shell: bash
         run: |
@@ -78,11 +81,15 @@ jobs:
 
           PACKAGE_NAME="$(node -p "require('./package.json').name")"
           PACKAGE_VERSION="$(node -p "require('./package.json').version")"
+          # The version of CSP the bindings were built against (see cmake/GetCSP.cmake)
+          CSP_VERSION="$(node -p "require('./package.json').cspVersion ?? ''")"
 
           test -n "$PACKAGE_NAME"
           test -n "$PACKAGE_VERSION"
+          test -n "$CSP_VERSION"
 
-          echo "Publishing ${PACKAGE_NAME}@${PACKAGE_VERSION}"
+          echo "Publishing ${PACKAGE_NAME}@${PACKAGE_VERSION} (CSP ${CSP_VERSION})"
+          echo "csp_version=$CSP_VERSION" >> "$GITHUB_OUTPUT"
 
           # Every file listed in package.json "files" must be present, including the debug build.
           node -e "
@@ -106,26 +113,6 @@ jobs:
     permissions:
       contents: write
     steps:
-      # Checkout needed to read the pinned CSP version
-      - name: Checkout
-        uses: actions/checkout@v7
-
-      - name: Determine CSP version
-        id: csp
-        shell: bash
-        env:
-          CSP_TAG: ${{ inputs.csp_tag }}
-        run: |
-          set -euo pipefail
-          if [ -n "$CSP_TAG" ]; then
-            CSP_VERSION="$CSP_TAG"
-          else
-            CSP_VERSION="$(sed -n 's/.*set(CSP_TARGET_VERSION "\([^"]*\)".*/\1/p' cmake/GetCSP.cmake)"
-            # Fail loudly if the pin moves or changes format.
-            test -n "$CSP_VERSION"
-          fi
-          echo "version=$CSP_VERSION" >> "$GITHUB_OUTPUT"
-
       # Only the packaged builds, not the test builds build-bindings also uploads.
       - name: Download build artifacts
         uses: actions/download-artifact@v8
@@ -139,8 +126,8 @@ jobs:
           name: ${{ github.event.inputs.release_name }}
           tag_name: ${{ github.event.inputs.version }}
           target_commitish: ${{ github.sha }}
-          # Prepend CSP version to the generated release notes
-          body: 'Bindings for CSP `${{ steps.csp.outputs.version }}`'
+          # Prepend the CSP version to the generated release notes
+          body: 'Bindings for CSP `${{ needs.publish-npm.outputs.csp_version }}`'
           generate_release_notes: true
           # Add the ** wildcard so it searches inside the subfolders too
           files: release-artifacts/**/*.zip
