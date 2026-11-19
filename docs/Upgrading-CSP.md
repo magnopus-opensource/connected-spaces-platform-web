@@ -40,6 +40,11 @@ set(CSP_TARGET_VERSION "X.X.X" CACHE STRING "The CSP release version to download
 ...
 ```
 
+This pin is also the CSP version the package reports to consumers (`cspVersion` from the `./version` entry point and in `package.json`) and that appears in the release notes, so nothing else needs updating.
+
+> [!NOTE]
+> `CSP_TARGET_VERSION` is a cache variable, so an existing build directory keeps its old value. Reconfigure with a fresh build directory (or `-DCSP_TARGET_VERSION=X.X.X`) to pick up the new pin locally.
+
 ### Create a PR to `main`
 
 Finally, we can create a PR to merge the upgrade branch into `main`. Once that is merged, we can create a new release of the web bindings and publish the NPM package.
