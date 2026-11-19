@@ -108,6 +108,9 @@ export function makeConfig({ debug = false } = {}) {
     },
     resolve: {
       alias: {
+        // Note that sub-paths must come first
+        'connected-spaces-platform-bindings/version': resolve(installDir, 'version.js'),
+        'connected-spaces-platform-bindings/package.json': resolve(installDir, 'package.json'),
         'connected-spaces-platform-bindings': resolve(installDir, 'connected-spaces-platform-bindings.js')
       }
     }

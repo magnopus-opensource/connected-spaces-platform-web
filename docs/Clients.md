@@ -67,6 +67,29 @@ For client applications using TypeScript, version 5.2 or higher must be used to 
 }
 ```
 
+## CSP Version
+
+The version of CSP the bindings were built against is available from the `./version` entry point. It's a plain JavaScript module, so it can be read without loading the bindings:
+
+```js
+import { cspVersion } from '@magnopus-opensource/connected-spaces-platform-bindings-web/version';
+
+console.log(cspVersion); // e.g. "7.1.0"
+```
+
+This is the value to use for `ClientUserAgent.cspVersion` when initialising CSP:
+
+```js
+using userAgent = csp.ClientUserAgent.create();
+userAgent.cspVersion = cspVersion;
+```
+
+The same version is recorded in the package's `package.json` as `cspVersion`, for tooling that inspects installed packages.
+
+> [!NOTE]
+>
+> `CSPFoundation.getVersion()` does not return this version. It returns the commit hash of the CSP build.
+
 ## Debugging
 
 The package contains a debug build of the bindings alongside the release build, available via the `./debug` entry point or `loadCsp({ debug: true })` from `./loader`. This build can be debugged at the C++ level in Chrome with the [C/C++ DevTools Support (DWARF) extension](https://chromewebstore.google.com/detail/cc++-devtools-support-dwa/pdcpmagijalfljmkmjngeonclgbbannb). See [Debugging](Debugging.md) for more on the debugging workflow itself.
