@@ -19,6 +19,9 @@ find_package(CSP CONFIG QUIET
 
 if(CSP_FOUND)
     message(STATUS "Using CSP from discovered path: ${CSP_DIR}")
+
+    # CSP_VERSION is set by the find_package above, via the CSP's CSPConfigVersion.cmake.
+    set(CSP_RESOLVED_VERSION "${CSP_VERSION}")
 else()
     # Specify the CSP version we want to use.
     set(CSP_TARGET_VERSION "7.1.0" CACHE STRING "The CSP release version to download")
@@ -48,4 +51,15 @@ else()
 
     # Only look in the fetched package. NO_CMAKE_FIND_ROOT_PATH stops the Emscripten toolchain re-rooting it under the sysroot.
     find_package(CSP CONFIG REQUIRED PATHS "${csp_package_SOURCE_DIR}" NO_DEFAULT_PATH NO_CMAKE_FIND_ROOT_PATH)
+
+    # Set the CSP version to the pin we just used to download the package
+    set(CSP_RESOLVED_VERSION "${CSP_TARGET_VERSION}")
 endif()
+
+# The version of CSP the bindings are built against.
+# This version is exposed to consumers of the bindings by the package (see PackageInstall.cmake).
+if(NOT CSP_RESOLVED_VERSION)
+    message(FATAL_ERROR "Could not determine the version of CSP being built against")
+endif()
+
+message(STATUS "Building against CSP version ${CSP_RESOLVED_VERSION}")
