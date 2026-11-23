@@ -30,8 +30,15 @@ EOF
 
 if [ "${DEPS_CACHE_HIT:-}" = true ] && compgen -G "$DEPS_DIR/*.deb" > /dev/null; then
   echo "::group::Install system packages from the cache"
-  # --no-download makes this fail rather than fall back to the mirror if anything else is needed.
-  if sudo apt-get install -y --no-install-recommends --no-download "$DEPS_DIR"/*.deb; then
+  # apt's package sources are hidden from it here, so it can only use the cached packages and what's
+  # already installed. If anything else is needed, this fails before installing anything, rather
+  # than downloading it from the mirror.
+  # (--no-download can't do this, as apt treats packages given as files as downloads too, so it
+  # skips them all and fails with "Unable to fetch some archives".)
+  no_sources=$(mktemp -d)
+  if sudo apt-get install -y --no-install-recommends \
+      -o Dir::Etc::SourceList=/dev/null -o Dir::Etc::SourceParts="$no_sources" \
+      "$DEPS_DIR"/*.deb; then
     echo "::endgroup::"
     exit 0
   fi
