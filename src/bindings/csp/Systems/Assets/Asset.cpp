@@ -36,10 +36,6 @@ EMSCRIPTEN_BINDINGS(CSPAsset)
 
     emscripten::enum_<csp::systems::EAssetPlatform>("EAssetPlatform", emscripten::enum_value_type::number).value("DEFAULT", csp::systems::EAssetPlatform::DEFAULT);
 
-    emscripten::function("convertDTOAssetDetailType(dtoAssetDetailType)", &csp::systems::ConvertDTOAssetDetailType);
-    emscripten::function("convertStringToAssetPlatform(platform)", &csp::systems::ConvertStringToAssetPlatform);
-    emscripten::function("convertAssetPlatformToString(platform)", &csp::systems::ConvertAssetPlatformToString);
-
     emscripten::class_<csp::systems::Asset>("Asset")
         .class_function(
             "create", +[]() { return csp::systems::Asset(); })
