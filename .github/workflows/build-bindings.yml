@@ -54,7 +54,7 @@ env:
 
 jobs:
   emscripten-build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     strategy:
       fail-fast: false
@@ -74,13 +74,6 @@ jobs:
       - name: Checkout (native)
         if: inputs.binding_repo_branch == ''
         uses: actions/checkout@v7
-
-      # MSVC is the build-context compiler used by profiles/build/windows
-      # Needed if Conan has to compile any tool_requires from source.
-      - name: Set up MSVC
-        uses: ilammy/msvc-dev-cmd@v1
-        with:
-          arch: x64
 
       # Setup EMSDK with cache so we don't have to re-download it constantly
       - name: Setup emsdk
