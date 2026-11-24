@@ -117,6 +117,12 @@ jobs:
           csp_branch: ${{ inputs.csp_branch }}
           build_type: ${{ matrix.config == 'debug' && 'Debug' || 'Release' }}
 
+      # No pip cache: there's no requirements file to key it on.
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.x'
+
       - name: Install Conan
         shell: pwsh
         run: pip install "conan==2.27.0"
