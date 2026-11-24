@@ -103,7 +103,7 @@ runs:
         # CMake 4 dropped support for cmake_minimum_required(VERSION <3.5), which
         # some older transitive Conan recipes (e.g. asyncplusplus/1.2) still
         # declare.
-        # If cmake 4 is on the runner, this is neccesary.
+        # If cmake 4 is on the runner, this is necessary.
         CMAKE_POLICY_VERSION_MINIMUM: '3.5'
       run: >
         conan install .
