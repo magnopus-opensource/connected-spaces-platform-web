@@ -85,7 +85,7 @@ EM_JS(emscripten::EM_VAL, make_promise_with_cloning_callback, (emscripten::EM_VA
             if (arg.resultCode === Module['EResultCode'].Success) {
                 resolve(cloneArg(arg));
             } else if (arg.resultCode === Module['EResultCode'].Failed) {
-                reject(new CspRequestError('Request failed', arg.resultCode, arg.httpResultCode, arg.responseBody, arg.failureReason));
+                reject(new CspRequestError(arg.resultCode, arg.httpResultCode, arg.responseBody, arg.failureReason));
             } else if (arg.resultCode === Module['EResultCode'].InProgress) {
                 progressCallback?.(arg.requestProgress, arg.responseProgress);
             } else if (arg.resultCode === Module['EResultCode'].Init) {
