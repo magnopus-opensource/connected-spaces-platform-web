@@ -86,6 +86,7 @@ describeOnAndOffThread('ResultBase Callbacks', (offThread, modelLabel) => {
         expect(error.failureReason).toBe(csp.ERequestFailureReason.UserMissingPassword);
         expect(error.resultCode).toBe(csp.EResultCode.Failed);
         expect(error.httpResultCode).toBe(csp.EResponseCodes.ResponseUnauthorized);
+        expect(error.message).toBe('Request failed (HTTP 401, UserMissingPassword)');
       }
     }
 
