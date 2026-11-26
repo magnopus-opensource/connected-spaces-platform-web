@@ -88,17 +88,6 @@ runs:
         -s build_type=${{ inputs.build_type }}
         --build=missing
 
-    - name: Install wrapper generator dependencies
-      if: steps.csp-install-cache.outputs.cache-hit != 'true'
-      shell: pwsh
-      run: pip install chevron==0.14.0 jinja2==3.1.2
-
-    # Run the legacy wrapper generator — its output is included directly in CSPFoundation.cpp. Should go away eventually
-    - name: Run wrapper generator
-      if: steps.csp-install-cache.outputs.cache-hit != 'true'
-      shell: pwsh
-      run: python CSP/Tools/WrapperGenerator/WrapperGenerator.py
-
     - name: Configure
       if: steps.csp-install-cache.outputs.cache-hit != 'true'
       shell: pwsh
