@@ -89,8 +89,6 @@ add_executable(connected-spaces-platform-bindings
     src/bindings/csp/Systems/Maintenance/MaintenanceSystem.cpp
     src/bindings/csp/Systems/Multiplayer/Scope.cpp
     src/bindings/csp/Systems/Multiplayer/ScopeLeader.cpp
-    src/bindings/csp/Systems/Quota/Quota.cpp
-    src/bindings/csp/Systems/Quota/QuotaSystem.cpp
     src/bindings/csp/Systems/Script/ScriptSystem.cpp
     src/bindings/csp/Systems/Sequence/Sequence.cpp
     src/bindings/csp/Systems/Sequence/SequenceSystem.cpp
@@ -111,7 +109,6 @@ add_executable(connected-spaces-platform-bindings
     src/bindings/csp/Systems/Users/Authentication.cpp
     src/bindings/csp/Systems/Users/ThirdPartyAuthentication.cpp
     src/bindings/csp/Systems/Users/UserSystem.cpp
-    src/bindings/csp/Systems/Voip/VoipSystem.cpp
     src/bindings/testtypes/BindingsTestType.cpp
     src/bindings/testtypes/TestContainerBindings.cpp
     src/bindings/testtypes/TestCallbackBindings.cpp

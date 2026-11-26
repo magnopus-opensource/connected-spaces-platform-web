@@ -20,7 +20,6 @@ EMSCRIPTEN_BINDINGS(CSPPointerDeclarations)
     emscripten::register_type<UserSystemPointer>("UserSystem | null");
     emscripten::register_type<SpaceSystemPointer>("SpaceSystem | null");
     emscripten::register_type<AssetSystemPointer>("AssetSystem | null");
-    emscripten::register_type<VoipSystemPointer>("VoipSystem | null");
     emscripten::register_type<ScriptSystemPointer>("ScriptSystem | null");
     emscripten::register_type<PointOfInterestSystemPointer>("PointOfInterestSystem | null");
     emscripten::register_type<AnchorSystemPointer>("AnchorSystem | null");
@@ -30,7 +29,6 @@ EMSCRIPTEN_BINDINGS(CSPPointerDeclarations)
     emscripten::register_type<MaintenanceSystemPointer>("MaintenanceSystem | null");
     emscripten::register_type<EventTicketingSystemPointer>("EventTicketingSystem | null");
     emscripten::register_type<ECommerceSystemPointer>("ECommerceSystem | null");
-    emscripten::register_type<QuotaSystemPointer>("QuotaSystem | null");
     emscripten::register_type<SequenceSystemPointer>("SequenceSystem | null");
     emscripten::register_type<HotspotSequenceSystemPointer>("HotspotSequenceSystem | null");
     emscripten::register_type<AnalyticsSystemPointer>("AnalyticsSystem | null");
