@@ -89,6 +89,23 @@ runs:
       run: |
         set -euo pipefail
 
+        # TODO: this is a temporary workaround that we should remove once there is a way to start
+        # the MCS stack without the load test containers.
+        # Stop the load test services from starting. They crash on every start here, as they need
+        # an AWS profile, and Docker keeps restarting them throughout the tests. Each start or crash
+        # adds or removes a network interface, which makes Chromium cancel requests in progress
+        # (ERR_NETWORK_CHANGED). If that hits a test page while it's loading, the page never starts
+        # and the run fails. The tests don't use these services.
+        compose_file=Source/Magnopus.Game.Services/docker-compose.yml
+        for service in mag-loadtest-orchestration mag-loadtest-agent; do
+          found=$(service="$service" yq '.services | has(strenv(service))' "$compose_file")
+          if [ "$found" = true ]; then
+            service="$service" yq -i '.services[strenv(service)].scale = 0' "$compose_file"
+          else
+            echo "::warning::$service isn't in the MCS compose file any more, so it no longer needs to be stopped from starting"
+          fi
+        done
+
         pip install requests
         python Build/LocalContainers/start_current_o2dev.py
 
