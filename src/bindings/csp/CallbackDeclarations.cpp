@@ -66,6 +66,7 @@ DEFINE_CALLBACK(csp::systems::MaterialsResultCallback, MaterialsResultCallback, 
 DEFINE_CALLBACK(csp::systems::MaterialInfoResultCallback, MaterialInfoResultCallback, "(result: MaterialInfoResult) => void")
 DEFINE_CALLBACK(csp::systems::MaterialInfosResultCallback, MaterialInfosResultCallback, "(result: MaterialInfosResult) => void")
 DEFINE_CALLBACK(csp::systems::AssetSystem::MaterialChangedCallbackHandler, MaterialChangedCallback, "(materialChangedParams: MaterialChangedParams) => void")
+DEFINE_CALLBACK(csp::systems::ScriptErrorCallbackHandler, ScriptErrorCallback, "(errorData: ScriptErrorData) => void")
 DEFINE_CALLBACK(csp::systems::SpaceResultCallback, SpaceResultCallback, "(result: SpaceResult) => void")
 DEFINE_CALLBACK(csp::systems::SpacesResultCallback, SpacesResultCallback, "(result: SpacesResult) => void")
 DEFINE_CALLBACK(csp::systems::BasicSpaceResultCallback, BasicSpaceResultCallback, "(result: BasicSpaceResult) => void")
