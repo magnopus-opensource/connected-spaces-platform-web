@@ -6,6 +6,10 @@
 # even so the @ONLY is merely defensive
 configure_file(package.json.in package.json @ONLY)
 
+# Exposes the version of CSP the bindings were built against (CSP_RESOLVED_VERSION, from GetCSP.cmake),
+# as a plain JS module, so consumers can read it without loading the bindings.
+configure_file(src/version/version.js.in version.js @ONLY)
+
 # Merge hand-written TypeScript type overlays and declarations into the Embind-generated .d.ts output.
 include(${CMAKE_CURRENT_LIST_DIR}/MergeDts.cmake)
 merge_dts(TARGET connected-spaces-platform-bindings OUTPUT_VARIABLE MERGED_DTS)
@@ -18,6 +22,8 @@ install(FILES
       "$<TARGET_FILE_DIR:connected-spaces-platform-bindings>/$<TARGET_FILE_BASE_NAME:connected-spaces-platform-bindings>.wasm" # The wasm, not a target output, always adjacent
       "${MERGED_DTS}" # Single merged TypeScript declaration file produced above
       "${CMAKE_CURRENT_BINARY_DIR}/package.json" # Configured above, makes this an npm package
+      "${CMAKE_CURRENT_BINARY_DIR}/version.js" # Configured above, the version of CSP built against
+      "${CMAKE_SOURCE_DIR}/src/version/version.d.ts"
       # Runtime release/debug selector. It expects the release build alongside it and the debug build
       # under debug/, which is only true of the assembled npm package (see make-release.yml).
       "${CMAKE_SOURCE_DIR}/src/loader/loader.js"

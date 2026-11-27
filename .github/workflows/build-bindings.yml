@@ -247,3 +247,24 @@ jobs:
         with:
           test_browser: ${{ env.TEST_BROWSER }}
           endpoint: ${{ steps.local-mcs.outputs.endpoint }}
+
+      # Collect the local MCS container logs, even if the tests failed, for diagnosing service issues.
+      - name: Collect MCS logs
+        if: always() && steps.local-mcs.outcome != 'skipped'
+        shell: bash
+        run: |
+          set -uo pipefail
+          dir="$RUNNER_TEMP/mcs-logs"
+          mkdir -p "$dir"
+          docker ps -a --filter label=com.docker.compose.project=maglocal \
+            --format 'table {{.Names}}\t{{.Status}}\t{{.Image}}' | tee "$dir/containers.txt"
+          for name in $(docker ps -a --filter label=com.docker.compose.project=maglocal --format '{{.Names}}'); do
+            docker logs --timestamps "$name" > "$dir/$name.log" 2>&1
+            docker inspect --format '{{json .State}} restarts={{.RestartCount}}' "$name" >> "$dir/containers-state.txt"
+          done
+      - name: Upload MCS logs
+        if: always() && steps.local-mcs.outcome != 'skipped'
+        uses: actions/upload-artifact@v7
+        with:
+          name: mcs-logs-${{ matrix.config }}
+          path: ${{ runner.temp }}/mcs-logs/
