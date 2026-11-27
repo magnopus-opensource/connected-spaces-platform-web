@@ -37,7 +37,7 @@ EMSCRIPTEN_BINDINGS(CSPNetworkEventBus)
         .function(
             "sendNetworkEventToClient(eventName, args, targetClientId)",
             +[](csp::multiplayer::NetworkEventBus& self, const csp::common::String& eventName, const csp::common::Array<csp::common::ReplicatedValue>& args,
-                 uint64_t targetClientId) {
+                 uint32_t targetClientId) {
                 return Promisify<PromiseOfErrorCode>(
                     [&](emscripten::val cb) { self.SendNetworkEventToClient(eventName, args, targetClientId, ToNativeCallback(cb.as<ErrorCodeCallback>())); });
             })
