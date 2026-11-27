@@ -54,7 +54,7 @@ env:
 
 jobs:
   emscripten-build:
-    runs-on: windows-latest
+    runs-on: ubuntu-24.04
 
     strategy:
       fail-fast: false
@@ -74,13 +74,6 @@ jobs:
       - name: Checkout (native)
         if: inputs.binding_repo_branch == ''
         uses: actions/checkout@v7
-
-      # MSVC is the build-context compiler used by profiles/build/windows
-      # Needed if Conan has to compile any tool_requires from source.
-      - name: Set up MSVC
-        uses: ilammy/msvc-dev-cmd@v1
-        with:
-          arch: x64
 
       # Setup EMSDK with cache so we don't have to re-download it constantly
       - name: Setup emsdk
@@ -123,6 +116,12 @@ jobs:
         with:
           csp_branch: ${{ inputs.csp_branch }}
           build_type: ${{ matrix.config == 'debug' && 'Debug' || 'Release' }}
+
+      # No pip cache: there's no requirements file to key it on.
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.x'
 
       - name: Install Conan
         shell: pwsh
@@ -190,7 +189,7 @@ jobs:
       - name: Package install dir
         shell: pwsh
         run: |
-          Compress-Archive -Path CSP-WASM-Bindings\* -DestinationPath CSP-WASM-Bindings-${{ matrix.config }}.zip
+          Compress-Archive -Path CSP-WASM-Bindings/* -DestinationPath CSP-WASM-Bindings-${{ matrix.config }}.zip
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v7

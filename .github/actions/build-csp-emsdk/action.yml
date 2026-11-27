@@ -10,6 +10,9 @@ description: |
       You can do this by calling `emscripten-core/setup-emsdk` with `version: 5.0.2`).
     * Conan 2.27.0 on PATH (`pip install "conan==2.27.0"`).
 
+  Set `os` to match the runner. MSVC is only set up for `windows`, where it is the
+  build-context compiler.
+
 inputs:
   csp_branch:
     description: CSP branch or tag to build, defaults to main.
@@ -19,10 +22,30 @@ inputs:
     description: Debug or Release
     required: true
     default: 'Release'
+  os:
+    description: OS of the runner, linux or windows.
+    required: false
+    default: 'linux'
 
 runs:
   using: composite
   steps:
+    # Validate OS and ensure it matches that of the current runner
+    - name: Validate os input
+      shell: pwsh
+      env:
+        OS_INPUT: ${{ inputs.os }}
+      run: |
+        $expected = switch ($env:OS_INPUT) { 'linux' { 'Linux' } 'windows' { 'Windows' } }
+        if (-not $expected) {
+          Write-Output "::error::os must be 'linux' or 'windows', got '$env:OS_INPUT'"
+          exit 1
+        }
+        if ($env:RUNNER_OS -ne $expected) {
+          Write-Output "::error::os is '$env:OS_INPUT' but this runner is $env:RUNNER_OS"
+          exit 1
+        }
+
     - name: Checkout connected-spaces-platform
       uses: actions/checkout@v7
       with:
@@ -48,17 +71,18 @@ runs:
       uses: actions/cache/restore@v6
       with:
         path: CSP/install
-        key: csp-install-emsdk-${{ inputs.build_type }}-${{ steps.csp-sha.outputs.sha }}-${{ hashFiles('.github/actions/build-csp-emsdk/action.yml') }}
+        key: csp-install-emsdk-${{ inputs.os }}-${{ inputs.build_type }}-${{ steps.csp-sha.outputs.sha }}-${{ hashFiles('.github/actions/build-csp-emsdk/action.yml') }}
 
+    # No pip cache: it would be keyed on whatever requirements.txt happens to be in the workspace
+    # (CSP's docs requirements.txt).
     - uses: actions/setup-python@v7
       if: steps.csp-install-cache.outputs.cache-hit != 'true'
       with:
         python-version: '3.x'
-        cache: pip
 
-    # We need cl.exe on the path.
+    # We need cl.exe on the path for Windows builds.
     - uses: ilammy/msvc-dev-cmd@v1
-      if: steps.csp-install-cache.outputs.cache-hit != 'true'
+      if: inputs.os == 'windows' && steps.csp-install-cache.outputs.cache-hit != 'true'
       with:
         arch: x64
 
@@ -80,7 +104,7 @@ runs:
         # CMake 4 dropped support for cmake_minimum_required(VERSION <3.5), which
         # some older transitive Conan recipes (e.g. asyncplusplus/1.2) still
         # declare.
-        # If cmake 4 is on the runner, this is neccesary.
+        # If cmake 4 is on the runner, this is necessary.
         CMAKE_POLICY_VERSION_MINIMUM: '3.5'
       run: >
         conan install .
@@ -113,4 +137,4 @@ runs:
       uses: actions/cache/save@v6
       with:
         path: CSP/install
-        key: csp-install-emsdk-${{ inputs.build_type }}-${{ steps.csp-sha.outputs.sha }}-${{ hashFiles('.github/actions/build-csp-emsdk/action.yml') }}
+        key: csp-install-emsdk-${{ inputs.os }}-${{ inputs.build_type }}-${{ steps.csp-sha.outputs.sha }}-${{ hashFiles('.github/actions/build-csp-emsdk/action.yml') }}
