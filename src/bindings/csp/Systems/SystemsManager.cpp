@@ -10,7 +10,6 @@
 #include "CSP/Systems/GraphQL/GraphQLSystem.h"
 #include "CSP/Systems/HotspotSequence/HotspotSequenceSystem.h"
 #include "CSP/Systems/Maintenance/MaintenanceSystem.h"
-#include "CSP/Systems/Quota/QuotaSystem.h"
 #include "CSP/Systems/Script/ScriptSystem.h"
 #include "CSP/Systems/Sequence/SequenceSystem.h"
 #include "CSP/Systems/Settings/ApplicationSettingsSystem.h"
@@ -20,7 +19,6 @@
 #include "CSP/Systems/Spatial/PointOfInterestSystem.h"
 #include "CSP/Systems/SystemsManager.h"
 #include "CSP/Systems/Users/UserSystem.h"
-#include "CSP/Systems/Voip/VoipSystem.h"
 
 #include "emscripten/bind.h"
 #include "emscripten/val.h"
@@ -42,8 +40,6 @@ EMSCRIPTEN_BINDINGS(CSPSystemsManager)
             "getSpaceSystem", +[](csp::systems::SystemsManager& self) { return bindings::utils::NonOwningVal<SpaceSystemPointer>(self.GetSpaceSystem()); })
         .function(
             "getAssetSystem", +[](csp::systems::SystemsManager& self) { return bindings::utils::NonOwningVal<AssetSystemPointer>(self.GetAssetSystem()); })
-        .function(
-            "getVoipSystem", +[](csp::systems::SystemsManager& self) { return bindings::utils::NonOwningVal<VoipSystemPointer>(self.GetVoipSystem()); })
         .function(
             "getScriptSystem", +[](csp::systems::SystemsManager& self) { return bindings::utils::NonOwningVal<ScriptSystemPointer>(self.GetScriptSystem()); })
         .function(
@@ -67,8 +63,6 @@ EMSCRIPTEN_BINDINGS(CSPSystemsManager)
             +[](csp::systems::SystemsManager& self) { return bindings::utils::NonOwningVal<EventTicketingSystemPointer>(self.GetEventTicketingSystem()); })
         .function(
             "getECommerceSystem", +[](csp::systems::SystemsManager& self) { return bindings::utils::NonOwningVal<ECommerceSystemPointer>(self.GetECommerceSystem()); })
-        .function(
-            "getQuotaSystem", +[](csp::systems::SystemsManager& self) { return bindings::utils::NonOwningVal<QuotaSystemPointer>(self.GetQuotaSystem()); })
         .function(
             "getSequenceSystem", +[](csp::systems::SystemsManager& self) { return bindings::utils::NonOwningVal<SequenceSystemPointer>(self.GetSequenceSystem()); })
         .function(

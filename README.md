@@ -2,10 +2,6 @@
 
 Typescript bindings for in-browser use of the [connected spaces platform library](https://github.com/magnopus-opensource/connected-spaces-platform), generated via embind.
 
-> [!WARNING]
->
-> 👷 Under construction. Check back in a few months.
-
 ## Setup
 
 Before continuing, ensure you have [Emscripten](https://emscripten.org/docs/tools_reference/emsdk.html) (emsdk) installed and activated on your system. The currently supported version is **5.0.2**.

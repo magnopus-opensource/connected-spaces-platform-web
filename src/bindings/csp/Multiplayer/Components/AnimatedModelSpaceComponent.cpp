@@ -9,10 +9,6 @@
 #include "emscripten/bind.h"
 #include <cstdint>
 
-// We disagree with the deprecation of one of the properties here (SetExternalResourceAssetId)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-
 EMSCRIPTEN_BINDINGS(CSPAnimatedModelSpaceComponent)
 {
     emscripten::enum_<csp::multiplayer::AnimatedModelPropertyKeys>("AnimatedModelPropertyKeys", emscripten::enum_value_type::number)
@@ -59,5 +55,3 @@ EMSCRIPTEN_BINDINGS(CSPAnimatedModelSpaceComponent)
         .function("addMaterialOverride(modelPath, materialAssetId)", &csp::multiplayer::AnimatedModelSpaceComponent::AddMaterialOverride)
         .function("removeMaterialOverride(modelPath)", &csp::multiplayer::AnimatedModelSpaceComponent::RemoveMaterialOverride);
 }
-
-#pragma clang diagnostic pop
