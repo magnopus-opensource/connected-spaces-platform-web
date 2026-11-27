@@ -21,6 +21,7 @@
 #include "CSP/Systems/HotspotSequence/HotspotGroup.h"
 #include "CSP/Systems/Maintenance/Maintenance.h"
 #include "CSP/Systems/Sequence/Sequence.h"
+#include "CSP/Systems/Script/ScriptSystem.h"
 #include "CSP/Systems/Settings/ApplicationSettings.h"
 #include "CSP/Systems/Settings/SettingsCollection.h"
 #include "CSP/Systems/Spaces/Site.h"
@@ -86,6 +87,7 @@ DECLARE_CALLBACK(csp::systems::MaterialsResultCallback, MaterialsResultCallback)
 DECLARE_CALLBACK(csp::systems::MaterialInfoResultCallback, MaterialInfoResultCallback)
 DECLARE_CALLBACK(csp::systems::MaterialInfosResultCallback, MaterialInfosResultCallback)
 DECLARE_CALLBACK(csp::systems::AssetSystem::MaterialChangedCallbackHandler, MaterialChangedCallback)
+DECLARE_CALLBACK(csp::systems::ScriptErrorCallbackHandler, ScriptErrorCallback)
 DECLARE_CALLBACK(csp::systems::SpaceResultCallback, SpaceResultCallback)
 DECLARE_CALLBACK(csp::systems::SpacesResultCallback, SpacesResultCallback)
 DECLARE_CALLBACK(csp::systems::BasicSpaceResultCallback, BasicSpaceResultCallback)

@@ -20,12 +20,19 @@ EMSCRIPTEN_BINDINGS(CSPImageSpaceComponent)
         .value("IsARVisible", csp::multiplayer::ImagePropertyKeys::IsARVisible)
         .value("IsEmissive", csp::multiplayer::ImagePropertyKeys::IsEmissive)
         .value("IsVirtualVisible", csp::multiplayer::ImagePropertyKeys::IsVirtualVisible)
+        .value("BlendType", csp::multiplayer::ImagePropertyKeys::BlendType)
+        .value("AlphaTest", csp::multiplayer::ImagePropertyKeys::AlphaTest)
         .value("Num", csp::multiplayer::ImagePropertyKeys::Num);
 
     emscripten::enum_<csp::multiplayer::DisplayMode>("DisplayMode", emscripten::enum_value_type::number)
         .value("SingleSided", csp::multiplayer::DisplayMode::SingleSided)
         .value("DoubleSided", csp::multiplayer::DisplayMode::DoubleSided)
         .value("DoubleSidedReversed", csp::multiplayer::DisplayMode::DoubleSidedReversed);
+
+    emscripten::enum_<csp::multiplayer::BlendType>("BlendType", emscripten::enum_value_type::number)
+        .value("Opaque", csp::multiplayer::BlendType::Opaque)
+        .value("Blend", csp::multiplayer::BlendType::Blend)
+        .value("Mask", csp::multiplayer::BlendType::Mask);
 
     emscripten::class_<csp::multiplayer::ImageSpaceComponent, emscripten::base<csp::multiplayer::ComponentBase>>("ImageSpaceComponent")
         .property("imageAssetId", &csp::multiplayer::ImageSpaceComponent::GetImageAssetId, &csp::multiplayer::ImageSpaceComponent::SetImageAssetId)
@@ -36,6 +43,8 @@ EMSCRIPTEN_BINDINGS(CSPImageSpaceComponent)
         .property("transform", &csp::multiplayer::ImageSpaceComponent::GetTransform, &csp::multiplayer::ImageSpaceComponent::SetTransform)
         .property("billboardMode", &csp::multiplayer::ImageSpaceComponent::GetBillboardMode, &csp::multiplayer::ImageSpaceComponent::SetBillboardMode)
         .property("displayMode", &csp::multiplayer::ImageSpaceComponent::GetDisplayMode, &csp::multiplayer::ImageSpaceComponent::SetDisplayMode)
+        .property("blendType", &csp::multiplayer::ImageSpaceComponent::GetBlendType, &csp::multiplayer::ImageSpaceComponent::SetBlendType)
+        .property("alphaTest", &csp::multiplayer::ImageSpaceComponent::GetAlphaTest, &csp::multiplayer::ImageSpaceComponent::SetAlphaTest)
         .property("isEmissive", &csp::multiplayer::ImageSpaceComponent::GetIsEmissive, &csp::multiplayer::ImageSpaceComponent::SetIsEmissive)
         .property("isVisible", &csp::multiplayer::ImageSpaceComponent::GetIsVisible, &csp::multiplayer::ImageSpaceComponent::SetIsVisible)
         .property("isARVisible", &csp::multiplayer::ImageSpaceComponent::GetIsARVisible, &csp::multiplayer::ImageSpaceComponent::SetIsARVisible)
