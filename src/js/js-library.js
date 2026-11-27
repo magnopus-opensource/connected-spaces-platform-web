@@ -19,7 +19,32 @@
  * operations.
  */
 class CspRequestError extends Error {
-  constructor(message, resultCode, httpResultCode, responseBody, failureReason) {
+  constructor(resultCode, httpResultCode, responseBody, failureReason) {
+    // Construct a descriptive error message so that error.message contains as much information
+    // as possible when logged.
+
+    const MAX_BODY_LENGTH = 500;
+    const details = [];
+
+    if (httpResultCode) {
+      details.push(`HTTP ${httpResultCode}`);
+    }
+
+    if (failureReason > 0) {
+      const reasons = Module['ERequestFailureReason'];
+
+      details.push(
+        Object.keys(reasons).find((name) => reasons[name] === failureReason) ?? `failure reason ${failureReason}`
+      );
+    }
+
+    let message = details.length > 0 ? `Request failed (${details.join(', ')})` : 'Request failed';
+
+    // Truncate the response body if too long
+    if (responseBody) {
+      message += `: ${responseBody.length > MAX_BODY_LENGTH ? `${responseBody.slice(0, MAX_BODY_LENGTH)}...` : responseBody}`;
+    }
+
     super(message);
 
     if (Error.captureStackTrace) {
