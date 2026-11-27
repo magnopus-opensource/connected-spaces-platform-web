@@ -99,16 +99,44 @@ runs:
       shell: bash
       run: docker ps --format 'table {{.Names}}\t{{.Image}}\t{{.Ports}}'
 
-    # Wait for the MCS stack to be ready (make sure to poll the services and not just nginx.
-    #  Any response other than a gateway error (e.g. 404) means the service is up.
+    # Wait for the MCS stack to be ready (make sure to poll the services and not just nginx).
+    # Any response other than a gateway error (e.g. 404) means the service is up.
+    #
+    # Stop waiting if a container exits with an error.
+    # Containers that are set to restarts are ignored, as some crash and restart even when
+    # everything else works (e.g. the load test ones, as they need an AWS profile the runner doesn't
+    # have, but we don't need them anyway when running our integration tests).
     - name: Wait for MCS
       shell: bash
       env:
         ENDPOINT: ${{ steps.start-mcs.outputs.endpoint }}
       run: |
         set -euo pipefail
+
+        # Fails if an MCS container that isn't set to restart has exited with an error, showing the
+        # end of its log.
+        check_containers() {
+          local failed=0 name state code policy
+          for name in $(docker ps --all --filter label=com.docker.compose.project=maglocal \
+              --filter status=exited --format '{{.Names}}'); do
+            state=$(docker inspect \
+              --format '{{.State.ExitCode}} {{.HostConfig.RestartPolicy.Name}}' "$name") || continue
+            read -r code policy <<< "$state"
+            if [ "$code" != 0 ] && { [ -z "$policy" ] || [ "$policy" = no ]; }; then
+              echo "::error::MCS container $name exited with code $code. The end of its log is below."
+              echo "----- Last 100 lines of the $name log -----"
+              docker logs --tail 100 "$name" 2>&1
+              failed=1
+            fi
+          done
+          if [ "$failed" != 0 ]; then
+            exit 1
+          fi
+        }
+
         for service in mag-user mag-prototype mag-multiplayer oly-aggregation; do
           for attempt in $(seq 1 90); do
+            check_containers
             status=$(curl --silent --output /dev/null --write-out '%{http_code}' "$ENDPOINT/$service/" || true)
             case "$status" in
               000|502|503|504) sleep 2 ;;
